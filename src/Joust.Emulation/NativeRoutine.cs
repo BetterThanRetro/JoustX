@@ -58,6 +58,9 @@ public sealed class NativeContext
 
     public byte Read(int address) => _m.Read((ushort)address);
 
+    /// <summary>A RAM byte (video RAM under $9000 too), whatever the ROM/RAM read latch says.</summary>
+    public byte ReadRam(int address) => _m.Ram[address & 0xFFFF];
+
     public ushort Read16(int address) => (ushort)((Read(address) << 8) | Read(address + 1));
 
     public void Write(int address, byte value) => _m.Write((ushort)address, value);

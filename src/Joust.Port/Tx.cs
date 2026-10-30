@@ -82,6 +82,13 @@ public sealed class Tx
         return _pending.TryGetValue(a, out byte v) ? v : _c.Read(a);
     }
 
+    /// <summary>A RAM byte as code would read it with the RAM read latch selected (video RAM under $9000).</summary>
+    public byte ReadRam(int a)
+    {
+        a &= 0xFFFF;
+        return _pending.TryGetValue(a, out byte v) ? v : _c.ReadRam(a);
+    }
+
     public ushort Read16(int a) => (ushort)((Read(a) << 8) | Read(a + 1));
 
     public void Write(int a, byte v) => _pending[a & 0xFFFF] = v;

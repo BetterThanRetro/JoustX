@@ -34,7 +34,10 @@ public sealed class Engine
         Checksums = new Checksums(s, Scheduler);
         Puff = new DeathPuff(s, Ground, Scheduler);
         GameOver = new GameOver(s, Scheduler, Text);
+        Attract = new Attract(s);
     }
+
+    public Attract Attract { get; }
 
     public GameOver GameOver { get; }
 
@@ -456,6 +459,9 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         // Joystick reads (widget PIA)
         Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),
         Always("P2JOY", (e, t) => e.Bird.Joystick(t, player1: false)),
+
+        // Attract mode: one pixel of the Williams logo
+        Always("WRANIB", (e, t) => e.Attract.Plot(t)),
 
         // The lava troll's pull on a gripped bird (its PADGRA routine)
         new TxRoutine("ADDLAV", (e, t) => e.Troll.Pull(t)),
