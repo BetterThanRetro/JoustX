@@ -123,6 +123,33 @@ public sealed class Asm(Tx t)
     public void Sex() { T.A = (T.B & 0x80) != 0 ? (byte)0xFF : (byte)0; T.CC = Logic16(T.CC, T.D); Cy(2); }
     public void SubaI(int v) { T.A = Sub8(ref T.CC, T.A, (byte)v); Cy(2); }
 
+    public void EoraI(int v) { T.A ^= (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
+    public void EorbI(int v) { T.B ^= (byte)v; T.CC = Logic8(T.CC, T.B); Cy(2); }
+    public void Adda(Ea e) { T.A = Add8(ref T.CC, T.A, T.Read(e.Address), withCarry: false); Cy(4 + e.Extra); }
+    public void Addb(Ea e) { T.B = Add8(ref T.CC, T.B, T.Read(e.Address), withCarry: false); Cy(4 + e.Extra); }
+    public void Lsr(Ea e) => Modify(e, m => Lsr8(ref T.CC, m));
+    public void Lsra() { T.A = Lsr8(ref T.CC, T.A); Cy(2); }
+    public void Rora() { T.A = Ror8(ref T.CC, T.A); Cy(2); }
+    public void Cmpx(Ea e) { Sub16(ref T.CC, T.X, T.Read16(e.Address)); Cy(6 + e.Extra); }
+    public void Decb() { T.B = Alu6809.Dec(ref T.CC, T.B); Cy(2); }
+    public void Abx() { T.X = (ushort)(T.X + T.B); Cy(3); }
+    public void TfrBA() { T.A = T.B; Cy(6); }
+    public void TfrAB() { T.B = T.A; Cy(6); }
+
+    /// <summary>LEAX n,X (sets Z).</summary>
+    public void Leax(int offset) { T.X = (ushort)(T.X + offset); T.CC = Set(T.CC, Z, T.X == 0); Cy(4 + Symbols.IndexCost(offset)); }
+
+    /// <summary>LDB B,Y.</summary>
+    public void LdbBY() { T.B = T.Read(T.Y + (sbyte)T.B); T.CC = Logic8(T.CC, T.B); Cy(5); }
+
+    private static byte Lsr8(ref byte cc, byte m)
+    {
+        cc = Set(cc, C, (m & 1) != 0);
+        byte r = (byte)(m >> 1);
+        cc = NZ8(cc, r);
+        return r;
+    }
+
     /// <summary>TFR U,Y.</summary>
     public void TfrUY() { T.Y = T.U; Cy(6); }
 

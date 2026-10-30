@@ -25,8 +25,11 @@ public sealed class Engine
         Troll = new LavaTroll(s, Ground, Scheduler, Eggs, Scoring);
         Physics.SpawnTroll = Troll.Spawn;
         Bird.Troll = Troll;
+        Transporter = new Transporter(s, Ground, Scheduler, Eggs, Deaths, Bird);
+        Bird.Lava = Transporter;
     }
 
+    public Transporter Transporter { get; }
     public InterruptHandler Irq { get; }
     public LavaTroll Troll { get; }
 
@@ -135,6 +138,12 @@ public sealed class TxJumpRoutine(
             (e, t) => e.EggProcess.Run(t, l),
             e => e.EggProcess.Address(l))),
 
+        // Entering through a transporter, and the lava death, at any label or resume point
+        .. Enum.GetValues<Transporter.L>().Select(l => new TxJumpRoutine(
+            TransporterName(l),
+            (e, t) => e.Transporter.Run(t, l),
+            e => e.Transporter.Address(l))),
+
         // The lava troll's processes, entered at any of their labels or resume points
         .. Enum.GetValues<LavaTroll.L>().Select(l => new TxJumpRoutine(
             TrollName(l),
@@ -148,6 +157,26 @@ public sealed class TxJumpRoutine(
             return BirdProcess.Return(t);
         }, e => e.Bird.AirJoyReturn),
     ];
+
+    public static string TransporterName(Transporter.L l) => l switch
+    {
+        Transporter.L.Create => "CREP1",
+        Transporter.L.CreateLives => "CREP1@lives",
+        Transporter.L.CreateEnemy => "CREEM",
+        Transporter.L.QueueNap => "CRELP@nap",
+        Transporter.L.FadeNap => "TREFF2@nap",
+        Transporter.L.WaitNap => "TREFF2.40S",
+        Transporter.L.WaitJoy => "TREFF2.40S@joy",
+        Transporter.L.Start => "PLAYR",
+        Transporter.L.StartNap => "PLAYR@nap",
+        Transporter.L.StartLives => "PLAYR@lives",
+        Transporter.L.Reborn => "PLYLI2",
+        Transporter.L.Lava => "ADGFLR",
+        Transporter.L.SinkNap => "ADGLAV@nap",
+        Transporter.L.Sunk => "ADGDED",
+        Transporter.L.SunkNap => "ADGDED@nap",
+        _ => throw new ArgumentOutOfRangeException(nameof(l)),
+    };
 
     public static string TrollName(LavaTroll.L l) => l switch
     {

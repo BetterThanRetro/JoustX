@@ -5,9 +5,10 @@ using Joust.Port;
 namespace Joust.Tools;
 
 /// <summary>
-/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll]
-/// --troll wakes the lava troll from the first wave (it normally comes out in wave 4, which the
-/// random player rarely reaches); both machines get the same change, so the comparison holds. [--troll]
+/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...]
+/// --troll runs the <see cref="TrollScenario"/>: the troll and a burnt bridge from the first wave,
+/// a player that rarely flaps, and a player dropped into the lava now and then.
+/// --probe counts how often the original reaches the given labels.
 /// Checks every native routine against the original 6809 code, two ways:
 ///   per-call: each real call runs both versions and compares registers, flags, cycles, memory;
 ///   lockstep: an all-original machine and a native machine run side by side, compared every frame.
@@ -22,6 +23,7 @@ internal static class NativeVerifyCommand
         bool trace = false;
         bool twoPlayers = false;
         bool troll = false;
+        string[] probes = [];
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
@@ -30,6 +32,7 @@ internal static class NativeVerifyCommand
             else if (args[i] == "--trace") trace = true;
             else if (args[i] == "--two-players") twoPlayers = true;
             else if (args[i] == "--troll") troll = true;
+            else if (args[i] == "--probe") probes = args[++i].Split(',');
         }
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
@@ -40,6 +43,8 @@ internal static class NativeVerifyCommand
                 r.Bind(symbols);
                 m.InstallNative(r, r.ResolveAddress(symbols));
             }
+            foreach (string label in probes)
+                m.InstallNative(new Probe(label), (ushort)symbols[label]);
         }
 
         string dir = JoustRomBuild.FindSourceDirectory(Environment.CurrentDirectory)
@@ -48,11 +53,9 @@ internal static class NativeVerifyCommand
         var program = JoustRomBuild.Assemble(dir);
         if (!program.Success) throw new InvalidOperationException("assembly failed");
         byte[] cmos = FactoryCmos(program.Memory);
-        ushort trollWaves = (ushort)program.Symbols["TTROLL"];
-        void Prepare(JoustMachine m)
-        {
-            if (troll) m.Ram[trollWaves] = 0;                    // the troll is out from the start
-        }
+        var scenario = troll ? new TrollScenario(program.Symbols) : null;
+        void Prepare(JoustMachine m) => scenario?.Apply(m);
+        int flaps = troll ? TrollScenario.FlapPercent : 18;
 
         bool ok = true;
         foreach (int seed in seeds)
@@ -63,7 +66,7 @@ internal static class NativeVerifyCommand
             var m = Boot(program.Memory, cmos);
             Install(m, program.Symbols);
             var verifier = new NativeVerifier(m) { TraceOriginal = trace };
-            var player = new RandomPlayer(seed, twoPlayers);
+            var player = new RandomPlayer(seed, twoPlayers, flaps);
             for (int f = 0; f < frames; f++)
             {
                 player.Apply(m.Inputs, f);
@@ -81,8 +84,8 @@ internal static class NativeVerifyCommand
             Install(native, program.Symbols);
             native.IdleStart = (ushort)program.Symbols["EXEINT"];
             native.IdleEnd = (ushort)(native.IdleStart + 4);          // TST ,X / BNE EXEINT
-            var p1 = new RandomPlayer(seed, twoPlayers);
-            var p2 = new RandomPlayer(seed, twoPlayers);
+            var p1 = new RandomPlayer(seed, twoPlayers, flaps);
+            var p2 = new RandomPlayer(seed, twoPlayers, flaps);
             string? diff = null;
             int frame = 0;
             for (; frame < frames && diff == null; frame++)
@@ -105,6 +108,17 @@ internal static class NativeVerifyCommand
         }
         Console.WriteLine(ok ? "All native routines match the original." : "Native routines do NOT match.");
         return ok ? 0 : 4;
+    }
+
+    /// <summary>
+    /// --probe LABEL,...: counts how often the original code reaches a label (it shows in the
+    /// summary as calls, all declined), without changing anything.
+    /// </summary>
+    private sealed class Probe(string label) : NativeRoutine
+    {
+        public override string Symbol => "probe:" + label;
+        public override int MaxCycles => 0;
+        public override bool Execute(NativeContext c) => false;
     }
 
     private static JoustMachine Boot(byte[] image, byte[] cmos)

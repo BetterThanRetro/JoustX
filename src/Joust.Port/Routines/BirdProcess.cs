@@ -632,6 +632,11 @@ public sealed class BirdProcess
                 t.Cycles += 5;
                 return null;
             }
+            if (Lava != null)
+            {
+                t.Push16(_address[returnTo]);                    // ADGFLR never returns: the JSR's address stays
+                return Lava.LavaFromGravity(t);
+            }
             t.Rollback(m);
         }
         else if (Troll != null && target == Troll.PullAddress)
@@ -653,6 +658,9 @@ public sealed class BirdProcess
         }
         return Leave(t, jsr, target, _address[returnTo]);
     }
+
+    /// <summary>The lava death (ADGFLR), where ADDGRA goes when the bird reaches the lava.</summary>
+    public Transporter? Lava { get; set; }
 
     /// <summary>The lava troll, whose pull (ADDLAV) replaces a gripped bird's gravity.</summary>
     public LavaTroll? Troll { get; set; }
@@ -718,7 +726,7 @@ public sealed class BirdProcess
     /// JSR [PJOY,U]: the player's joystick or the enemy AI inline; anything else (attract-mode
     /// pilots, or an AI exit that is not ported) leaves the slice.
     /// </summary>
-    private ushort? ReadControls(Tx t, ushort returnTo)
+    public ushort? ReadControls(Tx t, ushort returnTo)
     {
         ushort target = t.Read16(t.U + _joy);
         int jsr = 7 + Symbols.IndirectCost(_joy);

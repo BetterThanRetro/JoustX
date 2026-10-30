@@ -37,7 +37,7 @@ public static class Lockstep
 /// Deterministic pseudo-random player: keeps feeding coins and starts, and flaps and steers
 /// with a seeded generator, so long runs cover many waves, deaths and game-overs.
 /// </summary>
-public sealed class RandomPlayer(int seed, bool twoPlayers = false)
+public sealed class RandomPlayer(int seed, bool twoPlayers = false, int flapPercent = 18)
 {
     private uint _state = (uint)seed * 2654435761u + 1;
     private int _flapHold, _dir, _dirHold;
@@ -67,7 +67,7 @@ public sealed class RandomPlayer(int seed, bool twoPlayers = false)
     private (bool Flap, bool Left, bool Right) Steer(ref int flapHold, ref int dir, ref int dirHold)
     {
         if (flapHold > 0) flapHold--;
-        else if (Next() % 100 < 18) flapHold = 3;
+        else if (Next() % 100 < flapPercent) flapHold = 3;
 
         if (dirHold > 0) dirHold--;
         else

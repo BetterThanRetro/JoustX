@@ -64,7 +64,7 @@ public class NativePortTests
                      "NAPTPC", "EXEC", "DTBOVR", "CRPROC", "CUPROC", "SUCIDE",
                      "SCODSP@idle", "SCODSP@digit", "BCDMSN", "BCDLSN",
                      "PLYRLP@nap", "PLYRS2", "UPDNO2@state", "FLAPLP@nap", "FLAPLP@air",
-                     "FLIPLP@nap", "FLIPLP@air", "FLIPST@grav", "GOTFIT@ground", "AIROVR@joy", "P1JOY",
+                     "FLIPLP@nap", "FLIPLP@air", "FLIPST@grav", "GOTFIT@ground", "AIROVR@joy",
                      "PLYCOL@nap", "OPPCOL.25S",
                      "ADDEGG", "WEGG", "CEGG", "EGGBKG", "CLIPER", "WEGPAR",
                      "EGGLPA@nap", "EGGLN2@nap",
@@ -339,8 +339,8 @@ public class NativePortTests
     }
 
     /// <summary>
-    /// A verified run where the lava troll is out from the first wave (it normally comes in
-    /// wave 4, which the random player rarely reaches).
+    /// A verified run of the <see cref="TrollScenario"/>: the troll and a burnt bridge from the
+    /// first wave, and players that end up in the lava (normally waves 3-4 and rare).
     /// </summary>
     private static NativeVerifier TrollRun(IEnumerable<NativeRoutine> routines, int seed, int frames)
     {
@@ -351,15 +351,66 @@ public class NativePortTests
             m.InstallNative(r, r.ResolveAddress(Program.Value.Symbols));
         }
         var v = new NativeVerifier(m);
-        var p = new RandomPlayer(seed);
-        ushort trollWaves = (ushort)Program.Value.Symbols["TTROLL"];
+        var p = new RandomPlayer(seed, flapPercent: TrollScenario.FlapPercent);
+        var scenario = new TrollScenario(Program.Value.Symbols);
         for (int f = 0; f < frames; f++)
         {
             p.Apply(m.Inputs, f);
-            m.Ram[trollWaves] = 0;
+            scenario.Apply(m);
             m.RunFrame();
         }
         return v;
+    }
+
+    private static readonly string[] TransporterLabels = Enum.GetValues<Transporter.L>().Select(TxJumpRoutine.TransporterName).ToArray();
+
+    [Fact]
+    public void TransportersAndTheLavaDeathMatchTheOriginal()
+    {
+        // Hook just these so the original scheduler and bird process enter every label.
+        var v = TrollRun(NativeRoutines.Create().Where(r => TransporterLabels.Contains(r.Symbol)), seed: 1, frames: 30000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[]
+                 {
+                     "CREP1", "CREP1@lives", "CREEM", "CRELP@nap", "TREFF2@nap", "TREFF2.40S", "PLAYR", "PLAYR@nap",
+                     "PLAYR@lives", "PLYLI2", "ADGFLR", "ADGLAV@nap", "ADGDED@nap",
+                 })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+    }
+
+    [Fact]
+    public void JoysticksMatchWhenCalledFromOriginalCode()
+    {
+        // Every caller reads the joystick inline now; hook just the reads so original code calls them.
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => r.Symbol is "P1JOY" or "P2JOY"), seed: 5, frames: 8000, twoPlayers: true);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[] { "P1JOY", "P2JOY" })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
+    }
+
+    [Fact]
+    public void TransporterResumePointsFollowTheirCalls()
+    {
+        var s = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        var tr = new Engine(new Symbols(s)).Transporter;
+        ushort Word(int a) => (ushort)((rom[a] << 8) | rom[a + 1]);
+        foreach (var l in new[] { Transporter.L.QueueNap, Transporter.L.FadeNap, Transporter.L.WaitNap, Transporter.L.StartNap,
+                                  Transporter.L.SinkNap, Transporter.L.SunkNap })
+        {
+            ushort ret = tr.Address(l);
+            Assert.True(rom[ret - 3] == 0xBD && Word(ret - 2) == (ushort)s["VNAPTPC"], $"{l} at {ret:X4} does not follow JSR VNAPTPC");
+        }
+        foreach (var l in new[] { Transporter.L.CreateLives, Transporter.L.StartLives })
+        {
+            ushort ret = tr.Address(l);
+            Assert.True(rom[ret - 3] == 0xBD && Word(ret - 2) == (ushort)s["DECLIV"], $"{l} at {ret:X4} does not follow JSR DECLIV");
+        }
+        foreach (var l in new[] { Transporter.L.WaitJoy, Transporter.L.Sunk })
+        {
+            ushort ret = tr.Address(l);
+            Assert.True(rom[ret - 3] == 0xAD, $"{l} at {ret:X4} does not follow JSR [n,R]");     // JSR [PJOY,U] / JSR [DDEAD,Y]
+        }
     }
 
     [Fact]
