@@ -322,6 +322,31 @@ public class NativePortTests
     }
 
     [Fact]
+    public void EnemyAiMatchesWhenCalledFromOriginalCode()
+    {
+        // The bird process runs the AI inline; hook just the AI so the original JSR [PJOY,U]
+        // calls every routine (seed 3 reaches the shadow lords).
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => EnemyAi.Labels.Contains(r.Symbol)), seed: 3, frames: 40000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[]
+                 {
+                     "LINET", "LNTOFP", "BODN1", "BOUP1", "BOUP2", "BOLEV1", "BOLEV2",
+                     "B2DN1", "B2UP1", "B2UP2", "B2UP3A", "B2LEV1", "B2AV",
+                     "SHADOW", "SHDN2", "SHLEP1", "SHLEV1", "SHUP3A",
+                     "PTERO", "PTEATK", "PTEUP2", "PTEOFF", "SEEKE", "SEEKF2", "MOUNLP", "AUTOFF",
+                 })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
+    }
+
+    [Fact]
+    public void EnemyAiLabelsAreDistinctCode()
+    {
+        var s = Program.Value.Symbols;
+        var addresses = EnemyAi.Labels.Select(l => (ushort)s[l]).ToList();
+        Assert.Equal(addresses.Count, addresses.Distinct().Count());
+    }
+
+    [Fact]
     public void JoustBounceRoutinesMatch()
     {
         // Contacts are rarer than flight, so run longer with just the bounce routines hooked

@@ -32,6 +32,7 @@ public sealed class BirdProcess
     private readonly Physics _physics;
     private readonly Ground _ground;
     private readonly Scheduler _scheduler;
+    private readonly EnemyAi _ai;
 
     // Process block
     private readonly int _decision, _timeUp, _face, _accX, _state, _timX, _bumpX, _bumpY, _velX, _velY;
@@ -49,11 +50,12 @@ public sealed class BirdProcess
     /// <summary>Return address of AIROVR's joystick call (resume point when PJOY is not native).</summary>
     public ushort AirJoyReturn { get; }
 
-    public BirdProcess(Symbols s, Physics physics, Ground ground, Scheduler scheduler)
+    public BirdProcess(Symbols s, Physics physics, Ground ground, Scheduler scheduler, EnemyAi ai)
     {
         _physics = physics;
         _ground = ground;
         _scheduler = scheduler;
+        _ai = ai;
         _decision = s["PDECSN"]; _timeUp = s["PTIMUP"]; _face = s["PFACE"]; _accX = s["PACCX"];
         _state = s["PSTATE"]; _timX = s["PTIMX"]; _bumpX = s["PBUMPX"]; _bumpY = s["PBUMPY"];
         _velX = s["PVELX"]; _velY = s["PVELY"]; _image = s["PIMAGE"]; _posX = s["PPOSX"]; _posY = s["PPOSY"];
@@ -692,17 +694,39 @@ public sealed class BirdProcess
 
     // ------------------------------------------------------------------ controls
 
-    /// <summary>JSR [PJOY,U]: the player's joystick inline; anything else (enemy AI) leaves the slice.</summary>
+    /// <summary>
+    /// JSR [PJOY,U]: the player's joystick or the enemy AI inline; anything else (attract-mode
+    /// pilots, or an AI exit that is not ported) leaves the slice.
+    /// </summary>
     private ushort? ReadControls(Tx t, ushort returnTo)
     {
         ushort target = t.Read16(t.U + _joy);
         int jsr = 7 + Symbols.IndirectCost(_joy);
-        if (target != _p1Joy && target != _p2Joy)
-            return Leave(t, jsr, target, returnTo);
-        t.Cycles += jsr;
-        Joystick(t, player1: target == _p1Joy);
-        t.Cycles += 5;
-        return null;
+        if (target == _p1Joy || target == _p2Joy)
+        {
+            t.Cycles += jsr;
+            Joystick(t, player1: target == _p1Joy);
+            t.Cycles += 5;
+            return null;
+        }
+        if (_ai.Handles(target))
+        {
+            var m = t.Mark();
+            try
+            {
+                t.Cycles += jsr;
+                t.Push16(returnTo);
+                _ai.Run(t, target);
+                t.S += 2;
+                t.Cycles += 5;
+                return null;
+            }
+            catch (HandBackException)
+            {
+                t.Rollback(m);
+            }
+        }
+        return Leave(t, jsr, target, returnTo);
     }
 
     /// <summary>

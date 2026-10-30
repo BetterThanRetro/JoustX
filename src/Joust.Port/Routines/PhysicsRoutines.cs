@@ -13,7 +13,8 @@ public sealed class Engine
         Combat = new Combat(s, Physics, Ground, Scoring);
         Scheduler = new Scheduler(s);
         ScoreDisplay = new ScoreDisplay(s);
-        Bird = new BirdProcess(s, Physics, Ground, Scheduler);
+        Ai = new EnemyAi(s, Ground);
+        Bird = new BirdProcess(s, Physics, Ground, Scheduler, Ai);
         Sweeps = new Sweeps(s, Combat, Scheduler);
         Deaths = new Deaths(s, Scheduler, Ground, Scoring, Combat);
         Combat.Deaths = Deaths;
@@ -28,6 +29,7 @@ public sealed class Engine
 
     public Deaths Deaths { get; }
 
+    public EnemyAi Ai { get; }
     public BirdProcess Bird { get; }
     public Scoring Scoring { get; }
     public Sweeps Sweeps { get; }
@@ -298,5 +300,8 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         // Joystick reads (widget PIA)
         Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),
         Always("P2JOY", (e, t) => e.Bird.Joystick(t, player1: false)),
+
+        // Enemy AI (PJOY routines), at every label that can be stored in PJOY
+        .. EnemyAi.Labels.Select(label => Always(label, (e, t) => e.Ai.Run(t, e.Ai.Entry(label)))),
     ];
 }

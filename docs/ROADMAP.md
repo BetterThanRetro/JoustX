@@ -62,11 +62,12 @@ Still open here:
 | Egg process: `EGGLPA`, `EGGBCK`, `EGGLND`, `EGGLN2`, `EGGNXF`, `EGGLLP`, `EGGHIT`, `EGGSC2`, `SCRAIR`, `EGGDON` and their resume points | Falling and bouncing (each bounce quarters the fall, slows the drift), waiting on a ledge (falls again if it burns away), hatching when the wave has room (spawns the buzzard from the far side at the egg's level, wiggle frames, the standing man), collection with a non-overlapping floating score and the caught-in-the-air bonus | Egg step |
 | `ADDEGG` / `WEGG` / `WEGPAR` / `CEGG` / `CLIPER` / `EGGBKG` / `EGAREA` | Egg helpers: gravity and the egg's 4–288 wrap, tumble frame by speed, draw/erase, clipping at the lava line, cliff refresh, score position | Egg step |
 | `HITEM` contact path (`OSTHIT`, `OSTBO`, `OSTHT2`, `EGGSCR`, `OSTWIN` + resume points) | The joust: higher lance wins, equal lances bounce, enemies thud, pterodactyl only dies to a lance in its mouth while facing it, egg pickups (250/500/750/1000, +500 caught in the air), the kill and the winner's score | Joust step |
+| Enemy AI (`PJOY` routines): `LINET`, `BOUNDR`, `B2UNDR`, `SHADOW`, `PTERO` (+ `PATCH4`/`5`/`6`/`9`), `SEEKE`, `AUTOFF`, `PTEOFF`, `SELPLY`, and every label they store in `PJOY` (40 entries) | Line tracking until the wave needs smarter enemies; Bounder, Hunter and Shadow Lord seeking (vertical range seeks, level flight, cliff look-ahead, flapping out of the lava, sometimes turning around instead of copying the player); the pterodactyl's line tracking and attack run; a buzzard fetching its rider; flying off screen. Ported instruction by instruction (`Asm`) because decisions hinge on exact flags and original quirks such as a stale X. Run inline from the bird process; a rider mounting (`MOUNRI`) and leaving the screen hand back | AI step |
 
 `verify-native` (4 seeds × 40,000 frames): about 2.3 million native calls in lockstep (identical every frame), 0 per-call mismatches. Natives handle about 46% of non-idle CPU time; the original code spends about 60% of all cycles idling until the blitter IRQ frees a DMA table. Mutation tests confirm the checks catch a single cycle, flag, memory-bit or register error, including in jump-style code.
 
 **How the bird process is ported**
-- It is one state machine over the original labels and the return addresses of its calls. Calls to native code (`WPLYR`, `CKGND`, `ADDGRA`, `ADDFLP`, `WRAPX`, the state callbacks, `SND`) run inline. A call to code that isn't native yet (enemy AI through `PJOY`, the lava troll's gravity, a troll spawn) leaves the slice with the return address pushed, and the hook at that address resumes in C# when the call returns. A test checks every computed return address against the ROM bytes.
+- It is one state machine over the original labels and the return addresses of its calls. Calls to native code (`WPLYR`, `CKGND`, `ADDGRA`, `ADDFLP`, `WRAPX`, the state callbacks, `SND`) run inline. A call to code that isn't native yet (attract-mode pilots through `PJOY`, the lava troll's gravity, a troll spawn) leaves the slice with the return address pushed, and the hook at that address resumes in C# when the call returns. A test checks every computed return address against the ROM bytes.
 - Natives may now do PIA I/O. A transaction keeps an ordered log of I/O reads and writes and replays it at commit. The joystick read predicts the port value with `PeekWidget`, and the read is repeated at commit for its side effect of clearing the IRQ flags. The verifier snapshots and restores PIA, multiplexer and bank state around each call and compares it; lockstep compares it every frame.
 
 **How the native scheduler works**
@@ -78,7 +79,7 @@ Still open here:
 Still original code:
 - `EXECST`: frame start (busy-wait for a free DMA table and sending the queued sound to the sound board).
 - The IRQ handler: palette refresh, switch debounce, and playing the DMA lists to the blitter. This is now the largest remaining share of CPU time.
-- Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), deaths, eggs, transporters, enemy AI (the `PJOY` routines of buzzards and pterodactyls), lava troll, attract mode.
+- Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), transporters, lava troll, wave control, attract mode (including its `PJOY` pilots).
 - The processes the death routines start: the death puff (`DEATH`), game over (`GAMOVR`/`GAMOV1`). The attract mode's cycling egg score (`ATTEGG`) is handed back.
 - Rare joust cases hand the whole call back: an egg score that earns an extra mount, and the "fictitious collision" `SWI`.
 
@@ -94,7 +95,9 @@ How a native routine stays exact (see `NativeRoutine`):
 
 Natives now handle about 52–54% of non-idle CPU time (4 seeds × 40,000 frames, 1.8 million native calls in lockstep, 0 mismatches).
 
-Next: enemy AI (the `PJOY` decision routines), then the IRQ handler. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
+AI step: all 40 AI entries are exercised with 0 per-call mismatches and identical lockstep over 4 seeds × 40,000 frames plus 2 two-player seeds; natives handle about 54–56% of non-idle CPU time.
+
+Next: the IRQ handler (now the largest remaining share), then the lava troll and transporters. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
 
 1. **Routine hooks.** Add a `NativeRoutines` table keyed by ROM address. When the PC reaches a hooked entry, the C# implementation runs against the *same* RAM, registers and stack, then returns as the original `RTS` would.
 2. **Lockstep verifier.** Run two machines side by side, pure original and hooked, with identical inputs. Compare RAM, palette and CMOS every frame and report the first diverging address, frame and routine. The golden replay script grows into a library of input recordings (wave 1–10, pterodactyls, lava troll, egg waves, two-player gladiator rounds, high-score entry).
