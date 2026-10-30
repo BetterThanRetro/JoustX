@@ -484,7 +484,7 @@ public sealed class Transporter
 
 
     /// <summary>RANDSYS (without its RTS): A = 0..127, carry = a random bit.</summary>
-    private static void Random(Tx t, ushort random)
+    internal static void Random(Tx t, ushort random)
     {
         int hiAddr = t.Var(random), loAddr = t.Var((ushort)(random + 1));
         byte hi = t.Read(hiAddr), lo = t.Read(loAddr);

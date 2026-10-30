@@ -5,7 +5,8 @@ using Joust.Port;
 namespace Joust.Tools;
 
 /// <summary>
-/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...] [--profile]
+/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...] [--profile] [--eggs]
+/// --eggs makes every wave an egg wave (the <see cref="EggScenario"/>).
 /// --troll runs the <see cref="TrollScenario"/>: the troll and a burnt bridge from the first wave,
 /// a player that rarely flaps, and a player dropped into the lava now and then.
 /// --probe counts how often the original reaches the given labels.
@@ -25,6 +26,7 @@ internal static class NativeVerifyCommand
         bool troll = false;
         string[] probes = [];
         bool profile = false;
+        bool eggs = false;
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
@@ -35,6 +37,7 @@ internal static class NativeVerifyCommand
             else if (args[i] == "--troll") troll = true;
             else if (args[i] == "--probe") probes = args[++i].Split(',');
             else if (args[i] == "--profile") profile = true;
+            else if (args[i] == "--eggs") eggs = true;
         }
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
@@ -54,9 +57,15 @@ internal static class NativeVerifyCommand
             ?? throw new DirectoryNotFoundException("joust-main-asm not found");
         var program = JoustRomBuild.Assemble(dir);
         if (!program.Success) throw new InvalidOperationException("assembly failed");
-        byte[] cmos = FactoryCmos(program.Memory);
+        byte[] image = program.Memory;
+        byte[] cmos = FactoryCmos(image);
         var scenario = troll ? new TrollScenario(program.Symbols) : null;
-        void Prepare(JoustMachine m) => scenario?.Apply(m);
+        var eggScenario = eggs ? new EggScenario(program.Memory, program.Symbols) : null;
+        void Prepare(JoustMachine m)
+        {
+            scenario?.Apply(m);
+            eggScenario?.Apply(m);
+        }
         int flaps = troll ? TrollScenario.FlapPercent : 18;
 
         bool ok = true;
@@ -65,7 +74,7 @@ internal static class NativeVerifyCommand
             Console.WriteLine($"seed {seed}, {frames} frames");
 
             // Per-call differential verification.
-            var m = Boot(program.Memory, cmos);
+            var m = Boot(image, cmos);
             Install(m, program.Symbols);
             var verifier = new NativeVerifier(m) { TraceOriginal = trace };
             var player = new RandomPlayer(seed, twoPlayers, flaps);
@@ -81,8 +90,8 @@ internal static class NativeVerifyCommand
             ok &= verifier.TotalMismatches == 0;
 
             // Frame lockstep: pure original vs native.
-            var original = Boot(program.Memory, cmos);
-            var native = Boot(program.Memory, cmos);
+            var original = Boot(image, cmos);
+            var native = Boot(image, cmos);
             Install(native, program.Symbols);
             native.IdleStart = (ushort)program.Symbols["EXEINT"];
             native.IdleEnd = (ushort)(native.IdleStart + 4);          // TST ,X / BNE EXEINT

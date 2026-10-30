@@ -10,6 +10,7 @@ namespace Joust.Emulation;
 /// </summary>
 public sealed class TrollScenario(IReadOnlyDictionary<string, long> s)
 {
+
     /// <summary>Flap rate for the random player: low, so birds sink to the lava.</summary>
     public const int FlapPercent = 1;
 
@@ -33,5 +34,50 @@ public sealed class TrollScenario(IReadOnlyDictionary<string, long> s)
         ram[bird + _posY + 1] = (byte)(_floor + 6);              // just above the lava
         ram[bird + _velY] = 0x01;
         ram[bird + _velY + 1] = 0x00;                            // falling
+    }
+}
+
+/// <summary>
+/// A test scenario where every wave is an egg wave (normally wave 5 and later): before each frame
+/// the wave controller's (CIA's) wave table pointer is set just before the table's first egg
+/// wave, unless that wave is running. The ROM is untouched (its checksums are tested at boot).
+/// </summary>
+public sealed class EggScenario
+{
+    private readonly ushort _head;
+    private readonly int _link, _id, _pWave;
+    private readonly ushort _eggWave, _before;
+    private const byte CiaId = 0x11;
+
+    public EggScenario(byte[] image, IReadOnlyDictionary<string, long> s)
+    {
+        _head = (ushort)s["PDUMMY"];
+        _link = (int)s["PLINK"]; _id = (int)s["PID"]; _pWave = (int)s["PWAVE"];
+        int status = (int)s["WSTATUS"], length = (int)s["WLEN"];
+        long entry = s["WAVTBL"];
+        while ((image[entry + status] & 0x0E) != 0x08) entry += length;   // WJSRTB entry 4: WAVEGG
+        _eggWave = (ushort)entry;
+        _before = (ushort)(entry - length);
+    }
+
+    public void Apply(JoustMachine m)
+    {
+        byte[] ram = m.Ram;
+        int p = (ram[_head + _link] << 8) | ram[_head + _link + 1];
+        for (int guard = 0; p != 0 && guard < 64; guard++)
+        {
+            if (p + 0x40 > ram.Length) return;                   // not a process list yet (booting)
+            if (ram[p + _id] == CiaId)
+            {
+                int wave = (ram[p + _pWave] << 8) | ram[p + _pWave + 1];
+                if (wave != _eggWave && wave != _before)
+                {
+                    ram[p + _pWave] = (byte)(_before >> 8);
+                    ram[p + _pWave + 1] = (byte)_before;
+                }
+                return;
+            }
+            p = (ram[p + _link] << 8) | ram[p + _link + 1];
+        }
     }
 }

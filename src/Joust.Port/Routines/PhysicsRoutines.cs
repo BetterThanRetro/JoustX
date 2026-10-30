@@ -220,6 +220,12 @@ public sealed class TxJumpRoutine(
         WaveSetup.L.Team => "WCOOP",
         WaveSetup.L.Gladiator => "WGLAD",
         WaveSetup.L.Pterodactyls => "WPTERO",
+        WaveSetup.L.Eggs => "WAVEGG",
+        WaveSetup.L.EggDelay => "WAVEGG@delay",
+        WaveSetup.L.EggWait => "WAVEGG@wait",
+        WaveSetup.L.LedgeEggBack => "WAVEGG@ledge",
+        WaveSetup.L.SpareEggBack => "WAVEGG@spare",
+        WaveSetup.L.EggNap => "CREGG@nap",
         _ => throw new ArgumentOutOfRangeException(nameof(l)),
     };
 

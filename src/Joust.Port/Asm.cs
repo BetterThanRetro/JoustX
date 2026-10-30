@@ -130,6 +130,18 @@ public sealed class Asm(Tx t)
     public void Addb(Ea e) { T.B = Add8(ref T.CC, T.B, T.Read(e.Address), withCarry: false); Cy(4 + e.Extra); }
     public void Lsr(Ea e) => Modify(e, m => Lsr8(ref T.CC, m));
     public void Lsra() { T.A = Lsr8(ref T.CC, T.A); Cy(2); }
+    public void LdyI(int v) { T.Y = (ushort)v; T.CC = Logic16(T.CC, T.Y); Cy(4); }
+    public void Deca() { T.A = Alu6809.Dec(ref T.CC, T.A); Cy(2); }
+
+    /// <summary>MUL: D = A * B; Z from D, C = bit 7 of B.</summary>
+    public void Mul() { T.D = (ushort)(T.A * T.B); T.CC = Set(Set(T.CC, Z, T.D == 0), C, (T.B & 0x80) != 0); Cy(11); }
+
+    /// <summary>LDB A,X.</summary>
+    public void LdbAX() { T.B = T.Read(T.X + (sbyte)T.A); T.CC = Logic8(T.CC, T.B); Cy(5); }
+
+    /// <summary>INC A,X.</summary>
+    public void IncAX() { int at = T.X + (sbyte)T.A; T.Write(at, Alu6809.Inc(ref T.CC, T.Read(at))); Cy(7); }
+
     public void Asrb() { T.B = Asr8(ref T.CC, T.B); Cy(2); }
     public void Lsrb() { T.B = Lsr8(ref T.CC, T.B); Cy(2); }
     public void Daa() { T.A = Alu6809.Daa(ref T.CC, T.A); Cy(2); }

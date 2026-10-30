@@ -28,6 +28,7 @@ public sealed class WaveSetup
         Init, InitNap, Next, Settings, Previous, NumberNap, Cliff1, Cliff2, Cliff3, Cliff4, Started,
         MessageNap, DelayBack, WaitBack, Delayed, Waited, Bounders, Hunters, Lords, CreateNap,
         IntroDelay, GladDelay, PteroDelay, PteroWait, Intro, Team, Gladiator, Pterodactyls,
+        Eggs, EggDelay, EggWait, LedgeEggBack, SpareEggBack, EggNap,
     }
 
     private readonly Scheduler _scheduler;
@@ -51,7 +52,9 @@ public sealed class WaveSetup
     private readonly ushort _sply1Lives, _sply2Lives, _plyD1, _plyD2, _p1Dec, _p2Dec;
     private readonly ushort _intro1, _intro2, _coop1, _coop2, _coop3, _coop4, _surv1, _surv3, _surv4, _surv5;
     private readonly ushort _glad1, _glad2, _glad3, _glad4, _glad5, _glad6, _pter1;
-    private readonly int _wPten, _joyTime;
+    private readonly int _wPten, _joyTime, _wBound, _pEggTm, _pWhch, _pWregA, _feet, _colX, _colY1, _colY2, _picH;
+    private readonly ushort _wavEgg, _egg1, _egpTbl, _egLend, _egLtbl, _egLedg, _eggLnt, _eggWt2, _eggLn2, _random, _vRand;
+    private readonly int _eggId;
     private readonly byte _pteId;
     private readonly Scoring _scoring;
     private readonly Dictionary<L, ushort> _address = [];
@@ -95,10 +98,16 @@ public sealed class WaveSetup
         _glad1 = s["GLAD1"]; _glad2 = s["GLAD2"]; _glad3 = s["GLAD3"]; _glad4 = s["GLAD4"]; _glad5 = s["GLAD5"];
         _glad6 = s["GLAD6"]; _pter1 = s["PTER1"];
         _wPten = s["WPTEN"]; _joyTime = s["PJOYT"]; _pteId = (byte)s.Value("PTEID");
+        _wBound = s["WBOUND"]; _pEggTm = s["PEGGTM"]; _pWhch = s["PWHCH"]; _pWregA = s["PWREGA"]; _feet = s["PFEET"];
+        _colX = s["PCOLX"]; _colY1 = s["PCOLY1"]; _colY2 = s["PCOLY2"]; _picH = s["PPICH"];
+        _wavEgg = s["WAVEGG"]; _egg1 = s["EGG1"]; _egpTbl = s["EGPTBL"]; _egLend = s["EGLEND"]; _egLtbl = s["EGLTBL"];
+        _egLedg = s["EGLEDG"]; _eggLnt = s["EGGLNT"]; _eggWt2 = s["EGGWT2"]; _eggLn2 = s["EGGLN2"];
+        _random = s["RANDOM"]; _vRand = s["VRAND"]; _eggId = (int)s.Value("EGGID");
 
         // Resume points. Instruction sizes: a variable is 2 bytes direct / 3 extended, n,U 2 or 3.
         int V(ushort v) => Symbols.AddressCost(v) == 0 ? 2 : 3;
         int I(int offset) => offset is >= -16 and <= 15 ? 2 : 3;
+        int Iy(int offset) => I(offset);
         void At(L l, ushort address) => _address[l] = address;
         At(L.Init, s["CIA"]);
         At(L.InitNap, (ushort)(s["CIA"] + V(_wavBcd) + 3 + I(_pWprev) + 3 + I(_pWave) + 2 + I(_pBaits) + 5));
@@ -124,6 +133,12 @@ public sealed class WaveSetup
         At(L.Lords, s["WPAUS3.4S"]);
         At(L.CreateNap, (ushort)(s["WCREATE.10S"] + 5));
         At(L.Intro, _wIntro);
+        At(L.Eggs, _wavEgg);
+        At(L.EggDelay, (ushort)(_wavEgg + 3 + 3 + 2 + 3));       // LDX # / JSR WAVMSG / LDA # / JSR WAVDEL
+        At(L.EggWait, (ushort)(_wavEgg + 3 + 3 + 2 + 3 + 3));    // JSR WATWAV
+        At(L.LedgeEggBack, (ushort)(s["WAVEGG.55S"] + 2 + 2 + 3 + 1 + 2 + 2 + 1 + 2 + 3 + 2 + 3));
+        At(L.SpareEggBack, (ushort)(s["WAVEGG.8S"] + 2 + 3));    // INC A,X / JSR CREGG
+        At(L.EggNap, (ushort)(s["CREGG.20S"] + 3 + Iy(_picH) + Iy(_dist) + Iy(_chase) + 2 + Iy(_egg) + 2 + I(_pWrts) + 5));
         At(L.Team, _wCoop);
         At(L.Gladiator, _wGlad);
         At(L.Pterodactyls, _wPtero);
@@ -253,6 +268,33 @@ public sealed class WaveSetup
             case L.Team: return Team(t);
             case L.Gladiator: return Gladiator(t);
             case L.Pterodactyls: return Pterodactyls(t);
+
+            case L.Eggs:
+                CallMessage(t, _egg1);                           // WAVEGG
+                a.LdaI(180 / 6);
+                return Delay(t, L.EggDelay);
+
+            case L.EggDelay:
+                Coroutine(t, _address[L.EggWait]);               // JSR WATWAV
+                a.Stx(a.U(_pWrts));
+                return WaitLoop(t);
+
+            case L.EggWait: return EggWaveSetup(t);
+
+            case L.LedgeEggBack:
+                a.Dec(a.U(_pWregA));                             // more eggs for the ledges?
+                if (a.Br(a.Ne)) return LedgeEgg(t);
+                a.LdaI(6);                                       // six more anywhere
+                a.Sta(a.U(_pWregA));
+                return SpareEgg(t);
+
+            case L.SpareEggBack:
+                a.Dec(a.U(_pWregA));
+                if (a.Br(a.Ne)) return SpareEgg(t);
+                a.Jmp();                                         // JMP WBEGIN
+                return (L.Lords, null);
+
+            case L.EggNap: return JumpVia(t, _pWrts);
 
             case L.IntroDelay:
                 CallMessage(t, _intro2);
@@ -533,12 +575,12 @@ public sealed class WaveSetup
         a.LdxI(_wJsrTb);
         ushort routine = t.Read16(t.X + (sbyte)t.B);
         int jsr = 7 + 1 + 3;                                     // JSR [B,X]
-        if (routine == _wIntro || routine == _wGlad || routine == _wPtero || routine == _wCoop)
+        if (routine == _wIntro || routine == _wGlad || routine == _wPtero || routine == _wCoop || routine == _wavEgg)
         {
             t.Cycles += jsr;
             t.Push16(_address[L.Started]);
             return (routine == _wIntro ? L.Intro : routine == _wGlad ? L.Gladiator
-                : routine == _wPtero ? L.Pterodactyls : L.Team, null);
+                : routine == _wPtero ? L.Pterodactyls : routine == _wavEgg ? L.Eggs : L.Team, null);
         }
         if (routine != _wavRts) return (default, Leave(t, jsr, routine, L.Started));
         t.Cycles += jsr + 5;
@@ -628,7 +670,7 @@ public sealed class WaveSetup
         foreach (var (label, address) in _address)
             if (address == target && label is L.DelayBack or L.WaitBack or L.Delayed or L.Waited
                     or L.Bounders or L.Hunters or L.Lords or L.Previous or L.IntroDelay or L.GladDelay
-                    or L.PteroDelay or L.PteroWait)
+                    or L.PteroDelay or L.PteroWait or L.EggDelay or L.EggWait or L.LedgeEggBack or L.SpareEggBack)
                 return (label, null);
         return (default, target);
     }
@@ -977,6 +1019,199 @@ public sealed class WaveSetup
         a.Ldd(a.X(2));
         a.Std(a.Y(2));
         WriteMessage(t);                                         // falls into WMSG2
+    }
+
+    // ------------------------------------------------------------------ the egg wave
+
+    /// <summary>
+    /// After WATWAV: the hatching enemies' kind and number from the wave table (Shadow Lords if no
+    /// Bounders or Hunters), the hatching time (half with two players), then eggs.
+    /// </summary>
+    private (L, ushort?) EggWaveSetup(Tx t)
+    {
+        CallEraseMessages(t);
+        a.Ldx(a.U(_pWave));
+        a.LdyI(_p6Dec);                                          // assume the best
+        a.Lda(a.X(_wBound));
+        if (!a.Br(a.Ne))
+        {
+            a.Lda(a.X(_wLord));                                  // the Lord himself
+            a.Bra();
+            ShiftDown();
+        }
+        else
+        {
+            a.LdyI(_p5Dec);                                      // .1S: Hunters?
+            a.BitaI(0x0F);
+            if (!a.Br(a.Ne))
+            {
+                a.LdyI(_p4Dec);                                  // the Bounder
+                ShiftDown();                                     // .2S
+            }
+        }
+        a.AndaI(0x0F);                                           // .3S
+        a.Sta(a.M(_wEnemy));                                     // enemies to hatch at a time
+        a.Sty(a.U(_pIntel));
+        a.Ldb(a.M(_eggWt2));                                     // the hatching time
+        a.Lda(a.M(_sply2Lives));
+        if (!a.Br(a.Eq))
+        {
+            a.Lda(a.M(_sply1Lives));
+            if (!a.Br(a.Eq)) a.Lsrb();                           // two players: half
+        }
+        a.Stb(a.U(_pEggTm));                                     // .35S
+        a.Lda(a.X(_wPersue));
+        a.AndaI(0x0F);
+        a.Sta(a.M(_wSmart));
+        a.LdxI(_egpTbl);                                         // clear the egg places and ledge counts
+        do
+        {
+            t.Write(t.X, 0);                                     // .4S: CLR ,X+
+            t.X++;
+            t.CC = Clr(t.CC);
+            t.Cycles += 6 + 2;
+            a.CmpxI(_egLend);
+        }
+        while (a.Br(a.Lo));
+        a.LdaI(2);                                               // two eggs hatch early
+        a.Sta(a.U(_pWhch));
+        a.LdaI(6);                                               // six eggs, one per ledge in random order
+        a.Sta(a.U(_pWregA));
+        return LedgeEgg(t);
+
+        void ShiftDown()
+        {
+            for (int i = 0; i < 4; i++) a.Lsra();
+        }
+    }
+
+    /// <summary>.5S: an egg on a random ledge not used yet, at a random place on it.</summary>
+    private (L, ushort?) LedgeEgg(Tx t)
+    {
+        a.LdyI(_egLedg);
+        a.LdxI(_egLtbl);
+        CallRandom(t);                                           // a random ledge
+        a.LdbI(6 * 2);
+        a.Mul();
+        while (true)
+        {
+            a.LdbAX();                                           // .54S: used already?
+            if (a.Br(a.Eq)) break;
+            a.Deca();
+            if (a.Br(a.Pl)) continue;
+            a.LdaI(6 - 1);
+            a.Bra();
+        }
+        a.IncAX();                                               // .55S
+        a.LeayAY();
+        CallRandom(t);
+        a.Rola();                                                // 0..255
+        t.B = t.Read(t.Y);                                       // LDB ,Y+: the ledge's end
+        t.Y++;
+        t.CC = Logic8(t.CC, t.B);
+        t.Cycles += 6;
+        a.Subb(a.Y(-2));                                         // its length
+        a.Mul();
+        a.Adda(a.Y(-2));                                         // a place on it
+        a.LdxI(_egpTbl);
+        a.IncAX();                                               // this place is taken
+        return CreateEgg(t, L.LedgeEggBack);
+    }
+
+    /// <summary>.6S: an egg at a random free place on any ledge.</summary>
+    private (L, ushort?) SpareEgg(Tx t)
+    {
+        a.LdxI(_egpTbl);
+        CallRandom(t);
+        a.LdbI(69 * 2);
+        a.Mul();                                                 // 0..68
+        while (true)
+        {
+            a.LdbAX();                                           // .7S: free?
+            if (a.Br(a.Eq)) break;
+            a.Inca();
+            a.CmpaI(69);                                         // wrap round
+            if (a.Br(a.Lo)) continue;
+            a.Clra();
+            a.Bra();
+        }
+        a.IncAX();                                               // .8S: reserved
+        return CreateEgg(t, L.SpareEggBack);
+    }
+
+    /// <summary>
+    /// JSR CREGG: an egg process (EGGLN2) at place A, hatching after PEGGTM (the first PWHCH
+    /// eggs sooner); nap a tick, then return through PWRTS.
+    /// </summary>
+    private (L, ushort?) CreateEgg(Tx t, L returnTo)
+    {
+        a.Jsr();
+        t.Write16(t.S, _address[returnTo]);
+        t.S--;                                                   // PSHS A
+        t.Write(t.S, t.A);
+        t.Cycles += 6;
+        a.Inc(a.M(_nRider));                                     // one more rider (egg)
+        a.LdxI(_eggLn2);                                         // SECCR EGGLN2,+EGGID
+        a.LddI(((0x80 + _eggId) << 8) | 0xFF);
+        t.Cycles += 7 + Symbols.AddressCost(_vCrProc) + 4;
+        _scheduler.Create(t, afterRunning: true);
+        t.Cycles += 5;
+        t.A = t.Read(t.S);                                       // PULS A
+        t.S++;
+        t.Cycles += 6;
+        a.LdxI(_eggLnt - 4);                                     // find the place's ledge
+        do
+        {
+            a.Leax(4);
+            a.Cmpa(a.X(0));
+        }
+        while (a.Br(a.Hs));
+        a.LdbI(8);                                               // a place every 8 pixels
+        a.Stb(a.Y(_feet));                                       // (no caught-in-the-air points)
+        a.Mul();
+        a.Addd(a.X(2));
+        a.Std(a.Y(_posX));
+        a.AdddI(8 - 1 - 1);
+        a.Std(a.Y(_colX));
+        a.Ldb(a.X(1));                                           // the ledge's height
+        a.Clra();
+        a.Std(a.Y(_posY));
+        a.Stb(a.Y(_colY1));
+        a.SubbI(7 - 1);
+        a.Stb(a.Y(_colY2));
+        a.Ldd(a.U(_pIntel));
+        a.Std(a.Y(_decision));
+        a.Ldb(a.U(_pEggTm));                                     // hatching time
+        a.Stb(a.Y(_joyTime));
+        a.Dec(a.U(_pWhch));                                      // an early one?
+        if (!a.Br(a.Mi))
+        {
+            CallRandom(t);
+            a.Mul();                                             // up to half the time sooner
+            a.Nega();
+            a.Adda(a.Y(_joyTime));
+            a.Sta(a.Y(_joyTime));
+        }
+        a.LddI(0);                                               // .20S
+        a.Std(a.Y(_picH));
+        a.Std(a.Y(_dist));                                       // no buzzard sent yet
+        a.Clr(a.Y(_chase));
+        a.LdaI(4);
+        a.Sta(a.Y(_egg));
+        t.D = t.Read16(t.S);                                     // LDD ,S++: the return address
+        t.S += 2;
+        t.CC = Logic16(t.CC, t.D);
+        t.Cycles += 8;
+        a.Std(a.U(_pWrts));
+        return (default, Nap(t, 1, L.EggNap));
+    }
+
+    /// <summary>JSR VRAND.</summary>
+    private void CallRandom(Tx t)
+    {
+        t.Cycles += 7 + Symbols.AddressCost(_vRand) + 4;
+        Transporter.Random(t, _random);
+        t.Cycles += 5;
     }
 
     // ------------------------------------------------------------------ helpers

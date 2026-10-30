@@ -379,6 +379,31 @@ public class NativePortTests
     }
 
     [Fact]
+    public void EggWaveMatchesTheOriginal()
+    {
+        // Every wave an egg wave (normally wave 5 and later); only the wave labels hooked.
+        string[] labels = Enum.GetValues<WaveSetup.L>().Select(TxJumpRoutine.WaveName).ToArray();
+        var m = Boot();
+        foreach (var r in NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)))
+        {
+            r.Bind(Program.Value.Symbols);
+            m.InstallNative(r, r.ResolveAddress(Program.Value.Symbols));
+        }
+        var v = new NativeVerifier(m);
+        var p = new RandomPlayer(1);
+        var eggs = new EggScenario(Program.Value.Memory, Program.Value.Symbols);
+        for (int f = 0; f < 12000; f++)
+        {
+            p.Apply(m.Inputs, f);
+            eggs.Apply(m);
+            m.RunFrame();
+        }
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        Assert.True(v.Stats.TryGetValue("CREGG@nap", out var s) && s.Calls > s.Declined, "no egg was created natively");
+        Assert.True(v.Stats.ContainsKey("WAVEGG"), "no egg wave started");
+    }
+
+    [Fact]
     public void WaveSetupResumePointsFollowTheirCalls()
     {
         var s = Program.Value.Symbols;
@@ -398,6 +423,11 @@ public class NativePortTests
         foreach (var l in new[] { WaveSetup.L.Delayed, WaveSetup.L.IntroDelay, WaveSetup.L.GladDelay, WaveSetup.L.PteroDelay })
             Follows(l, "WAVDEL");
         Follows(WaveSetup.L.PteroWait, "WATWAV");
+        Follows(WaveSetup.L.EggDelay, "WAVDEL");
+        Follows(WaveSetup.L.EggWait, "WATWAV");
+        Follows(WaveSetup.L.EggNap, "VNAPTPC");
+        foreach (var l in new[] { WaveSetup.L.LedgeEggBack, WaveSetup.L.SpareEggBack })
+            Follows(l, "CREGG");
         Follows(WaveSetup.L.Waited, "WATWAV");
         foreach (var l in new[] { WaveSetup.L.Bounders, WaveSetup.L.Hunters, WaveSetup.L.Lords })
             Follows(l, "WCREATE");
