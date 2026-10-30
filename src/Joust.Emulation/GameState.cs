@@ -37,6 +37,7 @@ public sealed class JoustLayout
     public required int Image { get; init; }
     public required int HorsePic { get; init; }
     public required int RiderPic { get; init; }
+    public ushort Executing { get; init; }                // PEXEC: the process running now (0 if unknown)
 
     public static JoustLayout FromSymbols(IReadOnlyDictionary<string, long> s) => new()
     {
@@ -49,6 +50,7 @@ public sealed class JoustLayout
         Image = (int)s["PIMAGE"],
         HorsePic = (int)s["PPICH"],
         RiderPic = (int)s["PPICR"],
+        Executing = s.TryGetValue("PEXEC", out long exec) ? (ushort)exec : (ushort)0,
     };
 }
 
@@ -96,6 +98,22 @@ public sealed class GameStateReader(JoustMachine machine, JoustLayout layout)
         }
         return into;
     }
+
+    /// <summary>
+    /// The game object whose process is running right now (PEXEC), or null when the running
+    /// process is not one (wave control, the score display, coin handling...).
+    /// </summary>
+    public GameObject? Executing()
+    {
+        if (layout.Executing == 0) return null;
+        int block = Word(machine.Ram, layout.Executing);
+        if (block == 0 || block + 64 > machine.Ram.Length) return null;
+        foreach (var o in ReadObjects(_scratch))
+            if (o.Block == block) return o;
+        return null;
+    }
+
+    private readonly List<GameObject> _scratch = [];
 
     private static int Word(byte[] ram, int a) => (ram[a] << 8) | ram[a + 1];
 }

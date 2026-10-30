@@ -9,7 +9,7 @@ public sealed class CavernReverb
 {
     private readonly Comb[] _combL, _combR;
     private readonly AllPass[] _apL, _apR;
-    private float _lowPass;
+    private float _lowPass, _pan;
     private readonly float _lowPassK;
 
     public CavernReverb(int sampleRate)
@@ -28,6 +28,9 @@ public sealed class CavernReverb
     /// <summary>How much reverb is mixed in (0 = original only).</summary>
     public float Wet { get; set; } = 0.22f;
 
+    /// <summary>Where the sound comes from, -1 (left) to 1 (right); followed smoothly.</summary>
+    public float Pan { get; set; }
+
     /// <summary>Reverb tail length (comb feedback).</summary>
     public float Room { get; set; } = 0.78f;
 
@@ -44,8 +47,10 @@ public sealed class CavernReverb
             foreach (var c in _combR) r += c.Run(input, Room);
             foreach (var a in _apL) l = a.Run(l);
             foreach (var a in _apR) r = a.Run(r);
-            stereo[2 * i] = dry + l * Wet;
-            stereo[2 * i + 1] = dry + r * Wet;
+            _pan += (Math.Clamp(Pan, -1f, 1f) - _pan) * 0.0005f;   // ~40 ms glide, no zipper noise
+            float angle = (_pan * 0.7f + 1f) * MathF.PI / 4f;     // equal power, never fully one-sided
+            stereo[2 * i] = dry * MathF.Cos(angle) * 1.41f + l * Wet;
+            stereo[2 * i + 1] = dry * MathF.Sin(angle) * 1.41f + r * Wet;
         }
     }
 

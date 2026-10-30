@@ -68,6 +68,34 @@ public class SoundRomTests
     }
 
     [Fact]
+    public void SoundsCanBeTracedToTheObjectThatMadeThem()
+    {
+        var program = JoustRomBuild.Assemble(JoustRomBuild.FindSourceDirectory(AppContext.BaseDirectory)!);
+        var factory = new Joust.Emulation.JoustMachine(program.Memory);
+        factory.Reset();
+        for (int f = 0; f < 1300; f++) factory.RunFrame();
+        var m = new Joust.Emulation.JoustMachine(program.Memory);
+        factory.Cmos.CopyTo(m.Cmos, 0);
+        m.Reset();
+        var reader = new Joust.Emulation.GameStateReader(m, Joust.Emulation.JoustLayout.FromSymbols(program.Symbols));
+        int fromPlayer = 0, total = 0;
+        m.WatchAddress = (int)program.Symbols["SNDPTR"];
+        m.Watched = _ =>
+        {
+            total++;
+            if (reader.Executing() is { Kind: Joust.Emulation.ObjectKind.Player }) fromPlayer++;
+        };
+        for (int f = 0; f < 2400; f++)
+        {
+            m.Inputs.CoinLeft = f is >= 900 and < 904;
+            m.Inputs.Start1 = f is >= 960 and < 964;
+            m.Inputs.P1Flap = f > 1100 && f % 12 < 3;
+            m.RunFrame();
+        }
+        Assert.True(fromPlayer > 5, $"{fromPlayer} of {total} sounds traced to the player");
+    }
+
+    [Fact]
     public void SoundRomVectorsPointIntoTheRom()
     {
         var r = Sound.Value;

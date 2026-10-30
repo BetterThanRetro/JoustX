@@ -84,6 +84,10 @@ public sealed class JoustGame : Game
         _state = new GameStateReader(_machine, JoustLayout.FromSymbols(program.Symbols));
         _events = new EventEffects(_state, _renderer.Effects);
         _machine.SoundCommand += cmd => _lastSound = cmd;
+        // SND stores the accepted sound in SNDPTR while the process that asked for it is still
+        // running (the board gets it next frame): pan toward that object, or centre for the rest.
+        _machine.WatchAddress = (int)program.Symbols["SNDPTR"];
+        _machine.Watched = _ => _reverb.Pan = _state.Executing() is { } source ? (source.X + 8 - 152) / 146f : 0f;
 
         var sound = JoustRomBuild.AssembleSound(source);
         if (!sound.Success || JoustRomBuild.SoundChecksum(sound) is var (sum, stored) && sum != stored)

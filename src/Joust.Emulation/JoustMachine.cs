@@ -305,11 +305,18 @@ public sealed class JoustMachine : IBus
         return (byte)(line < 0x100 ? line & 0xFC : 0xFC);
     }
 
+    /// <summary>One RAM address whose writes (by original or native code) raise <see cref="Watched"/>; -1 for none.</summary>
+    public int WatchAddress { get; set; } = -1;
+
+    /// <summary>Raised with the value when <see cref="WatchAddress"/> is written. Observers only.</summary>
+    public Action<byte>? Watched { get; set; }
+
     public void Write(ushort a, byte v)
     {
         WriteHook?.Invoke(a, v);
         if (a < 0xC000)
         {
+            if (a == WatchAddress) Watched?.Invoke(v);
             WriteJournal?.Add((a, _ram[a]));
             _ram[a] = v;
             return;
