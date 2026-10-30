@@ -116,6 +116,7 @@ public sealed class Asm(Tx t)
     public void Coma() { T.A = Com8(ref T.CC, T.A); Cy(2); }
     public void Comb() { T.B = Com8(ref T.CC, T.B); Cy(2); }
     public void Aslb() { T.B = Asl8(ref T.CC, T.B); Cy(2); }
+    public void Asla() { T.A = Asl8(ref T.CC, T.A); Cy(2); }
     public void Rola() { T.A = Rol8(ref T.CC, T.A); Cy(2); }
     public void Asra() { T.A = Asr8(ref T.CC, T.A); Cy(2); }
     public void Rorb() { T.B = Ror8(ref T.CC, T.B); Cy(2); }

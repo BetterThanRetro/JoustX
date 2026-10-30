@@ -89,6 +89,13 @@ public sealed class Tx
         return _pending.TryGetValue(a, out byte v) ? v : _c.ReadRam(a);
     }
 
+    /// <summary>A byte as code would read it with the ROM read latch selected (pending writes only above $9000).</summary>
+    public byte ReadRom(int a)
+    {
+        a &= 0xFFFF;
+        return a >= 0x9000 && _pending.TryGetValue(a, out byte v) ? v : _c.ReadRom(a);
+    }
+
     public ushort Read16(int a) => (ushort)((Read(a) << 8) | Read(a + 1));
 
     public void Write(int a, byte v) => _pending[a & 0xFFFF] = v;

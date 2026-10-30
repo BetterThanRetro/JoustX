@@ -440,6 +440,25 @@ public class NativePortTests
     }
 
     [Fact]
+    public void AttractDrawingMatchesTheOriginal()
+    {
+        // The marquee page (logo lines, fill, stripes) and the compacted images, only these hooked.
+        string[] labels = ["COUNTS", "FILLDN.1S", "COUNTS.6S", "WRPIXH", "WRPIXV", "UNCLP", "WRPIX.33S"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in labels)
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+
+        // The stripe nap is PCNAP 1, and FILLDN returns to COUNTS.6S.
+        var sym = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        int nap = (int)sym["WRPRTS.10S"] - 5;
+        Assert.True(rom[nap] == 0x86 && rom[nap + 2] == 0xBD && ((rom[nap + 3] << 8) | rom[nap + 4]) == (ushort)sym["VNAPTPC"]);
+        int after = (int)sym["COUNTS.6S"];
+        Assert.True(rom[after - 3] == 0xBD && ((rom[after - 2] << 8) | rom[after - 1]) == (ushort)sym["FILLDN"]);
+    }
+
+    [Fact]
     public void DeathPuffMatchesTheOriginal()
     {
         string[] labels = ["DEATH", "DEATH@frame2", "DEATH@frame3", "DEATH@end"];

@@ -35,9 +35,12 @@ public sealed class Engine
         Puff = new DeathPuff(s, Ground, Scheduler);
         GameOver = new GameOver(s, Scheduler, Text);
         Attract = new Attract(s);
+        Image = new ImageDecoder(s);
     }
 
     public Attract Attract { get; }
+
+    public ImageDecoder Image { get; }
 
     public GameOver GameOver { get; }
 
@@ -147,6 +150,17 @@ public sealed class TxJumpRoutine(
         new TxJumpRoutine("WCLFEW.22S", (e, t) => e.Checksums.MergeBits(t, e.Symbols["WCLFEW.22S"], e.Symbols["LNDXD2"])),
         new TxJumpRoutine("WCLFEW.23S", (e, t) => e.Checksums.MergeBits(t, e.Symbols["WCLFEW.23S"], e.Symbols["BCKXD2"])),
         new TxJumpRoutine("CLRBIT", (e, t) => e.Checksums.ClearBits(t, e.Symbols["CLRBIT"])),
+
+        // Attract mode: the logo's line drawer, in chunks
+        new TxJumpRoutine("COUNTS", (e, t) => e.Attract.Line(t, Attract.L.Pixel)),
+        new TxJumpRoutine("FILLDN.1S", (e, t) => e.Attract.Line(t, Attract.L.Fill)),
+        new TxJumpRoutine("COUNTS.6S", (e, t) => e.Attract.Line(t, Attract.L.AfterFill)),
+        new TxJumpRoutine("WRPIXH", (e, t) => e.Attract.Stripe(t, across: false)),
+        new TxJumpRoutine("WRPIXV", (e, t) => e.Attract.Stripe(t, across: true)),
+
+        // The compacted-image decoder (UNCOM) and its pixel runs (WRPIX), in chunks
+        new TxJumpRoutine("UNCLP", (e, t) => e.Image.Run(t, ImageDecoder.L.Decode)),
+        new TxJumpRoutine("WRPIX.33S", (e, t) => e.Image.Run(t, ImageDecoder.L.Run)),
         new TxJumpRoutine("KZAP", (e, t) => e.Checksums.Run(t, Checksums.L.KzapStart)),
         new TxJumpRoutine("KZAP.1S@nap", (e, t) => e.Checksums.Run(t, Checksums.L.KzapNap), e => e.Checksums.Address(Checksums.L.KzapNap)),
         new TxJumpRoutine("KZAP@raddr", (e, t) => e.Checksums.Run(t, Checksums.L.KzapFailed), e => e.Checksums.Address(Checksums.L.KzapFailed)),
