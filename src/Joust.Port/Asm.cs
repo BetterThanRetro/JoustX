@@ -88,6 +88,7 @@ public sealed class Asm(Tx t)
     public void OraI(int v) { T.A |= (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
     public void Bita(Ea e) { T.CC = Logic8(T.CC, (byte)(T.A & T.Read(e.Address))); Cy(4 + e.Extra); }
     public void BitaI(int v) { T.CC = Logic8(T.CC, (byte)(T.A & v)); Cy(2); }
+    public void BitbI(int v) { T.CC = Logic8(T.CC, (byte)(T.B & v)); Cy(2); }
     public void AddaI(int v) { T.A = Add8(ref T.CC, T.A, (byte)v, withCarry: false); Cy(2); }
     public void CmpdI(int v) { Sub16(ref T.CC, T.D, (ushort)v); Cy(5); }
     public void SubdI(int v) { T.D = Sub16(ref T.CC, T.D, (ushort)v); Cy(4); }
@@ -110,6 +111,7 @@ public sealed class Asm(Tx t)
     public void Clra() { T.A = 0; T.CC = Alu6809.Clr(T.CC); Cy(2); }
     public void Clrb() { T.B = 0; T.CC = Alu6809.Clr(T.CC); Cy(2); }
     public void Tsta() { T.CC = Logic8(T.CC, T.A); Cy(2); }
+    public void Tstb() { T.CC = Logic8(T.CC, T.B); Cy(2); }
     public void Nega() { T.A = Neg8(ref T.CC, T.A); Cy(2); }
     public void Negb() { T.B = Neg8(ref T.CC, T.B); Cy(2); }
     public void Incb() { T.B = Alu6809.Inc(ref T.CC, T.B); Cy(2); }

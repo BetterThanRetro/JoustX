@@ -459,6 +459,17 @@ public class NativePortTests
     }
 
     [Fact]
+    public void SelfTestAndClearsMatchTheOriginal()
+    {
+        // Power-on: RAM fill and read-back, ROM sums, the start-up delay, and the memory clears.
+        string[] labels = ["RAM3", "RAM7", "ROM1", "DELA2", "INIT2.1S", "SCCLER.10S"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 3000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in labels)
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+    }
+
+    [Fact]
     public void DeathPuffMatchesTheOriginal()
     {
         string[] labels = ["DEATH", "DEATH@frame2", "DEATH@frame3", "DEATH@end"];

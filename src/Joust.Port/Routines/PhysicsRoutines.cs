@@ -36,7 +36,13 @@ public sealed class Engine
         GameOver = new GameOver(s, Scheduler, Text);
         Attract = new Attract(s);
         Image = new ImageDecoder(s);
+        SelfTest = new SelfTest(s);
+        Clear = new ScreenClear(s);
     }
+
+    public ScreenClear Clear { get; }
+
+    public SelfTest SelfTest { get; }
 
     public Attract Attract { get; }
 
@@ -157,6 +163,14 @@ public sealed class TxJumpRoutine(
         new TxJumpRoutine("COUNTS.6S", (e, t) => e.Attract.Line(t, Attract.L.AfterFill)),
         new TxJumpRoutine("WRPIXH", (e, t) => e.Attract.Stripe(t, across: false)),
         new TxJumpRoutine("WRPIXV", (e, t) => e.Attract.Stripe(t, across: true)),
+
+        // The power-on self-test's loops, in chunks
+        new TxJumpRoutine("RAM3", (e, t) => e.SelfTest.Fill(t)),
+        new TxJumpRoutine("RAM7", (e, t) => e.SelfTest.Check(t)),
+        new TxJumpRoutine("ROM1", (e, t) => e.SelfTest.Sum(t)),
+        new TxJumpRoutine("DELA2", (e, t) => e.SelfTest.Delay(t)),
+        new TxJumpRoutine("INIT2.1S", (e, t) => e.Clear.Start(t)),
+        new TxJumpRoutine("SCCLER.10S", (e, t) => e.Clear.Screen(t)),
 
         // The compacted-image decoder (UNCOM) and its pixel runs (WRPIX), in chunks
         new TxJumpRoutine("UNCLP", (e, t) => e.Image.Run(t, ImageDecoder.L.Decode)),
