@@ -7,6 +7,7 @@ public sealed class Engine
 {
     public Engine(Symbols s)
     {
+        Symbols = s;
         Physics = new Physics(s);
         Ground = new Ground(s, Physics.Sound);
         Scoring = new Scoring(s);
@@ -34,6 +35,7 @@ public sealed class Engine
     }
 
     public Checksums Checksums { get; }
+    public Symbols Symbols { get; }
 
     public WaveSetup WaveSetup { get; }
 
@@ -118,6 +120,11 @@ public sealed class TxJumpRoutine(
 
         // The anti-tamper checksums: JZAP's summing loop in chunks, the KZAP process
         new TxJumpRoutine("JZAP.1S", (e, t) => e.Checksums.Sum(t)),
+
+        // Cliff changes (WCLFEW): the landing and collision table loops, in chunks
+        new TxJumpRoutine("WCLFEW.22S", (e, t) => e.Checksums.MergeBits(t, e.Symbols["WCLFEW.22S"], e.Symbols["LNDXD2"])),
+        new TxJumpRoutine("WCLFEW.23S", (e, t) => e.Checksums.MergeBits(t, e.Symbols["WCLFEW.23S"], e.Symbols["BCKXD2"])),
+        new TxJumpRoutine("CLRBIT", (e, t) => e.Checksums.ClearBits(t, e.Symbols["CLRBIT"])),
         new TxJumpRoutine("KZAP", (e, t) => e.Checksums.Run(t, Checksums.L.KzapStart)),
         new TxJumpRoutine("KZAP.1S@nap", (e, t) => e.Checksums.Run(t, Checksums.L.KzapNap), e => e.Checksums.Address(Checksums.L.KzapNap)),
         new TxJumpRoutine("KZAP@raddr", (e, t) => e.Checksums.Run(t, Checksums.L.KzapFailed), e => e.Checksums.Address(Checksums.L.KzapFailed)),

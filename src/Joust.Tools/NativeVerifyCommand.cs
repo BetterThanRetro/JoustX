@@ -5,8 +5,9 @@ using Joust.Port;
 namespace Joust.Tools;
 
 /// <summary>
-/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...] [--profile] [--eggs]
-/// --eggs makes every wave an egg wave (the <see cref="EggScenario"/>).
+/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...] [--profile] [--eggs] [--cliffs]
+/// --eggs makes every wave an egg wave (the <see cref="EggScenario"/>); --cliffs starts each game at wave 81,
+/// where the cliffs change (the <see cref="CliffScenario"/>).
 /// --troll runs the <see cref="TrollScenario"/>: the troll and a burnt bridge from the first wave,
 /// a player that rarely flaps, and a player dropped into the lava now and then.
 /// --probe counts how often the original reaches the given labels.
@@ -27,6 +28,7 @@ internal static class NativeVerifyCommand
         string[] probes = [];
         bool profile = false;
         bool eggs = false;
+        bool cliffs = false;
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
@@ -38,6 +40,7 @@ internal static class NativeVerifyCommand
             else if (args[i] == "--probe") probes = args[++i].Split(',');
             else if (args[i] == "--profile") profile = true;
             else if (args[i] == "--eggs") eggs = true;
+            else if (args[i] == "--cliffs") cliffs = true;
         }
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
@@ -61,10 +64,12 @@ internal static class NativeVerifyCommand
         byte[] cmos = FactoryCmos(image);
         var scenario = troll ? new TrollScenario(program.Symbols) : null;
         var eggScenario = eggs ? new EggScenario(program.Memory, program.Symbols) : null;
+        var cliffScenario = cliffs ? new CliffScenario(program.Memory, program.Symbols) : null;
         void Prepare(JoustMachine m)
         {
             scenario?.Apply(m);
             eggScenario?.Apply(m);
+            cliffScenario?.Apply(m);
         }
         int flaps = troll ? TrollScenario.FlapPercent : 18;
 

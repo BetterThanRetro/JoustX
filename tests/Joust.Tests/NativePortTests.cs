@@ -403,6 +403,32 @@ public class NativePortTests
         Assert.True(v.Stats.ContainsKey("WAVEGG"), "no egg wave started");
     }
 
+    [Theory]
+    [InlineData(true, "WCLFEW.22S")]
+    [InlineData(true, "WCLFEW.23S")]
+    [InlineData(false, "CLRBIT")]
+    public void CliffTableLoopsMatchTheOriginal(bool creating, string loop)
+    {
+        // Games start at wave 81 on, where cliffs vanish and come back; only the loops hooked.
+        var m = Boot();
+        foreach (var r in NativeRoutines.Create().Where(r => r.Symbol is "WCLFEW.22S" or "WCLFEW.23S" or "CLRBIT"))
+        {
+            r.Bind(Program.Value.Symbols);
+            m.InstallNative(r, r.ResolveAddress(Program.Value.Symbols));
+        }
+        var v = new NativeVerifier(m);
+        var p = new RandomPlayer(1);
+        var cliffs = new CliffScenario(Program.Value.Memory, Program.Value.Symbols, creating);
+        for (int f = 0; f < 12000; f++)
+        {
+            p.Apply(m.Inputs, f);
+            cliffs.Apply(m);
+            m.RunFrame();
+        }
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        Assert.True(v.Stats.TryGetValue(loop, out var s) && s.Calls > s.Declined, $"{loop} never ran natively");
+    }
+
     [Fact]
     public void WaveSetupResumePointsFollowTheirCalls()
     {

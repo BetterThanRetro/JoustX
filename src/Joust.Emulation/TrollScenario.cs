@@ -38,6 +38,53 @@ public sealed class TrollScenario(IReadOnlyDictionary<string, long> s)
 }
 
 /// <summary>
+/// A test scenario that starts every game in the wave table's repeating section (WTBRST, wave
+/// 81 on), where cliffs vanish and reappear between waves: when the wave controller (CIA) has
+/// just initialized its table pointer, it is moved to the first entry there whose next wave
+/// brings a cliff back, so the next wave creates a cliff and later ones destroy them again.
+/// </summary>
+public sealed class CliffScenario
+{
+    private readonly ushort _head;
+    private readonly int _link, _id, _pWave;
+    private readonly ushort _initial, _start;
+
+    /// <param name="creating">Start before a cliff comes back (else at WTBRST, where one vanishes first).</param>
+    public CliffScenario(byte[] image, IReadOnlyDictionary<string, long> s, bool creating = true)
+    {
+        _head = (ushort)s["PDUMMY"];
+        _link = (int)s["PLINK"]; _id = (int)s["PID"]; _pWave = (int)s["PWAVE"];
+        int status = (int)s["WSTATUS"], length = (int)s["WLEN"];
+        _initial = (ushort)(s["WAVTBL"] - length);
+        long entry = s["WTBRST"];
+        if (!creating) entry -= length;
+        while (creating && entry + length < s["WTBEND"] && (image[entry + status] & ~image[entry + length + status] & 0xF0) == 0)
+            entry += length;                                     // a cliff bit set here and clear next
+        _start = (ushort)entry;
+    }
+
+    public void Apply(JoustMachine m)
+    {
+        byte[] ram = m.Ram;
+        int p = (ram[_head + _link] << 8) | ram[_head + _link + 1];
+        for (int guard = 0; p != 0 && guard < 64; guard++)
+        {
+            if (p + 0x40 > ram.Length) return;
+            if (ram[p + _id] == 0x11)                            // the CIA process
+            {
+                if (((ram[p + _pWave] << 8) | ram[p + _pWave + 1]) == _initial)
+                {
+                    ram[p + _pWave] = (byte)(_start >> 8);
+                    ram[p + _pWave + 1] = (byte)_start;
+                }
+                return;
+            }
+            p = (ram[p + _link] << 8) | ram[p + _link + 1];
+        }
+    }
+}
+
+/// <summary>
 /// A test scenario where every wave is an egg wave (normally wave 5 and later): before each frame
 /// the wave controller's (CIA's) wave table pointer is set just before the table's first egg
 /// wave, unless that wave is running. The ROM is untouched (its checksums are tested at boot).

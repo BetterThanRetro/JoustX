@@ -113,6 +113,64 @@ public sealed class Checksums
         return _raddr;
     }
 
+    // ------------------------------------------------------------------ cliff table loops
+
+    /// <summary>
+    /// WCLFEW.22S / .23S (a cliff appears): for each byte of the landing (or collision) table,
+    /// replace the cliff's bit (on the stack) with the bit from the ROM copy (Y). Runs whole
+    /// iterations up to the next interrupt edge; returns the loop head or the instruction after it.
+    /// </summary>
+    public ushort? MergeBits(Tx t, ushort loopHead, ushort end)
+    {
+        const int iteration = 4 + 2 + 4 + 4 + 4 + 6 + 4 + 6 + 4 + 3;
+        int k = 0;
+        while (t.CanRun(iteration))
+        {
+            byte bit = t.Read(t.S);
+            t.A = Logic(ref t.CC, Com8(ref t.CC, bit));          // LDA ,S / COMA
+            t.A &= t.Read(t.X);                                  // ANDA ,X
+            t.CC = Logic8(t.CC, t.A);
+            t.Write(t.X, t.A);                                   // STA ,X
+            t.A = (byte)(bit & t.Read(t.Y));                     // LDA ,S / ANDA ,Y+
+            t.Y++;
+            t.A = Add8(ref t.CC, t.A, t.Read(t.X), withCarry: false);   // ADDA ,X
+            t.Write(t.X, t.A);                                   // STA ,X+
+            t.CC = Logic8(t.CC, t.A);
+            t.X++;
+            Sub16(ref t.CC, t.X, end);                           // CMPX #end
+            t.Cycles += iteration;
+            k++;
+            if (!Cs(t.CC)) return (ushort)(loopHead + 20);       // BLO falls through
+        }
+        return k == 0 ? null : loopHead;
+    }
+
+    /// <summary>CLRBIT (a cliff vanishes): AND every byte of a table with A (Y bytes); RTS at the end.</summary>
+    public ushort? ClearBits(Tx t, ushort loopHead)
+    {
+        const int iteration = 6 + 4 + 6 + 5 + 3;
+        int k = 0;
+        while (t.CanRun(iteration))
+        {
+            t.B = (byte)(t.A & t.Read(t.X));                     // TFR A,B / ANDB ,X
+            t.CC = Logic8(t.CC, t.B);
+            t.Write(t.X, t.B);                                   // STB ,X+
+            t.X++;
+            t.Y--;                                               // LEAY -1,Y
+            t.CC = Set(t.CC, Z, t.Y == 0);
+            t.Cycles += iteration;
+            k++;
+            if (t.Y == 0) return (ushort)(loopHead + 10);        // BNE falls through to the RTS
+        }
+        return k == 0 ? null : loopHead;
+    }
+
+    private static byte Logic(ref byte cc, byte value)
+    {
+        cc = Logic8(cc, value);
+        return value;
+    }
+
     /// <summary>After RADDR: BRA KZAP.</summary>
     private ushort AfterFailure(Tx t, Asm a)
     {
