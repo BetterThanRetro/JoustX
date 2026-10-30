@@ -430,6 +430,26 @@ public class NativePortTests
     }
 
     [Fact]
+    public void DeathPuffMatchesTheOriginal()
+    {
+        string[] labels = ["DEATH", "DEATH@frame2", "DEATH@frame3", "DEATH@end"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in labels)
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+
+        // Each resume point follows the PCNAP of the frame before.
+        var s2 = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        var puff = new Engine(new Symbols(s2)).Puff;
+        foreach (var l in new[] { DeathPuff.L.Frame2, DeathPuff.L.Frame3, DeathPuff.L.End })
+        {
+            ushort ret = puff.Address(l);
+            Assert.True(rom[ret - 3] == 0xBD && ((rom[ret - 2] << 8) | rom[ret - 1]) == (ushort)s2["VNAPTPC"], $"{l} does not follow JSR VNAPTPC");
+        }
+    }
+
+    [Fact]
     public void WaveSetupResumePointsFollowTheirCalls()
     {
         var s = Program.Value.Symbols;

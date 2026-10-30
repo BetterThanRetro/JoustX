@@ -72,6 +72,7 @@ Still open here:
 | `IRQVEC`; wave types `WINTRO`, `WCOOP`/`WAVSUR`, `WGLAD`, `WPTERO` and the end-of-wave bonuses `WCOSCR`, `WSUSCR`, `WGLSCR` (with `WAVMSG`) | The hardware IRQ vector's `JMP [$EFF8]` goes straight into the native handler. The introduction, team, survival, gladiator and pterodactyl waves show their messages (resuming inside each routine after its `WAVDEL`/`WATWAV`) and start their pterodactyls (`PTERWV`); the team and survival waves pay 3,000 points to each qualifying player. Steps end at hooked labels (`WNRM.4S`, the routines' entries) so each stays short; steps with long text output still often cross an interrupt edge and then run as the original. The egg wave (`WAVEGG`) is still original | Wave-type step |
 | Egg wave: `WAVEGG` and `CREGG` (+ resume points) | The hatching enemies' kind and number from the wave table, the hatching time (halved with two players), six eggs one per ledge in random order at random places, six more at random free places, two of them hatching early; each egg process (`EGGLN2`) is created by the `CREGG` coroutine, which naps a tick and returns through `PWRTS`. Egg waves start at wave 5, so `verify-native --eggs` (`EggScenario`) steers the wave controller's table pointer so every wave is one; the ROM is untouched because its checksums are tested at boot | Egg-wave step |
 | Cliff changes: the `WCLFEW` table loops (`WCLFEW.22S`/`.23S` when a cliff comes back, `CLRBIT` when one vanishes) | Each change rewrites the 352-byte landing and collision tables, 8,000–14,000 cycles per table, longer than the 4,096 between interrupts, so the loops run natively in chunks that end before the next interrupt edge (like `JZAP`). The rest of `WCLFEW` (once per cliff, it starts the cliff-destroyer process `CLFDES`) is still original. Cliffs only change from wave 81 on, so `verify-native --cliffs` (`CliffScenario`) starts each game there | Cliff step |
+| Death puff: `DEATH` (+ resume points) | The puff where a rider was killed: three images over about a second, kept on screen, then a cliff it overlapped is redrawn and the process ends | Puff step |
 
 `verify-native` (4 seeds × 40,000 frames): about 2.3 million native calls in lockstep (identical every frame), 0 per-call mismatches. Natives handle about 46% of non-idle CPU time; the original code spends about 60% of all cycles idling until the blitter IRQ frees a DMA table. Mutation tests confirm the checks catch a single cycle, flag, memory-bit or register error, including in jump-style code.
 
@@ -88,7 +89,7 @@ Still open here:
 Still original code:
 - `EXECST`: frame start (busy-wait for a free DMA table and sending the queued sound to the sound board).
 - Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), transporters, lava troll, wave control, attract mode (including its `PJOY` pilots).
-- The processes the death routines start: the death puff (`DEATH`), game over (`GAMOVR`/`GAMOV1`). The attract mode's cycling egg score (`ATTEGG`) is handed back.
+- The process the death routines start for game over (`GAMOVR`/`GAMOV1`). The attract mode's cycling egg score (`ATTEGG`) is handed back.
 - Rare joust cases hand the whole call back: an egg score that earns an extra mount, and the "fictitious collision" `SWI`.
 
 `verify-native --only SYM,...` checks a subset; `--trace` adds the original's instruction trace to mismatch reports (how the one `BCKPIX` bug in this step was found).
@@ -117,7 +118,7 @@ Wave step: every wave set-up label exercised, 0 per-call mismatches, lockstep id
 
 Checksum step: 0 per-call mismatches, lockstep identical; natives now handle about 87–89% of non-idle CPU time in normal play.
 
-Next: the death puff (`DEATH`) and game over (`GAMOVR`), then attract mode (the Williams logo drawing `WRANIB`/`WRPIX`/`FILLDN` is now the largest share of original code outside the power-on self-test). The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
+Next: game over (`GAMOVR`), then attract mode (the Williams logo drawing `WRANIB`/`WRPIX`/`FILLDN` is now the largest share of original code outside the power-on self-test). The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
 
 1. **Routine hooks.** Add a `NativeRoutines` table keyed by ROM address. When the PC reaches a hooked entry, the C# implementation runs against the *same* RAM, registers and stack, then returns as the original `RTS` would.
 2. **Lockstep verifier.** Run two machines side by side, pure original and hooked, with identical inputs. Compare RAM, palette and CMOS every frame and report the first diverging address, frame and routine. The golden replay script grows into a library of input recordings (wave 1–10, pterodactyls, lava troll, egg waves, two-player gladiator rounds, high-score entry).

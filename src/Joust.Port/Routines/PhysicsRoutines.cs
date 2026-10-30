@@ -32,7 +32,10 @@ public sealed class Engine
         Waves = new WaveMonitor(s, Scheduler);
         WaveSetup = new WaveSetup(s, Scheduler, Text, Scoring);
         Checksums = new Checksums(s, Scheduler);
+        Puff = new DeathPuff(s, Ground, Scheduler);
     }
+
+    public DeathPuff Puff { get; }
 
     public Checksums Checksums { get; }
     public Symbols Symbols { get; }
@@ -120,6 +123,12 @@ public sealed class TxJumpRoutine(
 
         // The anti-tamper checksums: JZAP's summing loop in chunks, the KZAP process
         new TxJumpRoutine("JZAP.1S", (e, t) => e.Checksums.Sum(t)),
+
+        // The death puff process
+        new TxJumpRoutine("DEATH", (e, t) => e.Puff.Run(t, DeathPuff.L.Start)),
+        new TxJumpRoutine("DEATH@frame2", (e, t) => e.Puff.Run(t, DeathPuff.L.Frame2), e => e.Puff.Address(DeathPuff.L.Frame2)),
+        new TxJumpRoutine("DEATH@frame3", (e, t) => e.Puff.Run(t, DeathPuff.L.Frame3), e => e.Puff.Address(DeathPuff.L.Frame3)),
+        new TxJumpRoutine("DEATH@end", (e, t) => e.Puff.Run(t, DeathPuff.L.End), e => e.Puff.Address(DeathPuff.L.End)),
 
         // Cliff changes (WCLFEW): the landing and collision table loops, in chunks
         new TxJumpRoutine("WCLFEW.22S", (e, t) => e.Checksums.MergeBits(t, e.Symbols["WCLFEW.22S"], e.Symbols["LNDXD2"])),
