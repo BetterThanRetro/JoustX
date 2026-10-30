@@ -395,7 +395,9 @@ public class NativePortTests
         Follows(WaveSetup.L.Settings, "RCMSA");
         foreach (var l in new[] { WaveSetup.L.Cliff1, WaveSetup.L.Cliff2, WaveSetup.L.Cliff3, WaveSetup.L.Cliff4 })
             Follows(l, "WCLFEW");
-        Follows(WaveSetup.L.Delayed, "WAVDEL");
+        foreach (var l in new[] { WaveSetup.L.Delayed, WaveSetup.L.IntroDelay, WaveSetup.L.GladDelay, WaveSetup.L.PteroDelay })
+            Follows(l, "WAVDEL");
+        Follows(WaveSetup.L.PteroWait, "WATWAV");
         Follows(WaveSetup.L.Waited, "WATWAV");
         foreach (var l in new[] { WaveSetup.L.Bounders, WaveSetup.L.Hunters, WaveSetup.L.Lords })
             Follows(l, "WCREATE");

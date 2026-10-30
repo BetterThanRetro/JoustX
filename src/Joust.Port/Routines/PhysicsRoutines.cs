@@ -29,7 +29,7 @@ public sealed class Engine
         Bird.Lava = Transporter;
         FrameStart = new FrameStart(s, Scheduler);
         Waves = new WaveMonitor(s, Scheduler);
-        WaveSetup = new WaveSetup(s, Scheduler, Text);
+        WaveSetup = new WaveSetup(s, Scheduler, Text, Scoring);
         Checksums = new Checksums(s, Scheduler);
     }
 
@@ -212,6 +212,14 @@ public sealed class TxJumpRoutine(
         WaveSetup.L.Hunters => "WPAUS3.3S",
         WaveSetup.L.Lords => "WBEGIN",
         WaveSetup.L.CreateNap => "WCREATE@nap",
+        WaveSetup.L.IntroDelay => "WINTRO@delay",
+        WaveSetup.L.GladDelay => "WGLAD@delay",
+        WaveSetup.L.PteroDelay => "WPTERO@delay",
+        WaveSetup.L.PteroWait => "WPTERO@wait",
+        WaveSetup.L.Intro => "WINTRO",
+        WaveSetup.L.Team => "WCOOP",
+        WaveSetup.L.Gladiator => "WGLAD",
+        WaveSetup.L.Pterodactyls => "WPTERO",
         _ => throw new ArgumentOutOfRangeException(nameof(l)),
     };
 

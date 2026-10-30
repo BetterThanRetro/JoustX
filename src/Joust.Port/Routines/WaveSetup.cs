@@ -27,6 +27,7 @@ public sealed class WaveSetup
     {
         Init, InitNap, Next, Settings, Previous, NumberNap, Cliff1, Cliff2, Cliff3, Cliff4, Started,
         MessageNap, DelayBack, WaitBack, Delayed, Waited, Bounders, Hunters, Lords, CreateNap,
+        IntroDelay, GladDelay, PteroDelay, PteroWait, Intro, Team, Gladiator, Pterodactyls,
     }
 
     private readonly Scheduler _scheduler;
@@ -46,14 +47,22 @@ public sealed class WaveSetup
     private readonly ushort _creem, _nEnemy, _nRider, _buzard, _baisbl, _baitbl, _cBait, _nBait, _dBait, _emy2;
     private readonly ushort _vNapTpc, _vCuProc, _vCrProc, _outPhr, _outBcd;
     private readonly int _baiterStarts, _floor, _eLeft, _eRight, _emyId, _waveMsg, _white, _wbPer, _wbCls;
+    private readonly ushort _wIntro, _wCoop, _wGlad, _wPtero, _wavRt2, _wCoScr, _wSuScr, _wGlScr, _pterWv;
+    private readonly ushort _sply1Lives, _sply2Lives, _plyD1, _plyD2, _p1Dec, _p2Dec;
+    private readonly ushort _intro1, _intro2, _coop1, _coop2, _coop3, _coop4, _surv1, _surv3, _surv4, _surv5;
+    private readonly ushort _glad1, _glad2, _glad3, _glad4, _glad5, _glad6, _pter1;
+    private readonly int _wPten, _joyTime;
+    private readonly byte _pteId;
+    private readonly Scoring _scoring;
     private readonly Dictionary<L, ushort> _address = [];
 
     private Asm a = null!;
 
-    public WaveSetup(Symbols s, Scheduler scheduler, TextOut text)
+    public WaveSetup(Symbols s, Scheduler scheduler, TextOut text, Scoring scoring)
     {
         _scheduler = scheduler;
         _text = text;
+        _scoring = scoring;
         _pWprev = s["PWPREV"]; _pWave = s["PWAVE"]; _pBaits = s["PBAITS"]; _pDelay = s["PDELAY"]; _pWrts = s["PWRTS"];
         _pWrts2 = s["PWRTS2"]; _pIntel = s["PINTEL"]; _pMsgA = s["PMSGA"]; _pMsg0 = s["PMSG0"]; _pMsg1 = s["PMSG1"];
         _pMsg5 = s["PMSG5"]; _pBaitN = s["PBAITN"]; _link = s["PLINK"]; _posX = s["PPOSX"]; _posY = s["PPOSY"];
@@ -77,6 +86,15 @@ public sealed class WaveSetup
         _floor = (int)s.Value("FLOOR"); _eLeft = (int)s.Value("ELEFT"); _eRight = (int)s.Value("ERIGHT");
         _emyId = (int)s.Value("EMYID"); _waveMsg = (int)s.Value("MSW06"); _white = (int)s.Value("WHI") * 0x11;
         _wbPer = (int)s.Value("WBPER"); _wbCls = (int)s.Value("WBCLS");
+        _wIntro = s["WINTRO"]; _wCoop = s["WCOOP"]; _wGlad = s["WGLAD"]; _wPtero = s["WPTERO"]; _wavRt2 = s["WAVRT2"];
+        _wCoScr = s["WCOSCR"]; _wSuScr = s["WSUSCR"]; _wGlScr = s["WGLSCR"]; _pterWv = s["PTERWV"];
+        _sply1Lives = (ushort)(s["SPLY1"] + 6); _sply2Lives = (ushort)(s["SPLY2"] + 6);
+        _plyD1 = s["PLYD1"]; _plyD2 = s["PLYD2"]; _p1Dec = s["P1DEC"]; _p2Dec = s["P2DEC"];
+        _intro1 = s["INTRO1"]; _intro2 = s["INTRO2"]; _coop1 = s["COOP1"]; _coop2 = s["COOP2"]; _coop3 = s["COOP3"];
+        _coop4 = s["COOP4"]; _surv1 = s["SURV1"]; _surv3 = s["SURV3"]; _surv4 = s["SURV4"]; _surv5 = s["SURV5"];
+        _glad1 = s["GLAD1"]; _glad2 = s["GLAD2"]; _glad3 = s["GLAD3"]; _glad4 = s["GLAD4"]; _glad5 = s["GLAD5"];
+        _glad6 = s["GLAD6"]; _pter1 = s["PTER1"];
+        _wPten = s["WPTEN"]; _joyTime = s["PJOYT"]; _pteId = (byte)s.Value("PTEID");
 
         // Resume points. Instruction sizes: a variable is 2 bytes direct / 3 extended, n,U 2 or 3.
         int V(ushort v) => Symbols.AddressCost(v) == 0 ? 2 : 3;
@@ -105,6 +123,15 @@ public sealed class WaveSetup
         At(L.Hunters, s["WPAUS3.3S"]);
         At(L.Lords, s["WPAUS3.4S"]);
         At(L.CreateNap, (ushort)(s["WCREATE.10S"] + 5));
+        At(L.Intro, _wIntro);
+        At(L.Team, _wCoop);
+        At(L.Gladiator, _wGlad);
+        At(L.Pterodactyls, _wPtero);
+        At(L.IntroDelay, (ushort)(_wIntro + 3 + 3 + 2 + 3));     // LDX # / JSR WAVMSG / LDA # / JSR WAVDEL
+        At(L.PteroDelay, (ushort)(_wPtero + 3 + 3 + 2 + 3));
+        At(L.PteroWait, (ushort)(_wPtero + 3 + 3 + 2 + 3 + 3));  // JSR WATWAV
+        At(L.GladDelay, (ushort)(_wGlad + V(_sply1Lives) + 2 + V(_sply2Lives) + 2 + 3 + I(_pWprev) + 2
+                                 + V(s["PLYG1"]) + V(s["PLYG2"]) + 3 + 3 + 2 + 3));
     }
 
     public ushort Address(L label) => _address[label];
@@ -222,6 +249,40 @@ public sealed class WaveSetup
                 return Create(t, _p6Dec, L.Lords);
 
             case L.Lords: return Begin(t);
+            case L.Intro: return Intro(t);
+            case L.Team: return Team(t);
+            case L.Gladiator: return Gladiator(t);
+            case L.Pterodactyls: return Pterodactyls(t);
+
+            case L.IntroDelay:
+                CallMessage(t, _intro2);
+                a.LdaI(90 / 6);
+                a.Jmp();                                         // JMP WPAUS2
+                return Delay(t, L.Delayed);
+
+            case L.GladDelay:
+                CallMessage(t, _glad2);
+                CallMessage(t, _glad3);
+                a.LdaI(90 / 6);
+                a.Jmp();
+                return Delay(t, L.Delayed);
+
+            case L.PteroDelay:
+                Coroutine(t, _address[L.PteroWait]);             // JSR WATWAV
+                a.Stx(a.U(_pWrts));
+                return WaitLoop(t);
+
+            case L.PteroWait:
+                a.LdxI(_pterWv);                                 // SECCR PTERWV,PTEID
+                a.LddI((_pteId << 8) | 0xFF);
+                t.Cycles += 7 + Symbols.AddressCost(_vCrProc) + 4;
+                _scheduler.Create(t, afterRunning: true);
+                t.Cycles += 5;
+                a.Ldx(a.U(_pWave));
+                a.Lda(a.X(_wPten));                              // the wave's pterodactyls
+                a.Sta(a.Y(_joyTime));
+                a.Jmp();                                         // JMP WPAUS3
+                return (L.Waited, null);
             case L.CreateNap: return NextEnemy(t);
         }
         throw new InvalidOperationException($"unknown label {label}");
@@ -393,6 +454,11 @@ public sealed class WaveSetup
         a.Sta(a.M(_wavBcd));
         ushort cleanUp = t.Read16(t.U + _pWprev);                // JSR [PWPREV,U]
         int jsr = 7 + Symbols.IndirectCost(_pWprev);
+        if (cleanUp == _wCoScr || cleanUp == _wSuScr || cleanUp == _wGlScr)
+        {
+            t.Cycles += jsr;                                     // its JMP WAVDEL pops the return address
+            return cleanUp == _wCoScr ? EndTeam(t) : cleanUp == _wSuScr ? EndSurvival(t) : EndGladiator(t);
+        }
         if (cleanUp != _wavRts) return (default, Leave(t, jsr, cleanUp, L.Previous));
         t.Cycles += jsr + 5;                                     // WAVRTS: nothing to do
         return Previous(t);
@@ -425,7 +491,7 @@ public sealed class WaveSetup
         t.CC = Logic8(t.CC, t.A);
         t.Cycles += 4 + Symbols.IndexCost(_wStatus);
         a.AndaI(_wbCls);
-        if (a.Br(a.Eq)) return Persue(t);
+        if (a.Br(a.Eq)) return (L.Cliff4, null);                 // .4S
         a.Ldb(a.X(_wStatus));                                    // the new state
         return Cliffs(t, 0);
     }
@@ -447,7 +513,7 @@ public sealed class WaveSetup
             t.Cycles += 11 - 5;
             a.Rts();
         }
-        return Persue(t);
+        return done == 4 ? Persue(t) : (L.Cliff4, null);         // .4S
     }
 
     /// <summary>.4S: early pursuit, then the wave type's routine (JSR [B,X] into WJSRTB).</summary>
@@ -467,6 +533,13 @@ public sealed class WaveSetup
         a.LdxI(_wJsrTb);
         ushort routine = t.Read16(t.X + (sbyte)t.B);
         int jsr = 7 + 1 + 3;                                     // JSR [B,X]
+        if (routine == _wIntro || routine == _wGlad || routine == _wPtero || routine == _wCoop)
+        {
+            t.Cycles += jsr;
+            t.Push16(_address[L.Started]);
+            return (routine == _wIntro ? L.Intro : routine == _wGlad ? L.Gladiator
+                : routine == _wPtero ? L.Pterodactyls : L.Team, null);
+        }
         if (routine != _wavRts) return (default, Leave(t, jsr, routine, L.Started));
         t.Cycles += jsr + 5;
         return Pause(t);
@@ -478,7 +551,13 @@ public sealed class WaveSetup
     private (L, ushort?) Pause(Tx t)
     {
         a.LdaI(180 / 6);
-        Coroutine(t, _address[L.Delayed]);                       // JSR WAVDEL / LDX ,S++
+        return Delay(t, L.Delayed);                              // WPAUS2
+    }
+
+    /// <summary>JSR WAVDEL (A = passes): rewrite the messages A times, then continue at <paramref name="returnTo"/>.</summary>
+    private (L, ushort?) Delay(Tx t, L returnTo)
+    {
+        Coroutine(t, _address[returnTo]);                        // JSR WAVDEL / LDX ,S++
         a.Stx(a.U(_pWrts));
         a.Sta(a.U(_pDelay));
         return Messages(t, L.DelayBack);
@@ -548,7 +627,8 @@ public sealed class WaveSetup
         t.Cycles += 3 + Symbols.IndirectCost(offset);
         foreach (var (label, address) in _address)
             if (address == target && label is L.DelayBack or L.WaitBack or L.Delayed or L.Waited
-                    or L.Bounders or L.Hunters or L.Lords)
+                    or L.Bounders or L.Hunters or L.Lords or L.Previous or L.IntroDelay or L.GladDelay
+                    or L.PteroDelay or L.PteroWait)
                 return (label, null);
         return (default, target);
     }
@@ -696,6 +776,207 @@ public sealed class WaveSetup
         a.Clr(a.M(_nBait));
         a.Clr(a.M(_dBait));
         return (default, _emy2);
+    }
+
+    // ------------------------------------------------------------------ wave types
+
+    /// <summary>WINTRO: the two introduction messages, a second apart.</summary>
+    private (L, ushort?) Intro(Tx t)
+    {
+        CallMessage(t, _intro1);
+        a.LdaI(90 / 6);
+        return Delay(t, L.IntroDelay);
+    }
+
+    /// <summary>WPTERO: "pterodactyl beware", then once the last wave is gone the pterodactyls (PTERWV).</summary>
+    private (L, ushort?) Pterodactyls(Tx t)
+    {
+        CallMessage(t, _pter1);
+        a.LdaI(180 / 6);
+        return Delay(t, L.PteroDelay);
+    }
+
+    /// <summary>WCOOP: with both players alive a team wave (3,000 each if neither kills the other), else WAVSUR.</summary>
+    private (L, ushort?) Team(Tx t)
+    {
+        a.Lda(a.M(_sply2Lives));
+        bool survival = a.Br(a.Eq);
+        if (!survival)
+        {
+            a.Lda(a.M(_sply1Lives));
+            survival = a.Br(a.Eq);
+        }
+        if (survival)
+        {
+            a.LddI(_wSuScr);                                     // WAVSUR: survival wave
+            a.Std(a.U(_pWprev));
+            a.Clr(a.M(_plyD1));
+            a.Clr(a.M(_plyD2));
+            a.LdxI(_surv1);
+            a.Jmp();                                             // JMP WAVMSG
+            WaveMessage(t);
+        }
+        else
+        {
+            a.LddI(_wCoScr);
+            a.Std(a.U(_pWprev));
+            a.Clr(a.M(_plyG1));
+            a.Clr(a.M(_plyG2));
+            CallMessage(t, _coop1);
+            a.LdxI(_coop2);
+            a.Jmp();
+            WaveMessage(t);
+        }
+        t.S += 2;                                                // WAVMSG's RTS returns from the JSR [B,X]
+        return Pause(t);
+    }
+
+    /// <summary>WGLAD: with both players alive, the gladiator wave's three messages; else nothing.</summary>
+    private (L, ushort?) Gladiator(Tx t)
+    {
+        a.Lda(a.M(_sply1Lives));
+        bool skip = a.Br(a.Eq);
+        if (!skip)
+        {
+            a.Lda(a.M(_sply2Lives));
+            skip = a.Br(a.Eq);
+        }
+        if (skip)
+        {
+            t.Cycles += 5;                                       // WAVRT2: RTS
+            t.S += 2;
+            return Pause(t);
+        }
+        a.LddI(_wGlScr);
+        a.Std(a.U(_pWprev));
+        a.LdaI(-1);                                              // the first to kill the other scores
+        a.Sta(a.M(_plyG1));
+        a.Sta(a.M(_plyG2));
+        CallMessage(t, _glad1);
+        a.LdaI(90 / 6);
+        return Delay(t, L.GladDelay);
+    }
+
+    /// <summary>WCOSCR: the team bonus, 3,000 to each living player unless they fought each other.</summary>
+    private (L, ushort?) EndTeam(Tx t)
+    {
+        a.Lda(a.M(_plyG1));
+        a.Ora(a.M(_plyG2));
+        if (!a.Br(a.Eq))
+        {
+            a.LdxI(_coop3);                                      // no bonus
+            a.Bra();
+            return EndMessage(t);
+        }
+        a.Lda(a.M(_sply1Lives));                                 // .1S
+        if (!a.Br(a.Eq)) Bonus(t, _p1Dec);
+        a.Lda(a.M(_sply2Lives));                                 // .2S
+        if (!a.Br(a.Eq)) Bonus(t, _p2Dec);
+        a.LdxI(_coop4);                                          // .3S: bonus awarded
+        return EndMessage(t);
+    }
+
+    /// <summary>WSUSCR: 3,000 to the surviving player if they did not die this wave.</summary>
+    private (L, ushort?) EndSurvival(Tx t)
+    {
+        a.LdxI(_surv3);                                          // assume no points
+        a.Lda(a.M(_sply1Lives));
+        if (!a.Br(a.Eq))
+        {
+            a.Lda(a.M(_plyD1));
+            if (a.Br(a.Ne)) return EndMessage(t);
+            Bonus(t, _p1Dec);
+            a.LdxI(_surv4);
+            a.Bra();
+            return EndMessage(t);
+        }
+        a.Lda(a.M(_sply2Lives));                                 // .1S
+        if (a.Br(a.Eq)) return EndMessage(t);
+        a.Lda(a.M(_plyD2));
+        if (a.Br(a.Ne)) return EndMessage(t);
+        Bonus(t, _p2Dec);
+        a.LdxI(_surv5);
+        a.Bra();
+        return EndMessage(t);
+    }
+
+    /// <summary>WGLSCR: the gladiator bounty message; no more bounties.</summary>
+    private (L, ushort?) EndGladiator(Tx t)
+    {
+        a.Lda(a.M(_plyG1));
+        if (a.Br(a.Pl))
+        {
+            a.LdxI(_glad6);                                      // .2S: player 2 got the bounty
+        }
+        else
+        {
+            a.LdxI(_glad5);
+            a.Lda(a.M(_plyG2));
+            if (!a.Br(a.Pl))
+            {
+                a.LdxI(_glad4);                                  // no one did
+                a.Bra();
+            }
+        }
+        CallMessage(t);                                          // .3S
+        a.Clr(a.M(_plyG1));
+        a.Clr(a.M(_plyG2));
+        a.LdaI(120 / 6);
+        a.Jmp();                                                 // JMP WAVDEL
+        return Delay(t, L.Previous);
+    }
+
+    /// <summary>ENDTS: message X, then a two-second WAVDEL back to the wave set-up.</summary>
+    private (L, ushort?) EndMessage(Tx t)
+    {
+        CallMessage(t);
+        a.LdaI(120 / 6);
+        a.Jmp();                                                 // JMP WAVDEL
+        return Delay(t, L.Previous);
+    }
+
+    /// <summary>LDX #decision / LDA # / JSR SCRHUN: 3,000 points.</summary>
+    private void Bonus(Tx t, ushort decision)
+    {
+        a.LdxI(decision);
+        a.LdaI(0x30);
+        t.Cycles += 8;
+        if (!_scoring.Add(t, tens: false)) throw new HandBackException();   // an extra mount: original
+        t.Cycles += 5;
+    }
+
+    /// <summary>LDX #table / JSR WAVMSG.</summary>
+    private void CallMessage(Tx t, ushort table)
+    {
+        a.LdxI(table);
+        CallMessage(t);
+    }
+
+    /// <summary>JSR WAVMSG with X = the message's table entry.</summary>
+    private void CallMessage(Tx t)
+    {
+        a.Jsr();
+        WaveMessage(t);
+        t.S += 2;
+    }
+
+    /// <summary>WAVMSG (with its return): put message X in the first free slot and show it.</summary>
+    private void WaveMessage(Tx t)
+    {
+        a.LeayU(_pMsg1 - 4);
+        do
+        {
+            a.Leay(4);
+            a.Tst(a.Y(0));
+        }
+        while (a.Br(a.Ne));
+        a.Lda(a.M(_gOver));
+        if (a.Br(a.Eq)) { t.Cycles += 5; return; }               // WVMRTS
+        a.Ldd(a.X(0));
+        a.Std(a.Y(0));
+        a.Ldd(a.X(2));
+        a.Std(a.Y(2));
+        WriteMessage(t);                                         // falls into WMSG2
     }
 
     // ------------------------------------------------------------------ helpers
