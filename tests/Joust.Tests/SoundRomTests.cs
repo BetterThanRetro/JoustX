@@ -49,6 +49,25 @@ public class SoundRomTests
     }
 
     [Fact]
+    public void EveryCommandRunsAndTheBoardGoesQuietAgain()
+    {
+        var board = new Joust.Emulation.SoundBoard(Sound.Value.Memory);
+        board.Reset();
+        var samples = new float[48000 * 4];
+        board.Run(20000, 48000, samples);
+        int sounding = 0;
+        for (byte cmd = 0; cmd < 0x3F; cmd++)
+        {
+            board.Command(cmd);
+            board.Run(200, 48000, samples);
+            board.Command(0x3F);
+            int n = board.Run((long)Joust.Emulation.SoundBoard.ClockHz, 48000, samples);   // 1 s
+            if (samples.Take(n).Any(s => Math.Abs(s) > 0.02f)) sounding++;
+        }
+        Assert.True(sounding > 30, $"only {sounding} of 63 commands made a sound");
+    }
+
+    [Fact]
     public void SoundRomVectorsPointIntoTheRom()
     {
         var r = Sound.Value;
