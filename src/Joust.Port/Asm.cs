@@ -86,6 +86,7 @@ public sealed class Asm(Tx t)
     public void AndaI(int v) { T.A &= (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
     public void AndbI(int v) { T.B &= (byte)v; T.CC = Logic8(T.CC, T.B); Cy(2); }
     public void OraI(int v) { T.A |= (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
+    public void Bita(Ea e) { T.CC = Logic8(T.CC, (byte)(T.A & T.Read(e.Address))); Cy(4 + e.Extra); }
     public void BitaI(int v) { T.CC = Logic8(T.CC, (byte)(T.A & v)); Cy(2); }
     public void AddaI(int v) { T.A = Add8(ref T.CC, T.A, (byte)v, withCarry: false); Cy(2); }
     public void CmpdI(int v) { Sub16(ref T.CC, T.D, (ushort)v); Cy(5); }
@@ -129,6 +130,23 @@ public sealed class Asm(Tx t)
     public void Addb(Ea e) { T.B = Add8(ref T.CC, T.B, T.Read(e.Address), withCarry: false); Cy(4 + e.Extra); }
     public void Lsr(Ea e) => Modify(e, m => Lsr8(ref T.CC, m));
     public void Lsra() { T.A = Lsr8(ref T.CC, T.A); Cy(2); }
+    public void Asrb() { T.B = Asr8(ref T.CC, T.B); Cy(2); }
+    public void Lsrb() { T.B = Lsr8(ref T.CC, T.B); Cy(2); }
+    public void Daa() { T.A = Alu6809.Daa(ref T.CC, T.A); Cy(2); }
+    public void CmpxI(int v) { Sub16(ref T.CC, T.X, (ushort)v); Cy(4); }
+
+    /// <summary>LEAY n,Y (sets Z).</summary>
+    public void Leay(int offset) { T.Y = (ushort)(T.Y + offset); T.CC = Set(T.CC, Z, T.Y == 0); Cy(4 + Symbols.IndexCost(offset)); }
+
+    /// <summary>LEAY n,U (sets Z).</summary>
+    public void LeayU(int offset) { T.Y = (ushort)(T.U + offset); T.CC = Set(T.CC, Z, T.Y == 0); Cy(4 + Symbols.IndexCost(offset)); }
+
+    /// <summary>LEAY A,U (sets Z).</summary>
+    public void LeayAU() { T.Y = (ushort)(T.U + (sbyte)T.A); T.CC = Set(T.CC, Z, T.Y == 0); Cy(5); }
+
+    /// <summary>LDB B,X.</summary>
+    public void LdbBX() { T.B = T.Read(T.X + (sbyte)T.B); T.CC = Logic8(T.CC, T.B); Cy(5); }
+
     public void Rora() { T.A = Ror8(ref T.CC, T.A); Cy(2); }
     public void Cmpx(Ea e) { Sub16(ref T.CC, T.X, T.Read16(e.Address)); Cy(6 + e.Extra); }
     public void Decb() { T.B = Alu6809.Dec(ref T.CC, T.B); Cy(2); }

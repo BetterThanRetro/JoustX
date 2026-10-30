@@ -16,7 +16,7 @@ public sealed class TextOut
 {
     private const byte BlitCharacter = 0x1A;                     // serial->block, colour substitute, zero suppress
 
-    private readonly ushort _font57, _font35, _phrases, _fontSave, _blitControl, _blitColor, _blitSource, _blitDest, _blitSize;
+    private readonly ushort _font57, _font35, _phrases, _fontSave, _aSave, _blitControl, _blitColor, _blitSource, _blitDest, _blitSize;
 
     public TextOut(Symbols s)
     {
@@ -24,6 +24,7 @@ public sealed class TextOut
         _font35 = s["FONT35"];
         _phrases = s["PHRASE"];
         _fontSave = s["XSAVE"];
+        _aSave = s["ASAVE"];
         _blitControl = s["DMA"];
         _blitColor = s["CON"];
         _blitSource = s["ORG"];
@@ -57,6 +58,33 @@ public sealed class TextOut
                 if ((ch & 0x80) != 0) break;                     // last character has bit 7 set
             }
         }
+        t.X = screen;
+    }
+
+    /// <summary>
+    /// BCDOUT (5x7 font): A = two BCD digits, shown high digit first; a digit above 10 is blank.
+    /// The whole routine including its final PULS (its return); X advances past the digits.
+    /// </summary>
+    public void WriteBcd(Tx t)
+    {
+        t.Cycles += 12 + 4 + 6 + 3 + 5 + 7;                      // PSHS, LDY #FONT57, STY XSAVE, ORCC, STB CON, BSR BCDOT1
+        t.IoWrite(_blitColor, t.B);
+        t.Write16(t.Var(_fontSave), _font57);
+        t.Write(t.Var(_aSave), t.A);
+        t.Cycles += 4 + Symbols.AddressCost(_aSave) + 8 + 2 + 3; // STA ASAVE / LSRA x4 / CMPA / BLE
+        ushort screen = t.X;
+        foreach (int digit in new[] { t.A >> 4, t.A & 0x0F })
+        {
+            byte ch = (byte)digit;
+            if (ch > 0x0A)
+            {
+                ch = 0x0A;                                       // CSPC: blank
+                t.Cycles += 2;
+            }
+            t.Cycles += 6;                                       // LDY XSAVE
+            Draw(t, _font57, Glyph(t, _font57, ch), ref screen);
+        }
+        t.Cycles += 8 + 4 + Symbols.AddressCost(_aSave) + 2 + 2 + 3 + 4 + 14; // JSR OUTPUT / LDA ASAVE / ANDA / CMPA / BLE / JMP OUTPUT / PULS
         t.X = screen;
     }
 

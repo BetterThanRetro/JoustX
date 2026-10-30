@@ -29,7 +29,10 @@ public sealed class Engine
         Bird.Lava = Transporter;
         FrameStart = new FrameStart(s, Scheduler);
         Waves = new WaveMonitor(s, Scheduler);
+        WaveSetup = new WaveSetup(s, Scheduler, Text);
     }
+
+    public WaveSetup WaveSetup { get; }
 
     public FrameStart FrameStart { get; }
     public WaveMonitor Waves { get; }
@@ -103,6 +106,12 @@ public sealed class TxJumpRoutine(
         new TxJumpRoutine("EXECST", (e, t) => e.FrameStart.Start(t)),
         new TxJumpRoutine("EXEINT", (e, t) => e.FrameStart.Wait(t)),
 
+        // The wave controller between waves, at any label or resume point
+        .. Enum.GetValues<WaveSetup.L>().Select(l => new TxJumpRoutine(
+            WaveName(l),
+            (e, t) => e.WaveSetup.Run(t, l),
+            e => e.WaveSetup.Address(l))),
+
         // The wave controller's in-play loop
         new TxJumpRoutine("EMY2", (e, t) => e.Waves.Run(t, WaveMonitor.L.Reset)),
         new TxJumpRoutine("EMYOK@nap", (e, t) => e.Waves.Run(t, WaveMonitor.L.Check), e => e.Waves.Address(WaveMonitor.L.Check)),
@@ -170,6 +179,31 @@ public sealed class TxJumpRoutine(
             return BirdProcess.Return(t);
         }, e => e.Bird.AirJoyReturn),
     ];
+
+    public static string WaveName(WaveSetup.L l) => l switch
+    {
+        WaveSetup.L.Init => "CIA",
+        WaveSetup.L.InitNap => "CIA@nap",
+        WaveSetup.L.Next => "IWAVE",
+        WaveSetup.L.Settings => "IWAVE@settings",
+        WaveSetup.L.Previous => "WNRM@cleanup",
+        WaveSetup.L.NumberNap => "WNRM@nap",
+        WaveSetup.L.Cliff1 => "WNRM@cliff1",
+        WaveSetup.L.Cliff2 => "WNRM@cliff2",
+        WaveSetup.L.Cliff3 => "WNRM@cliff3",
+        WaveSetup.L.Cliff4 => "WNRM.4S",
+        WaveSetup.L.Started => "WNRM@started",
+        WaveSetup.L.MessageNap => "REWMSG@nap",
+        WaveSetup.L.DelayBack => "WAVDEL@message",
+        WaveSetup.L.WaitBack => "WATWAV@message",
+        WaveSetup.L.Delayed => "WPAUS2@delay",
+        WaveSetup.L.Waited => "WPAUS3",
+        WaveSetup.L.Bounders => "WPAUS3.2S",
+        WaveSetup.L.Hunters => "WPAUS3.3S",
+        WaveSetup.L.Lords => "WBEGIN",
+        WaveSetup.L.CreateNap => "WCREATE@nap",
+        _ => throw new ArgumentOutOfRangeException(nameof(l)),
+    };
 
     public static string TransporterName(Transporter.L l) => l switch
     {

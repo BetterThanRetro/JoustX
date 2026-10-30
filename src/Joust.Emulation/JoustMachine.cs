@@ -134,12 +134,20 @@ public sealed class JoustMachine : IBus
                 }
                 if (Cpu.PC >= IdleStart && Cpu.PC < IdleEnd)
                     IdleCycles += Cpu.Step();
+                else if (StepHook != null)
+                {
+                    ushort pc = Cpu.PC;
+                    StepHook(pc, Cpu.Step());
+                }
                 else
                     Cpu.Step();
             }
         }
         Frame++;
     }
+
+    /// <summary>Called after each original (non-native, non-idle) instruction with its PC and cycles, for profiling.</summary>
+    public Action<ushort, int>? StepHook { get; set; }
 
     /// <summary>Address range of a busy-wait loop whose cycles are counted as <see cref="IdleCycles"/>.</summary>
     public ushort IdleStart { get; set; }

@@ -5,7 +5,7 @@ using Joust.Port;
 namespace Joust.Tools;
 
 /// <summary>
-/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...]
+/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...] [--profile]
 /// --troll runs the <see cref="TrollScenario"/>: the troll and a burnt bridge from the first wave,
 /// a player that rarely flaps, and a player dropped into the lava now and then.
 /// --probe counts how often the original reaches the given labels.
@@ -24,6 +24,7 @@ internal static class NativeVerifyCommand
         bool twoPlayers = false;
         bool troll = false;
         string[] probes = [];
+        bool profile = false;
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
@@ -33,6 +34,7 @@ internal static class NativeVerifyCommand
             else if (args[i] == "--two-players") twoPlayers = true;
             else if (args[i] == "--troll") troll = true;
             else if (args[i] == "--probe") probes = args[++i].Split(',');
+            else if (args[i] == "--profile") profile = true;
         }
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
@@ -86,6 +88,8 @@ internal static class NativeVerifyCommand
             native.IdleEnd = (ushort)(native.IdleStart + 4);          // TST ,X / BNE EXEINT
             var p1 = new RandomPlayer(seed, twoPlayers, flaps);
             var p2 = new RandomPlayer(seed, twoPlayers, flaps);
+            var profileCycles = new long[0x10000];
+            if (profile) native.StepHook = (pc, cycles) => profileCycles[pc] += cycles;
             string? diff = null;
             int frame = 0;
             for (; frame < frames && diff == null; frame++)
@@ -104,10 +108,37 @@ internal static class NativeVerifyCommand
             long busy = native.Cpu.Cycles - native.IdleCycles;
             Console.WriteLine($"  native share of non-idle CPU time: {100.0 * native.NativeCycles / busy:F1}% "
                               + $"(idle wait for the blitter IRQ: {100.0 * native.IdleCycles / native.Cpu.Cycles:F1}% of all cycles)");
+            if (profile) PrintProfile(profileCycles, busy, program.Symbols);
             ok &= diff == null;
         }
         Console.WriteLine(ok ? "All native routines match the original." : "Native routines do NOT match.");
         return ok ? 0 : 4;
+    }
+
+    /// <summary>
+    /// --profile: the original code's non-idle cycles in the native run, by the nearest label at or
+    /// below each PC (labels are approximated by the symbol table, which also holds equates).
+    /// </summary>
+    private static void PrintProfile(long[] cycles, long busy, IReadOnlyDictionary<string, long> symbols)
+    {
+        var labels = symbols.Where(kv => !kv.Key.Contains('.') && kv.Value is >= 0x0100 and <= 0xFFFF)
+            .GroupBy(kv => (ushort)kv.Value).Select(g => (Address: g.Key, Name: g.Min(kv => kv.Key)!))
+            .OrderBy(l => l.Address).ToArray();
+        ushort[] addresses = labels.Select(l => l.Address).ToArray();
+        var byLabel = new Dictionary<string, long>();
+        long total = 0;
+        for (int pc = 0; pc < cycles.Length; pc++)
+        {
+            if (cycles[pc] == 0) continue;
+            total += cycles[pc];
+            int i = Array.BinarySearch(addresses, (ushort)pc);
+            if (i < 0) i = ~i - 1;
+            string name = i >= 0 ? labels[i].Name : "?";
+            byLabel[name] = byLabel.GetValueOrDefault(name) + cycles[pc];
+        }
+        Console.WriteLine($"  original code: {100.0 * total / busy:F1}% of non-idle time; top labels:");
+        foreach (var (name, c) in byLabel.OrderByDescending(kv => kv.Value).Take(25))
+            Console.WriteLine($"    {name,-10} {100.0 * c / busy,5:F2}%");
     }
 
     /// <summary>

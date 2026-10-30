@@ -379,6 +379,43 @@ public class NativePortTests
     }
 
     [Fact]
+    public void WaveSetupResumePointsFollowTheirCalls()
+    {
+        var s = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        var w = new Engine(new Symbols(s)).WaveSetup;
+        ushort Word(int a) => (ushort)((rom[a] << 8) | rom[a + 1]);
+        void Follows(WaveSetup.L l, string routine)
+        {
+            ushort ret = w.Address(l);
+            Assert.True(rom[ret - 3] == 0xBD && Word(ret - 2) == (ushort)s[routine], $"{l} at {ret:X4} does not follow JSR {routine}");
+        }
+        foreach (var l in new[] { WaveSetup.L.InitNap, WaveSetup.L.NumberNap, WaveSetup.L.MessageNap, WaveSetup.L.CreateNap })
+            Follows(l, "VNAPTPC");
+        Follows(WaveSetup.L.Settings, "RCMSA");
+        foreach (var l in new[] { WaveSetup.L.Cliff1, WaveSetup.L.Cliff2, WaveSetup.L.Cliff3, WaveSetup.L.Cliff4 })
+            Follows(l, "WCLFEW");
+        Follows(WaveSetup.L.Delayed, "WAVDEL");
+        Follows(WaveSetup.L.Waited, "WATWAV");
+        foreach (var l in new[] { WaveSetup.L.Bounders, WaveSetup.L.Hunters, WaveSetup.L.Lords })
+            Follows(l, "WCREATE");
+        Assert.Equal(0xAD, rom[w.Address(WaveSetup.L.Previous) - 3]);  // JSR [PWPREV,U]
+        Assert.Equal(0xAD, rom[w.Address(WaveSetup.L.Started) - 2]);   // JSR [B,X]
+        foreach (var l in new[] { WaveSetup.L.DelayBack, WaveSetup.L.WaitBack })
+            Assert.Equal(0x8D, rom[w.Address(l) - 2]);                 // BSR REWMSG
+    }
+
+    [Fact]
+    public void WaveSetupMatchesWhenCalledFromOriginalCode()
+    {
+        string[] labels = Enum.GetValues<WaveSetup.L>().Select(TxJumpRoutine.WaveName).ToArray();
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 40000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[] { "CIA", "CIA@nap", "IWAVE", "WNRM@nap", "REWMSG@nap", "WCREATE@nap" })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+    }
+
+    [Fact]
     public void JoysticksMatchWhenCalledFromOriginalCode()
     {
         // Every caller reads the joystick inline now; hook just the reads so original code calls them.
