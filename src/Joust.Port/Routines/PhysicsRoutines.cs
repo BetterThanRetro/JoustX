@@ -30,7 +30,10 @@ public sealed class Engine
         FrameStart = new FrameStart(s, Scheduler);
         Waves = new WaveMonitor(s, Scheduler);
         WaveSetup = new WaveSetup(s, Scheduler, Text);
+        Checksums = new Checksums(s, Scheduler);
     }
+
+    public Checksums Checksums { get; }
 
     public WaveSetup WaveSetup { get; }
 
@@ -111,6 +114,12 @@ public sealed class TxJumpRoutine(
             WaveName(l),
             (e, t) => e.WaveSetup.Run(t, l),
             e => e.WaveSetup.Address(l))),
+
+        // The anti-tamper checksums: JZAP's summing loop in chunks, the KZAP process
+        new TxJumpRoutine("JZAP.1S", (e, t) => e.Checksums.Sum(t)),
+        new TxJumpRoutine("KZAP", (e, t) => e.Checksums.Run(t, Checksums.L.KzapStart)),
+        new TxJumpRoutine("KZAP.1S@nap", (e, t) => e.Checksums.Run(t, Checksums.L.KzapNap), e => e.Checksums.Address(Checksums.L.KzapNap)),
+        new TxJumpRoutine("KZAP@raddr", (e, t) => e.Checksums.Run(t, Checksums.L.KzapFailed), e => e.Checksums.Address(Checksums.L.KzapFailed)),
 
         // The wave controller's in-play loop
         new TxJumpRoutine("EMY2", (e, t) => e.Waves.Run(t, WaveMonitor.L.Reset)),
