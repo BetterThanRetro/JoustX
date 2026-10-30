@@ -57,3 +57,9 @@ dotnet run --project src/Joust.Tools -- verify-native --frames 20000 --seeds 1,2
 ```bash
 dotnet test
 ```
+
+If Windows Smart App Control blocks the freshly built test assembly ("An Application Control policy has blocked this file"), run the suite in a Linux container instead (needs Docker Desktop):
+
+```bash
+powershell -File scripts/test-docker.ps1
+```

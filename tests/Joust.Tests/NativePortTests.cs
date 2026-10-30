@@ -56,7 +56,7 @@ public class NativePortTests
         Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
         foreach (var name in new[]
                  {
-                     "RANDSYS", "SND", "DCOLOR", "SCRHUN", "SCRTEN",
+                     "RANDSYS", "SND", "DCOLOR",
                      "CHROUT", "CHR35", "PHROUT",
                      "WRAPX", "ADDGRA", "ADDGRX", "ADDFLP", "CKGND", "BCKCOL",
                      "RUNR", "SKIDR", "STANDR", "SRCADA", "SRCADH",
@@ -243,6 +243,15 @@ public class NativePortTests
             Assert.Equal(0xBD, rom[afterNap - 3]);               // PCNAP 1: JSR VNAPTPC
             Assert.Equal((ushort)s["VNAPTPC"], Word(afterNap - 2));
         }
+    }
+
+    [Fact]
+    public void ScoreRoutinesMatchWhenCalledFromOriginalCode()
+    {
+        // The joust calls these inline now; hook just them so original code calls them.
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => r.Symbol is "SCRHUN" or "SCRTEN"), seed: 1, frames: 8000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        Assert.True(v.Stats["SCRHUN"].Calls > 0 && v.Stats["SCRTEN"].Calls > 0, "score routines not exercised");
     }
 
     [Fact]

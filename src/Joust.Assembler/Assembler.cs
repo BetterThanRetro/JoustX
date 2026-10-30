@@ -305,7 +305,13 @@ public sealed partial class Assembler
         string dir = Path.GetDirectoryName(_file) ?? ".";
         string full = Path.Combine(dir, name);
         if (!File.Exists(full))
-            throw new AsmException($"include file not found: {name}");
+        {
+            // The source was written on case-insensitive file systems (e.g. joust_mods.asm vs
+            // joust_mods.ASM); match by name ignoring case so it also builds on Linux.
+            full = Directory.EnumerateFiles(dir)
+                .FirstOrDefault(f => string.Equals(Path.GetFileName(f), name, StringComparison.OrdinalIgnoreCase))
+                ?? throw new AsmException($"include file not found: {name}");
+        }
         return Path.GetFullPath(full);
     }
 
