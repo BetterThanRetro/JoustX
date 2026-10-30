@@ -19,6 +19,19 @@ public class HdRendererTests
     }
 
     [Fact]
+    public void ReverbStaysBoundedAndDecays()
+    {
+        var reverb = new CavernReverb(48000);
+        var input = new float[48000 * 3];
+        for (int i = 0; i < 4800; i++) input[i] = (i / 40 % 2 == 0) ? 0.8f : -0.8f;   // 0.1 s square burst
+        var output = new float[input.Length * 2];
+        reverb.Process(input, output);
+        Assert.All(output, v => Assert.InRange(v, -2f, 2f));
+        float tail = output.Skip(output.Length - 9600).Max(Math.Abs);
+        Assert.True(tail < 0.01f, $"reverb still at {tail} after 3 s");
+    }
+
+    [Fact]
     public void FlatAreasStayFlat()
     {
         var src = Enumerable.Repeat((byte)7, 16).ToArray();

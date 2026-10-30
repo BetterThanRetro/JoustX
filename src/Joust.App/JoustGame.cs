@@ -47,7 +47,11 @@ public sealed class JoustGame : Game
     private SoundBridge _sound = null!;
     private DynamicSoundEffectInstance _audio = null!;
     private readonly float[] _samples = new float[SampleRate / 10];
-    private readonly byte[] _pcm = new byte[SampleRate / 10 * 2];
+    private readonly float[] _stereo = new float[SampleRate / 10 * 2];
+    private readonly byte[] _pcm = new byte[SampleRate / 10 * 4];
+    private readonly CavernReverb _reverb = new(SampleRate);
+    private bool _reverbOn = true;                               // F7: original sound only
+    private float _dcIn, _dcOut;
 
     public JoustGame()
     {
@@ -87,7 +91,7 @@ public sealed class JoustGame : Game
         var board = new SoundBoard(sound.Memory);
         board.Reset();
         _sound = new SoundBridge(_machine, board, SampleRate);
-        _audio = new DynamicSoundEffectInstance(SampleRate, AudioChannels.Mono);
+        _audio = new DynamicSoundEffectInstance(SampleRate, AudioChannels.Stereo);
         _audio.Play();
 
         string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JoustX");
@@ -120,6 +124,8 @@ public sealed class JoustGame : Game
             _machine.Reset();
         if (Pressed(k, Keys.F5))
             _hd = !_hd;
+        if (Pressed(k, Keys.F7))
+            _reverbOn = !_reverbOn;
         if (Pressed(k, Keys.F6))
             _hdOptions = _hdOptions with { Crt = !_hdOptions.Crt };
 
@@ -147,7 +153,7 @@ public sealed class JoustGame : Game
         SubmitAudio();
         _previousKeys = k;
         if (_machine.Frame % 30 == 0)
-            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
+            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
         base.Update(gameTime);
     }
 
@@ -172,11 +178,27 @@ public sealed class JoustGame : Game
         if (n == 0 || _audio.PendingBufferCount > 4) return;
         for (int s = 0; s < n; s++)
         {
-            short v = (short)Math.Clamp(_samples[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
+            // DC blocker: the DAC rests at whatever level a sound left it, which would click.
+            float x = _samples[s];
+            _dcOut = x - _dcIn + 0.9985f * _dcOut;
+            _dcIn = x;
+            _samples[s] = _dcOut;
+        }
+        if (_reverbOn)
+        {
+            _reverb.Process(_samples.AsSpan(0, n), _stereo);
+        }
+        else
+        {
+            for (int s = 0; s < n; s++) _stereo[2 * s] = _stereo[2 * s + 1] = _samples[s];
+        }
+        for (int s = 0; s < 2 * n; s++)
+        {
+            short v = (short)Math.Clamp(_stereo[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
             _pcm[2 * s] = (byte)v;
             _pcm[2 * s + 1] = (byte)(v >> 8);
         }
-        _audio.SubmitBuffer(_pcm, 0, n * 2);
+        _audio.SubmitBuffer(_pcm, 0, n * 4);
     }
 
     protected override void Draw(GameTime gameTime)
