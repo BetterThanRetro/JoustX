@@ -5,7 +5,7 @@ using Joust.Port;
 namespace Joust.Tools;
 
 /// <summary>
-/// verify-native [--frames N] [--seeds 1,2,3]
+/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players]
 /// Checks every native routine against the original 6809 code, two ways:
 ///   per-call: each real call runs both versions and compares registers, flags, cycles, memory;
 ///   lockstep: an all-original machine and a native machine run side by side, compared every frame.
@@ -18,12 +18,14 @@ internal static class NativeVerifyCommand
         int[] seeds = [1, 2, 3];
         HashSet<string>? only = null;
         bool trace = false;
+        bool twoPlayers = false;
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
             else if (args[i] == "--seeds") seeds = args[++i].Split(',').Select(int.Parse).ToArray();
             else if (args[i] == "--only") only = new HashSet<string>(args[++i].Split(','), StringComparer.OrdinalIgnoreCase);
             else if (args[i] == "--trace") trace = true;
+            else if (args[i] == "--two-players") twoPlayers = true;
         }
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
@@ -52,7 +54,7 @@ internal static class NativeVerifyCommand
             var m = Boot(program.Memory, cmos);
             Install(m, program.Symbols);
             var verifier = new NativeVerifier(m) { TraceOriginal = trace };
-            var player = new RandomPlayer(seed);
+            var player = new RandomPlayer(seed, twoPlayers);
             for (int f = 0; f < frames; f++)
             {
                 player.Apply(m.Inputs, f);
@@ -69,8 +71,8 @@ internal static class NativeVerifyCommand
             Install(native, program.Symbols);
             native.IdleStart = (ushort)program.Symbols["EXEINT"];
             native.IdleEnd = (ushort)(native.IdleStart + 4);          // TST ,X / BNE EXEINT
-            var p1 = new RandomPlayer(seed);
-            var p2 = new RandomPlayer(seed);
+            var p1 = new RandomPlayer(seed, twoPlayers);
+            var p2 = new RandomPlayer(seed, twoPlayers);
             string? diff = null;
             int frame = 0;
             for (; frame < frames && diff == null; frame++)

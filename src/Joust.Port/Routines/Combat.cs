@@ -289,7 +289,8 @@ public sealed class Combat
         t.CC = Logic16(t.CC, t.X);
         t.Cycles += 5 + Ext(_colObj) + 8;                        // LDX COLOBJ / JSR OSTWIN
         t.Push16(ULosesAfterWin);
-        return Kill(t);
+        ushort next = Kill(t);
+        return next == ULosesAfterWin ? ULosesAfterKill(t) : next; // whole kill ran inline
     }
 
     /// <summary>After OSTWIN in OSTXT3: a pterodactyl winner also knocks the bird away.</summary>
@@ -320,7 +321,8 @@ public sealed class Combat
         Swap(t);
         t.Cycles += 8;                                           // JSR OSTWIN
         t.Push16(XLosesAfterWin);
-        return Kill(t);
+        ushort next = Kill(t);
+        return next == XLosesAfterWin ? XLosesAfterKill(t) : next;
     }
 
     /// <summary>After OSTWIN in OSTPYP.</summary>
@@ -370,8 +372,17 @@ public sealed class Combat
                     + 3 + 5 + Ix(_joy) + 7 + Symbols.IndirectCost(_ddead);
         ushort death = t.Read16(t.Y + _ddead);
         t.Push16(OstwinAfterDeath);                              // JSR [DDEAD,Y]
+        if (Deaths != null && Deaths.Run(t, death))
+        {
+            t.S += 2;                                            // its RTS
+            t.Cycles += 5;
+            return KillAfterDeath(t);
+        }
         return death;
     }
+
+    /// <summary>The native death routines (set after construction; they also use this class).</summary>
+    public Deaths? Deaths { get; set; }
 
     /// <summary>OSTWIN after the death routine: the winner scores the loser's value.</summary>
     public ushort KillAfterDeath(Tx t)

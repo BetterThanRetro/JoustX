@@ -36,7 +36,7 @@ public class NativePortTests
         }
     }
 
-    private static NativeVerifier VerifiedRun(IEnumerable<NativeRoutine> routines, int seed, int frames)
+    private static NativeVerifier VerifiedRun(IEnumerable<NativeRoutine> routines, int seed, int frames, bool twoPlayers = false)
     {
         var m = Boot();
         foreach (var r in routines)
@@ -45,7 +45,7 @@ public class NativePortTests
             m.InstallNative(r, r.ResolveAddress(Program.Value.Symbols));
         }
         var v = new NativeVerifier(m);
-        Play(m, new RandomPlayer(seed), frames);
+        Play(m, new RandomPlayer(seed, twoPlayers), frames);
         return v;
     }
 
@@ -65,7 +65,7 @@ public class NativePortTests
                      "SCODSP@idle", "SCODSP@digit", "BCDMSN", "BCDLSN",
                      "PLYRLP@nap", "PLYRS2", "UPDNO2@state", "FLAPLP@nap", "FLAPLP@air",
                      "FLIPLP@nap", "FLIPLP@air", "FLIPST@grav", "GOTFIT@ground", "AIROVR@joy", "P1JOY",
-                     "PLYCOL@nap", "OPPCOL.25S", "OSTWIN@dead", "OSTXT3@win",
+                     "PLYCOL@nap", "OPPCOL.25S",
                  })
             Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
     }
@@ -246,6 +246,35 @@ public class NativePortTests
     }
 
     [Fact]
+    public void DeathRoutinesMatchWhenCalledFromOriginalCode()
+    {
+        // OSTWIN calls them inline now; hook just them so the original OSTWIN calls them.
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => r.Symbol.StartsWith("DEATH")), seed: 1, frames: 40000, twoPlayers: true);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[] { "DEATH1", "DEATH2", "DEATH3" })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
+    }
+
+    [Fact]
+    public void TwoPlayerGameStaysInLockstep()
+    {
+        var original = Boot();
+        var native = Boot();
+        NativeRoutines.InstallAll(native, Program.Value.Symbols);
+        var p1 = new RandomPlayer(5, twoPlayers: true);
+        var p2 = new RandomPlayer(5, twoPlayers: true);
+        for (int f = 0; f < 8000; f++)
+        {
+            p1.Apply(original.Inputs, f);
+            p2.Apply(native.Inputs, f);
+            original.RunFrame();
+            native.RunFrame();
+            var diff = Lockstep.Compare(original, native);
+            Assert.True(diff == null, $"frame {f}: {diff}");
+        }
+    }
+
+    [Fact]
     public void ScoreRoutinesMatchWhenCalledFromOriginalCode()
     {
         // The joust calls these inline now; hook just them so original code calls them.
@@ -262,6 +291,13 @@ public class NativePortTests
         Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
         Assert.True(v.Stats["EGGSCR"].Calls > 0, "no egg was collected");
         Assert.True(v.Stats["OSTWIN"].Calls > 10, "too few kills");
+
+        // The joust's resume points, entered after the original OSTWIN and death routines.
+        string[] resume = ["OSTWIN@dead", "OSTWIN@score", "OSTXT3@win", "OSTPYP@win"];
+        var r = VerifiedRun(NativeRoutines.Create().Where(n => resume.Contains(n.Symbol)), seed: 1, frames: 40000);
+        Assert.True(r.TotalMismatches == 0, string.Join("\n", r.Reports));
+        foreach (var name in new[] { "OSTWIN@dead", "OSTXT3@win", "OSTPYP@win" })
+            Assert.True(r.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
     }
 
     [Fact]

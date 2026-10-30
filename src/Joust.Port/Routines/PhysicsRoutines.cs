@@ -15,7 +15,11 @@ public sealed class Engine
         ScoreDisplay = new ScoreDisplay(s);
         Bird = new BirdProcess(s, Physics, Ground, Scheduler);
         Sweeps = new Sweeps(s, Combat, Scheduler);
+        Deaths = new Deaths(s, Scheduler, Ground, Scoring, Combat);
+        Combat.Deaths = Deaths;
     }
+
+    public Deaths Deaths { get; }
 
     public BirdProcess Bird { get; }
     public Scoring Scoring { get; }
@@ -238,6 +242,12 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         Always("CRPROC", (e, t) => e.Scheduler.Create(t, afterRunning: true)),
         Always("CUPROC", (e, t) => e.Scheduler.Create(t, afterRunning: false)),
         Always("KLPROC", (e, t) => e.Scheduler.Kill(t)),
+
+        // Death routines (also reached from the lava)
+        Always("DEATH1", (e, t) => e.Deaths.PlayerDies(t, player2: false)),
+        Always("DEATH2", (e, t) => e.Deaths.PlayerDies(t, player2: true)),
+        Always("DEATH3", (e, t) => e.Deaths.EnemyDies(t)),
+        Always("DEATH4", (e, t) => e.Deaths.PterodactylDies(t)),
 
         // Joystick reads (widget PIA)
         Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),

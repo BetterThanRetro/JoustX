@@ -37,10 +37,11 @@ public static class Lockstep
 /// Deterministic pseudo-random player: keeps feeding coins and starts, and flaps and steers
 /// with a seeded generator, so long runs cover many waves, deaths and game-overs.
 /// </summary>
-public sealed class RandomPlayer(int seed)
+public sealed class RandomPlayer(int seed, bool twoPlayers = false)
 {
     private uint _state = (uint)seed * 2654435761u + 1;
     private int _flapHold, _dir, _dirHold;
+    private int _flapHold2, _dir2, _dirHold2;
 
     private uint Next()
     {
@@ -53,21 +54,27 @@ public sealed class RandomPlayer(int seed)
     public void Apply(JoustInputs i, long frame)
     {
         long cycle = frame % 2400;
-        i.CoinLeft = cycle is >= 0 and < 4;
-        i.Start1 = cycle is >= 100 and < 104;
-        i.Start2 = false;
+        // Two coins (on separate presses) for a two-player game.
+        i.CoinLeft = cycle is >= 0 and < 4 || (twoPlayers && cycle is >= 20 and < 24);
+        i.Start1 = !twoPlayers && cycle is >= 100 and < 104;
+        i.Start2 = twoPlayers && cycle is >= 100 and < 104;
 
-        if (_flapHold > 0) _flapHold--;
-        else if (Next() % 100 < 18) _flapHold = 3;
-        i.P1Flap = _flapHold > 0;
+        (i.P1Flap, i.P1Left, i.P1Right) = Steer(ref _flapHold, ref _dir, ref _dirHold);
+        if (twoPlayers)
+            (i.P2Flap, i.P2Left, i.P2Right) = Steer(ref _flapHold2, ref _dir2, ref _dirHold2);
+    }
 
-        if (_dirHold > 0) _dirHold--;
+    private (bool Flap, bool Left, bool Right) Steer(ref int flapHold, ref int dir, ref int dirHold)
+    {
+        if (flapHold > 0) flapHold--;
+        else if (Next() % 100 < 18) flapHold = 3;
+
+        if (dirHold > 0) dirHold--;
         else
         {
-            _dir = (int)(Next() % 3) - 1;
-            _dirHold = 10 + (int)(Next() % 50);
+            dir = (int)(Next() % 3) - 1;
+            dirHold = 10 + (int)(Next() % 50);
         }
-        i.P1Left = _dir < 0;
-        i.P1Right = _dir > 0;
+        return (flapHold > 0, dir < 0, dir > 0);
     }
 }

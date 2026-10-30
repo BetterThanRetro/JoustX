@@ -58,6 +58,7 @@ Still open here:
 | Bird process: `PLYRLP`, `PLYRS2`, `PL2RIT`, `PL2EDG`, `STFLY`, `STFALL`, `STLAN`, `FLAPLP`/`FLIPLP` and their resume points | Ground loop (state table, stepping, walking off edges), take-off, falling, flap/flip flight loops, landing; players and enemies | Player-loop step |
 | `AIROVR` / `P1JOY` / `P2JOY` | In-air overhead (facing, time in air); joystick reads through the widget PIA | Player-loop step |
 | `PLYCOL` / `OPPCOL` (+ loop labels and resume points) | Collision sweeps: players vs everything, enemies vs enemies; target-timer countdown | Joust step |
+| `DEATH1` / `DEATH2` (`SPDIE`, `LZAP`) / `DEATH3` / `DEATH4` | Player death (gladiator bounty, death puff, 50 points, anti-tamper check, target removal, lives, game over), enemy death (drops the egg that hatches one level smarter), pterodactyl death; run inline in a kill, so a whole kill is native | Death step |
 | `HITEM` contact path (`OSTHIT`, `OSTBO`, `OSTHT2`, `EGGSCR`, `OSTWIN` + resume points) | The joust: higher lance wins, equal lances bounce, enemies thud, pterodactyl only dies to a lance in its mouth while facing it, egg pickups (250/500/750/1000, +500 caught in the air), the kill and the winner's score | Joust step |
 
 `verify-native` (4 seeds × 40,000 frames): about 2.3 million native calls in lockstep (identical every frame), 0 per-call mismatches. Natives handle about 46% of non-idle CPU time; the original code spends about 60% of all cycles idling until the blitter IRQ frees a DMA table. Mutation tests confirm the checks catch a single cycle, flag, memory-bit or register error, including in jump-style code.
@@ -76,7 +77,7 @@ Still original code:
 - `EXECST`: frame start (busy-wait for a free DMA table and sending the queued sound to the sound board).
 - The IRQ handler: palette refresh, switch debounce, and playing the DMA lists to the blitter. This is now the largest remaining share of CPU time.
 - Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), deaths, eggs, transporters, enemy AI (the `PJOY` routines of buzzards and pterodactyls), lava troll, attract mode.
-- The death routines the joust calls (`DEATH1`–`DEATH4`: the death puff, eggs, game over). `OSTWIN` leaves for them and resumes natively afterwards.
+- The processes the death routines start: the egg (`STEGG`), the death puff (`DEATH`), the floating score (`SCRAIR`), game over (`GAMOVR`/`GAMOV1`).
 - Rare joust cases hand the whole call back: an egg score that earns an extra mount, and the "fictitious collision" `SWI`.
 
 `verify-native --only SYM,...` checks a subset; `--trace` adds the original's instruction trace to mismatch reports (how the one `BCKPIX` bug in this step was found).
@@ -91,7 +92,7 @@ How a native routine stays exact (see `NativeRoutine`):
 
 Natives now handle about 52–54% of non-idle CPU time (4 seeds × 40,000 frames, 1.8 million native calls in lockstep, 0 mismatches).
 
-Next: the death routines and eggs (`DEATH1`–`DEATH4`, the egg process), then enemy AI (the `PJOY` decision routines), then the IRQ handler. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player.
+Next: the egg process (falling, bouncing, hatching, calling its buzzard, the score display), then enemy AI (the `PJOY` decision routines), then the IRQ handler. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
 
 1. **Routine hooks.** Add a `NativeRoutines` table keyed by ROM address. When the PC reaches a hooked entry, the C# implementation runs against the *same* RAM, registers and stack, then returns as the original `RTS` would.
 2. **Lockstep verifier.** Run two machines side by side, pure original and hooked, with identical inputs. Compare RAM, palette and CMOS every frame and report the first diverging address, frame and routine. The golden replay script grows into a library of input recordings (wave 1–10, pterodactyls, lava troll, egg waves, two-player gladiator rounds, high-score entry).
