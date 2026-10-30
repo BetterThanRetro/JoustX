@@ -67,6 +67,7 @@ public class NativePortTests
                      "FLIPLP@nap", "FLIPLP@air", "FLIPST@grav", "GOTFIT@ground", "AIROVR@joy", "P1JOY",
                      "PLYCOL@nap", "OPPCOL.25S",
                      "ADDEGG", "WEGG", "CEGG", "EGGBKG", "CLIPER", "WEGPAR",
+                     "EGGLPA@nap", "EGGLN2@nap",
                  })
             Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
     }
@@ -282,6 +283,25 @@ public class NativePortTests
         var v = VerifiedRun(NativeRoutines.Create().Where(r => r.Symbol is "SCRHUN" or "SCRTEN"), seed: 1, frames: 8000);
         Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
         Assert.True(v.Stats["SCRHUN"].Calls > 0 && v.Stats["SCRTEN"].Calls > 0, "score routines not exercised");
+    }
+
+    [Fact]
+    public void EggResumePointsFollowNaps()
+    {
+        var s = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        var eggs = new Engine(new Symbols(s)).EggProcess.Addresses;
+        ushort nap = (ushort)s["VNAPTPC"];
+        foreach (var l in new[]
+                 {
+                     EggProcess.L.FallNap, EggProcess.L.WaitNap, EggProcess.L.NextFrame, EggProcess.L.Hatched,
+                     EggProcess.L.IdleNap, EggProcess.L.HitNap, EggProcess.L.DelayNap, EggProcess.L.Show,
+                     EggProcess.L.ScoreNap,
+                 })
+        {
+            ushort ret = eggs[l];
+            Assert.True(rom[ret - 3] == 0xBD && ((rom[ret - 2] << 8) | rom[ret - 1]) == nap, $"{l} at {ret:X4} does not follow JSR VNAPTPC");
+        }
     }
 
     [Fact]

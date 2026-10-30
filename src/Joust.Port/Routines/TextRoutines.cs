@@ -9,22 +9,19 @@ namespace Joust.Port.Routines;
 /// past the text. 5x7 or 3x5 font.
 /// </summary>
 /// <remarks>
-/// The original masks interrupts (ORCC #$FF) right after saving registers and restores CC
-/// with its final PULS, so only that short prefix has to be interrupt-free.
+/// Blitter writes go through the transaction's I/O log, so the blits run (in order) at
+/// commit; their stall cycles are counted in <see cref="Tx.StallCycles"/>.
 /// </remarks>
-public sealed class TextRoutine(string symbol, bool phrase, bool smallFont) : NativeRoutine
+public sealed class TextOut
 {
-    private ushort _font, _phrases, _fontSave, _blitControl, _blitColor, _blitSource, _blitDest, _blitSize;
+    private const byte BlitCharacter = 0x1A;                     // serial->block, colour substitute, zero suppress
 
-    public override string Symbol => symbol;
+    private readonly ushort _font57, _font35, _phrases, _fontSave, _blitControl, _blitColor, _blitSource, _blitDest, _blitSize;
 
-    // PSHS U,Y,D,CC (12) + LDY #font (4) [+ STY XSAVE (6)] before ORCC #$FF.
-    public override int MaxCycles => phrase ? 12 + 4 + 6 + 1 : 12 + 4 + 1;
-
-    public override void Bind(IReadOnlyDictionary<string, long> symbols)
+    public TextOut(Symbols s)
     {
-        var s = new Symbols(symbols);
-        _font = s[smallFont ? "FONT35" : "FONT57"];
+        _font57 = s["FONT57"];
+        _font35 = s["FONT35"];
         _phrases = s["PHRASE"];
         _fontSave = s["XSAVE"];
         _blitControl = s["DMA"];
@@ -34,61 +31,70 @@ public sealed class TextRoutine(string symbol, bool phrase, bool smallFont) : Na
         _blitSize = s["XSIZE"];
     }
 
-    private const byte BlitCharacter = 0x1A;                     // serial->block, colour substitute, zero suppress
-
-    public override bool Execute(NativeContext c)
+    /// <summary>The whole routine, including its final PULS U,Y,D,CC,PC (which is its return).</summary>
+    public void Write(Tx t, bool phrase, bool smallFont)
     {
-        var cpu = c.Cpu;
-
-        // Plan first: the glyphs and the exact cost (including blitter stalls), so the call can
-        // still be handed back if it would not finish inside this video frame.
-        var glyphs = new List<ushort>();
-        int cycles = 12 + 4 + 3 + 5 + 7 + 14;                    // PSHS, LDY, ORCC, STB CON, BSR, PULS
+        ushort font = smallFont ? _font35 : _font57;
+        t.Cycles += 12 + 4 + 3 + 5 + 7 + 14;                     // PSHS, LDY, ORCC, STB CON, BSR, PULS
+        t.IoWrite(_blitColor, t.B);
+        ushort screen = t.X;
         if (!phrase)
         {
-            glyphs.Add(Glyph(c, cpu.A));
+            Draw(t, font, Glyph(t, font, t.A), ref screen);
         }
         else
         {
-            cycles += 6 + 3 + 5 + 6 + 5;                         // STY XSAVE, LDU, LEAU A,U, LDU A,U, RTS
+            t.Write16(t.Var(_fontSave), font);                   // STY XSAVE
+            t.Cycles += 6 + 3 + 5 + 6 + 5;                       // STY, LDU, LEAU A,U, LDU A,U, RTS
             // PHROT1: the phrase table is indexed by a signed phrase number, scaled by 2.
-            sbyte n = (sbyte)cpu.A;
-            ushort text = c.Read16(_phrases + n + n);
+            sbyte n = (sbyte)t.A;
+            ushort text = t.Read16(_phrases + n + n);
             while (true)
             {
-                byte ch = c.Read(text++);
-                glyphs.Add(Glyph(c, ch));
-                cycles += 4 + 6 + 8 + 8 + 3;                     // LDA ,U / LDY XSAVE / JSR OUTPUT / TST ,U+ / BPL
+                byte ch = t.Read(text++);
+                t.Cycles += 4 + 6 + 8 + 8 + 3;                   // LDA ,U / LDY XSAVE / JSR OUTPUT / TST ,U+ / BPL
+                Draw(t, font, Glyph(t, font, ch), ref screen);
                 if ((ch & 0x80) != 0) break;                     // last character has bit 7 set
             }
         }
-        cycles += 64 * glyphs.Count;                             // OUTPUT per glyph
-        int stalls = glyphs.Sum(g => JoustMachine.BlitStallCycles(c.Read(g), c.Read(g + 1), BlitCharacter));
-        if (!c.FitsInFrame(cycles + stalls))
-            return false;
-
-        ushort screen = cpu.X;
-        c.Write(_blitColor, cpu.B);
-        if (phrase)
-            c.Write16(cpu.DP << 8 | (_fontSave & 0xFF), _font);   // STY XSAVE (direct page)
-        foreach (ushort g in glyphs)
-            Draw(c, g, ref screen);
-        cpu.X = screen;
-        c.Return(cycles);                                        // the blits already charged their stalls
-        return true;
+        t.X = screen;
     }
 
-    private ushort Glyph(NativeContext c, byte ch) => c.Read16(_font + (sbyte)(byte)(ch << 1));
+    private static ushort Glyph(Tx t, ushort font, byte ch) => t.Read16(font + (sbyte)(byte)(ch << 1));
 
     /// <summary>OUTPUT: blit one glyph at <paramref name="screen"/> and advance by its width.</summary>
-    private void Draw(NativeContext c, ushort glyph, ref ushort screen)
+    private void Draw(Tx t, ushort font, ushort glyph, ref ushort screen)
     {
-        c.Write16(_blitDest, screen);
-        byte width = c.Read(glyph), height = c.Read(glyph + 1);
-        c.Write(_blitSize, (byte)(width ^ 4));                   // SC1 size registers are XORed with 4
-        c.Write(_blitSize + 1, (byte)(height ^ 4));
-        c.Write16(_blitSource, (ushort)(glyph + 2));
-        c.Write(_blitControl, BlitCharacter);                    // the blit runs (and stalls the CPU) here
+        byte width = t.Read(glyph), height = t.Read(glyph + 1);
+        t.IoWrite(_blitDest, (byte)(screen >> 8));
+        t.IoWrite(_blitDest + 1, (byte)screen);
+        t.IoWrite(_blitSize, (byte)(width ^ 4));                 // SC1 size registers are XORed with 4
+        t.IoWrite(_blitSize + 1, (byte)(height ^ 4));
+        ushort source = (ushort)(glyph + 2);
+        t.IoWrite(_blitSource, (byte)(source >> 8));
+        t.IoWrite(_blitSource + 1, (byte)source);
+        t.IoWrite(_blitControl, BlitCharacter);                  // the blit runs here
+        t.StallCycles += JoustMachine.BlitStallCycles(width, height, BlitCharacter);
+        t.Cycles += 64;
         screen = (ushort)(screen + (width << 8));
+    }
+}
+
+/// <summary>The text routines as standalone hooks.</summary>
+public sealed class TextRoutine(string symbol, bool phrase, bool smallFont) : NativeRoutine
+{
+    private TextOut _text = null!;
+
+    public override string Symbol => symbol;
+    public override int MaxCycles => 0;                          // checked at commit
+
+    public override void Bind(IReadOnlyDictionary<string, long> symbols) => _text = new TextOut(new Symbols(symbols));
+
+    public override bool Execute(NativeContext c)
+    {
+        var t = new Tx(c);
+        _text.Write(t, phrase, smallFont);
+        t.Cycles -= 5;                                           // Commit adds the "RTS" part of the PULS
+        return t.Commit();
     }
 }

@@ -266,8 +266,11 @@ public sealed class Physics
         return true;
     }
 
-    /// <summary>LND18: snap onto the top of the cliff whose landing bit is set.</summary>
-    private bool Land(Tx t)
+    /// <summary>
+    /// LND18: snap onto the top of the cliff whose landing bit is set (A = landing bits).
+    /// False (hand back) where the original would spawn a lava troll.
+    /// </summary>
+    public bool Land(Tx t)
     {
         byte bits = t.A;
         byte top;

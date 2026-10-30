@@ -20,6 +20,12 @@ public sealed class Tx
     /// <summary>Cycles used so far, excluding the routine's final RTS.</summary>
     public int Cycles;
 
+    /// <summary>
+    /// Cycles the blitter will steal when the logged blits run at commit. They count toward the
+    /// interrupt window but are charged by the blits themselves, not by <see cref="Cycles"/>.
+    /// </summary>
+    public int StallCycles;
+
     /// <summary>The player multiplexer as the I/O so far would leave it.</summary>
     public bool Mux;
 
@@ -36,15 +42,15 @@ public sealed class Tx
     // ------------------------------------------------------------------ marks
 
     public readonly record struct TxMark(
-        byte A, byte B, byte DP, byte CC, ushort X, ushort Y, ushort U, ushort S, int Cycles, bool Mux,
+        byte A, byte B, byte DP, byte CC, ushort X, ushort Y, ushort U, ushort S, int Cycles, int StallCycles, bool Mux,
         Dictionary<int, byte> Pending, int IoCount);
 
     /// <summary>Remembers the current state so a later step can be undone.</summary>
-    public TxMark Mark() => new(A, B, DP, CC, X, Y, U, S, Cycles, Mux, new Dictionary<int, byte>(_pending), _io.Count);
+    public TxMark Mark() => new(A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, Mux, new Dictionary<int, byte>(_pending), _io.Count);
 
     public void Rollback(TxMark m)
     {
-        (A, B, DP, CC, X, Y, U, S, Cycles, Mux) = (m.A, m.B, m.DP, m.CC, m.X, m.Y, m.U, m.S, m.Cycles, m.Mux);
+        (A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, Mux) = (m.A, m.B, m.DP, m.CC, m.X, m.Y, m.U, m.S, m.Cycles, m.StallCycles, m.Mux);
         _pending = new Dictionary<int, byte>(m.Pending);
         _io.RemoveRange(m.IoCount, _io.Count - m.IoCount);
     }
@@ -97,7 +103,7 @@ public sealed class Tx
     }
 
     /// <summary>True if <paramref name="extra"/> more cycles could still run without moving an interrupt.</summary>
-    public bool CanRun(int extra) => _c.InterruptSafe(Cycles + extra);
+    public bool CanRun(int extra) => _c.InterruptSafe(Cycles + StallCycles + extra);
 
     /// <summary>
     /// Applies the writes and registers and performs the final RTS, or returns false (changing
@@ -106,7 +112,7 @@ public sealed class Tx
     public bool Commit()
     {
         const int rts = 5;
-        if (!_c.InterruptSafe(Cycles + rts))
+        if (!_c.InterruptSafe(Cycles + StallCycles + rts))
             return false;
         Apply();
         _c.Return(Cycles + rts);
@@ -116,7 +122,7 @@ public sealed class Tx
     /// <summary>Like <see cref="Commit"/>, but the code leaves by jumping to <paramref name="pc"/>.</summary>
     public bool CommitJump(ushort pc)
     {
-        if (!_c.InterruptSafe(Cycles))
+        if (!_c.InterruptSafe(Cycles + StallCycles))
             return false;
         Apply();
         _c.Jump(pc, Cycles);

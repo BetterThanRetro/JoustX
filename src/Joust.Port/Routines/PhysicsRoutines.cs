@@ -18,9 +18,13 @@ public sealed class Engine
         Deaths = new Deaths(s, Scheduler, Ground, Scoring, Combat);
         Combat.Deaths = Deaths;
         Eggs = new Eggs(s, Physics, Ground);
+        Text = new TextOut(s);
+        EggProcess = new EggProcess(s, Physics, Ground, Scheduler, Eggs, Text);
     }
 
     public Eggs Eggs { get; }
+    public TextOut Text { get; }
+    public EggProcess EggProcess { get; }
 
     public Deaths Deaths { get; }
 
@@ -113,6 +117,12 @@ public sealed class TxJumpRoutine(
             (e, t) => e.Sweeps.Run(t, l),
             e => e.Sweeps.Address(l))),
 
+        // The egg process, entered at any of its labels or resume points
+        .. Enum.GetValues<EggProcess.L>().Select(l => new TxJumpRoutine(
+            EggName(l),
+            (e, t) => e.EggProcess.Run(t, l),
+            e => e.EggProcess.Address(l))),
+
         new TxJumpRoutine("AIROVR", (e, t) => e.Bird.AirOverhead(t) ?? BirdProcess.Return(t)),
         new TxJumpRoutine("AIROVR@joy", (e, t) =>
         {
@@ -120,6 +130,30 @@ public sealed class TxJumpRoutine(
             return BirdProcess.Return(t);
         }, e => e.Bird.AirJoyReturn),
     ];
+
+    public static string EggName(EggProcess.L l) => l switch
+    {
+        EggProcess.L.Fall => "EGGLPA",
+        EggProcess.L.FallNap => "EGGLPA@nap",
+        EggProcess.L.Back => "EGGBCK",
+        EggProcess.L.Settle => "EGGLND",
+        EggProcess.L.Wait => "EGGLN2",
+        EggProcess.L.WaitNap => "EGGLN2@nap",
+        EggProcess.L.NextFrame => "EGGNXF",
+        EggProcess.L.Hatched => "EGGNXF@hatched",
+        EggProcess.L.Idle => "EGGLLP",
+        EggProcess.L.IdleNap => "EGGLLP@nap",
+        EggProcess.L.Hit => "EGGHIT",
+        EggProcess.L.HitNap => "EGGHIT@nap",
+        EggProcess.L.Delay => "EGGHIT.101S",
+        EggProcess.L.DelayNap => "EGGHIT.101S@nap",
+        EggProcess.L.Show => "EGGHIT.112S",
+        EggProcess.L.Score => "EGGSC2",
+        EggProcess.L.ScoreNap => "EGGSC2@nap",
+        EggProcess.L.ScoreInAir => "SCRAIR",
+        EggProcess.L.Done => "EGGDON",
+        _ => throw new ArgumentOutOfRangeException(nameof(l)),
+    };
 
     public static string SweepName(Sweeps.L l) => l switch
     {

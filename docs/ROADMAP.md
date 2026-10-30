@@ -59,6 +59,7 @@ Still open here:
 | `AIROVR` / `P1JOY` / `P2JOY` | In-air overhead (facing, time in air); joystick reads through the widget PIA | Player-loop step |
 | `PLYCOL` / `OPPCOL` (+ loop labels and resume points) | Collision sweeps: players vs everything, enemies vs enemies; target-timer countdown | Joust step |
 | `DEATH1` / `DEATH2` (`SPDIE`, `LZAP`) / `DEATH3` / `DEATH4` | Player death (gladiator bounty, death puff, 50 points, anti-tamper check, target removal, lives, game over), enemy death (drops the egg that hatches one level smarter), pterodactyl death; run inline in a kill, so a whole kill is native | Death step |
+| Egg process: `EGGLPA`, `EGGBCK`, `EGGLND`, `EGGLN2`, `EGGNXF`, `EGGLLP`, `EGGHIT`, `EGGSC2`, `SCRAIR`, `EGGDON` and their resume points | Falling and bouncing (each bounce quarters the fall, slows the drift), waiting on a ledge (falls again if it burns away), hatching when the wave has room (spawns the buzzard from the far side at the egg's level, wiggle frames, the standing man), collection with a non-overlapping floating score and the caught-in-the-air bonus | Egg step |
 | `ADDEGG` / `WEGG` / `WEGPAR` / `CEGG` / `CLIPER` / `EGGBKG` / `EGAREA` | Egg helpers: gravity and the egg's 4–288 wrap, tumble frame by speed, draw/erase, clipping at the lava line, cliff refresh, score position | Egg step |
 | `HITEM` contact path (`OSTHIT`, `OSTBO`, `OSTHT2`, `EGGSCR`, `OSTWIN` + resume points) | The joust: higher lance wins, equal lances bounce, enemies thud, pterodactyl only dies to a lance in its mouth while facing it, egg pickups (250/500/750/1000, +500 caught in the air), the kill and the winner's score | Joust step |
 
@@ -78,7 +79,7 @@ Still original code:
 - `EXECST`: frame start (busy-wait for a free DMA table and sending the queued sound to the sound board).
 - The IRQ handler: palette refresh, switch debounce, and playing the DMA lists to the blitter. This is now the largest remaining share of CPU time.
 - Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), deaths, eggs, transporters, enemy AI (the `PJOY` routines of buzzards and pterodactyls), lava troll, attract mode.
-- The processes the death routines start: the egg (`STEGG`), the death puff (`DEATH`), the floating score (`SCRAIR`), game over (`GAMOVR`/`GAMOV1`).
+- The processes the death routines start: the death puff (`DEATH`), game over (`GAMOVR`/`GAMOV1`). The attract mode's cycling egg score (`ATTEGG`) is handed back.
 - Rare joust cases hand the whole call back: an egg score that earns an extra mount, and the "fictitious collision" `SWI`.
 
 `verify-native --only SYM,...` checks a subset; `--trace` adds the original's instruction trace to mismatch reports (how the one `BCKPIX` bug in this step was found).
@@ -93,7 +94,7 @@ How a native routine stays exact (see `NativeRoutine`):
 
 Natives now handle about 52–54% of non-idle CPU time (4 seeds × 40,000 frames, 1.8 million native calls in lockstep, 0 mismatches).
 
-Next: the egg process slices (`STEGG`/`EGGLPA` falling and bouncing, `EGGLN2` waiting, hatching and calling its buzzard, `EGGLLP`, `EGGHIT`/`SCRAIR`/`EGGSC2` score display), then enemy AI (the `PJOY` decision routines), then the IRQ handler. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
+Next: enemy AI (the `PJOY` decision routines), then the IRQ handler. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
 
 1. **Routine hooks.** Add a `NativeRoutines` table keyed by ROM address. When the PC reaches a hooked entry, the C# implementation runs against the *same* RAM, registers and stack, then returns as the original `RTS` would.
 2. **Lockstep verifier.** Run two machines side by side, pure original and hooked, with identical inputs. Compare RAM, palette and CMOS every frame and report the first diverging address, frame and routine. The golden replay script grows into a library of input recordings (wave 1–10, pterodactyls, lava troll, egg waves, two-player gladiator rounds, high-score entry).
