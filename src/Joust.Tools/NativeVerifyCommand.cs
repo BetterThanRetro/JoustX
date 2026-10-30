@@ -1,11 +1,13 @@
-﻿using Joust.Assembler;
+using Joust.Assembler;
 using Joust.Emulation;
 using Joust.Port;
 
 namespace Joust.Tools;
 
 /// <summary>
-/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players]
+/// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll]
+/// --troll wakes the lava troll from the first wave (it normally comes out in wave 4, which the
+/// random player rarely reaches); both machines get the same change, so the comparison holds. [--troll]
 /// Checks every native routine against the original 6809 code, two ways:
 ///   per-call: each real call runs both versions and compares registers, flags, cycles, memory;
 ///   lockstep: an all-original machine and a native machine run side by side, compared every frame.
@@ -19,6 +21,7 @@ internal static class NativeVerifyCommand
         HashSet<string>? only = null;
         bool trace = false;
         bool twoPlayers = false;
+        bool troll = false;
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
@@ -26,6 +29,7 @@ internal static class NativeVerifyCommand
             else if (args[i] == "--only") only = new HashSet<string>(args[++i].Split(','), StringComparer.OrdinalIgnoreCase);
             else if (args[i] == "--trace") trace = true;
             else if (args[i] == "--two-players") twoPlayers = true;
+            else if (args[i] == "--troll") troll = true;
         }
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
@@ -44,6 +48,11 @@ internal static class NativeVerifyCommand
         var program = JoustRomBuild.Assemble(dir);
         if (!program.Success) throw new InvalidOperationException("assembly failed");
         byte[] cmos = FactoryCmos(program.Memory);
+        ushort trollWaves = (ushort)program.Symbols["TTROLL"];
+        void Prepare(JoustMachine m)
+        {
+            if (troll) m.Ram[trollWaves] = 0;                    // the troll is out from the start
+        }
 
         bool ok = true;
         foreach (int seed in seeds)
@@ -58,6 +67,7 @@ internal static class NativeVerifyCommand
             for (int f = 0; f < frames; f++)
             {
                 player.Apply(m.Inputs, f);
+                Prepare(m);
                 m.RunFrame();
             }
             Console.Write(verifier.Summary());
@@ -79,6 +89,8 @@ internal static class NativeVerifyCommand
             {
                 p1.Apply(original.Inputs, frame);
                 p2.Apply(native.Inputs, frame);
+                Prepare(original);
+                Prepare(native);
                 original.RunFrame();
                 native.RunFrame();
                 diff = Lockstep.Compare(original, native);

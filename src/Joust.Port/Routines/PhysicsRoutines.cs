@@ -22,9 +22,13 @@ public sealed class Engine
         Text = new TextOut(s);
         EggProcess = new EggProcess(s, Physics, Ground, Scheduler, Eggs, Text);
         Irq = new InterruptHandler(s);
+        Troll = new LavaTroll(s, Ground, Scheduler, Eggs, Scoring);
+        Physics.SpawnTroll = Troll.Spawn;
+        Bird.Troll = Troll;
     }
 
     public InterruptHandler Irq { get; }
+    public LavaTroll Troll { get; }
 
     public Eggs Eggs { get; }
     public TextOut Text { get; }
@@ -131,13 +135,33 @@ public sealed class TxJumpRoutine(
             (e, t) => e.EggProcess.Run(t, l),
             e => e.EggProcess.Address(l))),
 
-        new TxJumpRoutine("AIROVR", (e, t) => e.Bird.AirOverhead(t) ?? BirdProcess.Return(t)),
+        // The lava troll's processes, entered at any of their labels or resume points
+        .. Enum.GetValues<LavaTroll.L>().Select(l => new TxJumpRoutine(
+            TrollName(l),
+            (e, t) => e.Troll.Run(t, l),
+            e => e.Troll.Address(l))),
+
+        new TxJumpRoutine("AIROVR",(e, t) => e.Bird.AirOverhead(t) ?? BirdProcess.Return(t)),
         new TxJumpRoutine("AIROVR@joy", (e, t) =>
         {
             e.Bird.AirAfterControls(t);
             return BirdProcess.Return(t);
         }, e => e.Bird.AirJoyReturn),
     ];
+
+    public static string TrollName(LavaTroll.L l) => l switch
+    {
+        LavaTroll.L.Clear => "LAVATC",
+        LavaTroll.L.Reach => "LAVAT1",
+        LavaTroll.L.TrackNap => "LT1HT.2S@nap",
+        LavaTroll.L.GripNap => "LT1GRP.1S@nap",
+        LavaTroll.L.HoldClear => "LAV2LP",
+        LavaTroll.L.Hold => "LAVAT2",
+        LavaTroll.L.HoldDie => "LT2DIE",
+        LavaTroll.L.Drop => "LT1DRP",
+        LavaTroll.L.Done => "LT1DON",
+        _ => throw new ArgumentOutOfRangeException(nameof(l)),
+    };
 
     public static string EggName(EggProcess.L l) => l switch
     {
@@ -306,6 +330,9 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         // Joystick reads (widget PIA)
         Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),
         Always("P2JOY", (e, t) => e.Bird.Joystick(t, player1: false)),
+
+        // The lava troll's pull on a gripped bird (its PADGRA routine)
+        new TxRoutine("ADDLAV", (e, t) => e.Troll.Pull(t)),
 
         // Enemy AI (PJOY routines), at every label that can be stored in PJOY
         .. EnemyAi.Labels.Select(label => Always(label, (e, t) => e.Ai.Run(t, e.Ai.Entry(label)))),

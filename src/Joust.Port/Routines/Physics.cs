@@ -319,7 +319,10 @@ public sealed class Physics
         return true;
     }
 
-    /// <summary>LNDB7: over the lava. If a troll could grab this bird, the original spawns it.</summary>
+    /// <summary>LNDB7 from LDA PID,U: starts a lava troll under the bird (see <see cref="LavaTroll.Spawn"/>).</summary>
+    public Action<Tx>? SpawnTroll { get; set; }
+
+    /// <summary>LNDB7: over the lava. If a troll can grab this bird, it is spawned.</summary>
     private bool LavaTrollZone(Tx t)
     {
         t.Cycles += 3;                                           // BRA LNDB7
@@ -335,7 +338,11 @@ public sealed class Physics
             {
                 byte id = t.Read(t.U + _id);
                 if (id == _playerAlive || id == _enemyAlive)
-                    return false;                                // spawn a lava troll: original
+                {
+                    if (SpawnTroll == null) return false;        // spawn a lava troll: original
+                    SpawnTroll(t);
+                    return true;
+                }
                 t.A = id;
                 Sub8(ref t.CC, id, _playerAlive);
                 Sub8(ref t.CC, id, _enemyAlive);

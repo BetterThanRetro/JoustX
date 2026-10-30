@@ -38,6 +38,10 @@ public sealed class Asm(Tx t)
     public void Ldd(Ea e) { T.D = T.Read16(e.Address); T.CC = Logic16(T.CC, T.D); Cy(5 + e.Extra); }
     public void Ldx(Ea e) { T.X = T.Read16(e.Address); T.CC = Logic16(T.CC, T.X); Cy(5 + e.Extra); }
     public void Ldy(Ea e) { T.Y = T.Read16(e.Address); T.CC = Logic16(T.CC, T.Y); Cy(6 + e.Extra); }
+    public void Ldu(Ea e) { T.U = T.Read16(e.Address); T.CC = Logic16(T.CC, T.U); Cy(5 + e.Extra); }
+    public void Stu(Ea e) { T.Write16(e.Address, T.U); T.CC = Logic16(T.CC, T.U); Cy(5 + e.Extra); }
+    public void Sty(Ea e) { T.Write16(e.Address, T.Y); T.CC = Logic16(T.CC, T.Y); Cy(6 + e.Extra); }
+    public void Cmpy(Ea e) { Sub16(ref T.CC, T.Y, T.Read16(e.Address)); Cy(7 + e.Extra); }
     public void Lds(Ea e) { T.S = T.Read16(e.Address); T.CC = Logic16(T.CC, T.S); Cy(6 + e.Extra); }
     public void Sta(Ea e) { Put(e.Address, T.A); T.CC = Logic8(T.CC, T.A); Cy(4 + e.Extra); }
     public void Stb(Ea e) { Put(e.Address, T.B); T.CC = Logic8(T.CC, T.B); Cy(4 + e.Extra); }
@@ -115,6 +119,12 @@ public sealed class Asm(Tx t)
     public void Asra() { T.A = Asr8(ref T.CC, T.A); Cy(2); }
     public void Rorb() { T.B = Ror8(ref T.CC, T.B); Cy(2); }
     public void Nop() => Cy(2);
+    public void Inca() { T.A = Alu6809.Inc(ref T.CC, T.A); Cy(2); }
+    public void Sex() { T.A = (T.B & 0x80) != 0 ? (byte)0xFF : (byte)0; T.CC = Logic16(T.CC, T.D); Cy(2); }
+    public void SubaI(int v) { T.A = Sub8(ref T.CC, T.A, (byte)v); Cy(2); }
+
+    /// <summary>TFR U,Y.</summary>
+    public void TfrUY() { T.Y = T.U; Cy(6); }
 
     /// <summary>LEAY A,Y (sets Z).</summary>
     public void LeayAY() { T.Y = (ushort)(T.Y + (sbyte)T.A); T.CC = Set(T.CC, Z, T.Y == 0); Cy(5); }

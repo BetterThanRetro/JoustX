@@ -613,8 +613,8 @@ public sealed class BirdProcess
     }
 
     /// <summary>
-    /// LDX #FLYX / JSR [PADGRA,U]: gravity and movement. Inline for normal gravity; the lava
-    /// troll's gravity, or sinking into the lava, leaves the slice.
+    /// LDX #FLYX / JSR [PADGRA,U]: gravity and movement, inline for normal gravity and the lava
+    /// troll's pull; sinking into the lava leaves the slice.
     /// </summary>
     private ushort? Gravity(Tx t, L returnTo)
     {
@@ -634,8 +634,28 @@ public sealed class BirdProcess
             }
             t.Rollback(m);
         }
+        else if (Troll != null && target == Troll.PullAddress)
+        {
+            var m = t.Mark();
+            t.Cycles += jsr;
+            try
+            {
+                if (Troll.Pull(t))
+                {
+                    t.Cycles += 5;
+                    return null;
+                }
+            }
+            catch (HandBackException)
+            {
+            }
+            t.Rollback(m);                                       // dragged into the lava: original
+        }
         return Leave(t, jsr, target, _address[returnTo]);
     }
+
+    /// <summary>The lava troll, whose pull (ADDLAV) replaces a gripped bird's gravity.</summary>
+    public LavaTroll? Troll { get; set; }
 
     /// <summary>
     /// AIROVR: read the controls, face the joystick direction, count ticks in the air

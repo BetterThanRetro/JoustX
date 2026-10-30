@@ -338,6 +338,58 @@ public class NativePortTests
             Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
     }
 
+    /// <summary>
+    /// A verified run where the lava troll is out from the first wave (it normally comes in
+    /// wave 4, which the random player rarely reaches).
+    /// </summary>
+    private static NativeVerifier TrollRun(IEnumerable<NativeRoutine> routines, int seed, int frames)
+    {
+        var m = Boot();
+        foreach (var r in routines)
+        {
+            r.Bind(Program.Value.Symbols);
+            m.InstallNative(r, r.ResolveAddress(Program.Value.Symbols));
+        }
+        var v = new NativeVerifier(m);
+        var p = new RandomPlayer(seed);
+        ushort trollWaves = (ushort)Program.Value.Symbols["TTROLL"];
+        for (int f = 0; f < frames; f++)
+        {
+            p.Apply(m.Inputs, f);
+            m.Ram[trollWaves] = 0;
+            m.RunFrame();
+        }
+        return v;
+    }
+
+    [Fact]
+    public void LavaTrollMatchesTheOriginal()
+    {
+        var v = TrollRun(NativeRoutines.Create(), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[] { "LAVATC", "LAVAT1", "LT1HT.2S@nap", "LT1GRP.1S@nap", "LAV2LP", "LAVAT2", "LT2DIE", "LT1DRP" })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
+
+        // The pull, called from the original bird process.
+        var pull = TrollRun(NativeRoutines.Create().Where(r => r.Symbol == "ADDLAV"), seed: 1, frames: 20000);
+        Assert.True(pull.TotalMismatches == 0, string.Join("\n", pull.Reports));
+        Assert.True(pull.Stats.TryGetValue("ADDLAV", out var a) && a.Calls > a.Declined, "the troll's pull never ran natively");
+    }
+
+    [Fact]
+    public void LavaTrollResumePointsFollowNaps()
+    {
+        var s = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        var troll = new Engine(new Symbols(s)).Troll;
+        ushort nap = (ushort)s["VNAPTPC"];
+        foreach (var l in new[] { LavaTroll.L.TrackNap, LavaTroll.L.GripNap })
+        {
+            ushort ret = troll.Address(l);
+            Assert.True(rom[ret - 3] == 0xBD && ((rom[ret - 2] << 8) | rom[ret - 1]) == nap, $"{l} at {ret:X4} does not follow JSR VNAPTPC");
+        }
+    }
+
     [Fact]
     public void EnemyAiLabelsAreDistinctCode()
     {
