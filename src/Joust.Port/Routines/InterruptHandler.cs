@@ -33,6 +33,22 @@ public sealed class InterruptHandler
         _iTbl = s["ITBL"]; _isqCnt = s["ISQCNT"]; _isqPtr = s["ISQPTR"]; _dmaInt = s["DMAINT"];
         _dTbl1 = s["DTBL1"]; _dTbl2 = s["DTBL2"]; _dma = s["DMA"];
         _wData = (byte)s.Value("WDATA");
+        _irq = s["IRQ"];
+    }
+
+    private const ushort _vectorPointer = 0xEFF8;                // IRQVEC: JMP [$EFF8]
+    private readonly ushort _irq;
+
+    /// <summary>
+    /// IRQVEC (T12REV3.ASM): the hardware IRQ vector's JMP [$EFF8] into the handler. When it
+    /// points at IRQ, the handler runs right away; otherwise it continues at the target.
+    /// </summary>
+    public ushort? FromVector(Tx t)
+    {
+        ushort target = t.Read16(_vectorPointer);
+        t.Cycles += 3 + 5;                                       // JMP [$EFF8]
+        if (target != _irq) return target;
+        return Run(t);
     }
 
     /// <summary>Runs the handler through its RTI; returns the interrupted PC, or null to hand back.</summary>

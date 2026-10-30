@@ -104,6 +104,7 @@ public sealed class TxJumpRoutine(
     [
         // The IRQ handler: palette, switches, and playing the DMA lists to the blitter
         new TxJumpRoutine("IRQ", (e, t) => e.Irq.Run(t)),
+        new TxJumpRoutine("IRQVEC", (e, t) => e.Irq.FromVector(t)),
 
         // Frame start: the wait for a free DMA table, the sound board, the list reset
         new TxJumpRoutine("EXECST", (e, t) => e.FrameStart.Start(t)),
