@@ -68,6 +68,7 @@ public sealed class GameStateReader(JoustMachine machine, JoustLayout layout)
         int block = Word(ram, layout.ProcessListHead + layout.Link);
         for (int guard = 0; block != 0 && guard < 64; guard++)
         {
+            if (block + 64 > ram.Length) break;                  // not a process block (e.g. RAM not yet set up at boot)
             byte id = ram[block + layout.Id];
             var kind = (id & 0x7F) switch
             {

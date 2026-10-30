@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Joust.Emulation\Joust.Emulation.csproj" />
+  </ItemGroup>
+
 </Project>

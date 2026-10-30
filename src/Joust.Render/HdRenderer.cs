@@ -13,6 +13,7 @@ public sealed record HdOptions
 
     public bool Backdrop { get; init; } = true;
     public bool Shimmer { get; init; } = true;
+    public bool Particles { get; init; } = true;
     public bool Crt { get; init; }
 
     /// <summary>Write pixels as A,B,G,R in memory (MonoGame's Color) instead of 0xAARRGGBB.</summary>
@@ -66,7 +67,15 @@ public sealed class HdRenderer
         float t = frame;
         float flicker = 1f + 0.10f * MathF.Sin(t * 0.071f) + 0.05f * MathF.Sin(t * 0.23f + 1.3f);
         Parallel.For(0, Height, y => ComposeRow(y, t, flicker, options));
+        if (options.Particles)
+        {
+            Effects.Step(_low, _hot, LavaTop);
+            Effects.Draw(Output, options.Abgr);
+        }
     }
+
+    /// <summary>Embers and spark bursts drawn over the frame (the host adds bursts for events).</summary>
+    public Particles Effects { get; } = new();
 
     /// <summary>Bright pixels feed the bloom; lava and fire feed a much wider heat glow.</summary>
     private void BuildLight(HdOptions o)

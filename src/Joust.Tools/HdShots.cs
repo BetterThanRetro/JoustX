@@ -34,6 +34,7 @@ internal static class HdShots
         m.Reset();
 
         var renderer = new HdRenderer();
+        var events = new EventEffects(new GameStateReader(m, JoustLayout.FromSymbols(program.Symbols)), renderer.Effects);
         var options = new HdOptions { Crt = crt };
         var indices = new byte[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
         var palette = new uint[16];
@@ -48,13 +49,15 @@ internal static class HdShots
             i.P1Right = f > 1000 && (f / 90) % 3 == 0;
             i.P1Left = f > 1000 && (f / 90) % 3 == 1;
             m.RunFrame();
-            if (!frames.Contains(f)) continue;
+            events.Update();
+            if (!frames.Any(s => f <= s && f > s - 120)) continue;   // render the run-up so particles move
 
             m.RenderIndices(indices);
             for (int c = 0; c < 16; c++) palette[c] = JoustMachine.PaletteToArgb(m.Palette[c]);
             var sw = System.Diagnostics.Stopwatch.StartNew();
             renderer.Render(indices, palette, f, options);
             sw.Stop();
+            if (!frames.Contains(f)) continue;
             string path = Path.Combine(outDir, $"hd_{f:D5}{(crt ? "_crt" : "")}.png");
             PngWriter.Write(path, renderer.Output, HdRenderer.Width, HdRenderer.Height);
             Console.WriteLine($"{path}  ({sw.Elapsed.TotalMilliseconds:F1} ms)");

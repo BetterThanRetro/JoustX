@@ -39,6 +39,7 @@ public sealed class JoustGame : Game
     private readonly byte[] _indices = new byte[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
     private readonly uint[] _palette = new uint[16];
     private Texture2D _hdScreen = null!;
+    private EventEffects _events = null!;
     private bool _hd = !Environment.GetCommandLineArgs().Contains("--classic");
 
     private const int SampleRate = 48000;
@@ -77,6 +78,7 @@ public sealed class JoustGame : Game
         if (!Environment.GetCommandLineArgs().Contains("--original"))
             Port.NativeRoutines.InstallAll(_machine, program.Symbols);
         _state = new GameStateReader(_machine, JoustLayout.FromSymbols(program.Symbols));
+        _events = new EventEffects(_state, _renderer.Effects);
         _machine.SoundCommand += cmd => _lastSound = cmd;
 
         var sound = JoustRomBuild.AssembleSound(source);
@@ -141,6 +143,7 @@ public sealed class JoustGame : Game
         i.AutoUp = k.IsKeyDown(Keys.F4);
 
         _machine.RunFrame();
+        _events.Update();
         SubmitAudio();
         _previousKeys = k;
         if (_machine.Frame % 30 == 0)
