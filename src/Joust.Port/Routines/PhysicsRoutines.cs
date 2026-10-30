@@ -17,7 +17,10 @@ public sealed class Engine
         Sweeps = new Sweeps(s, Combat, Scheduler);
         Deaths = new Deaths(s, Scheduler, Ground, Scoring, Combat);
         Combat.Deaths = Deaths;
+        Eggs = new Eggs(s, Physics, Ground);
     }
+
+    public Eggs Eggs { get; }
 
     public Deaths Deaths { get; }
 
@@ -248,6 +251,15 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         Always("DEATH2", (e, t) => e.Deaths.PlayerDies(t, player2: true)),
         Always("DEATH3", (e, t) => e.Deaths.EnemyDies(t)),
         Always("DEATH4", (e, t) => e.Deaths.PterodactylDies(t)),
+
+        // Egg helpers
+        Always("ADDEGG", (e, t) => e.Eggs.Fall(t)),
+        Always("WEGG", (e, t) => e.Eggs.Draw(t)),
+        Always("WEGPAR", (e, t) => e.Eggs.DrawFrame(t)),
+        Always("CLIPER", (e, t) => e.Eggs.Clip(t)),
+        Always("CEGG", (e, t) => e.Eggs.Erase(t)),
+        Always("EGGBKG", (e, t) => e.Eggs.RefreshBackground(t)),
+        Always("EGAREA", (e, t) => e.Eggs.ScoreArea(t)),
 
         // Joystick reads (widget PIA)
         Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),

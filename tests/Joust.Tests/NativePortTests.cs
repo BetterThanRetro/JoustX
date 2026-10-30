@@ -66,6 +66,7 @@ public class NativePortTests
                      "PLYRLP@nap", "PLYRS2", "UPDNO2@state", "FLAPLP@nap", "FLAPLP@air",
                      "FLIPLP@nap", "FLIPLP@air", "FLIPST@grav", "GOTFIT@ground", "AIROVR@joy", "P1JOY",
                      "PLYCOL@nap", "OPPCOL.25S",
+                     "ADDEGG", "WEGG", "CEGG", "EGGBKG", "CLIPER", "WEGPAR",
                  })
             Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
     }

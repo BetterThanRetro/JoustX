@@ -402,7 +402,7 @@ public sealed class Ground
     }
 
     /// <summary>Fill a DMA block from an image descriptor: destination, size, source.</summary>
-    private void QueueImage(Tx t)
+    public void QueueImage(Tx t)
     {
         t.D = t.Read16(t.Y + 2);                                 // image offset from the object's position
         t.CC = Logic16(t.CC, t.D);
