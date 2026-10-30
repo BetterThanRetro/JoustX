@@ -120,11 +120,15 @@ public sealed class JoustMachine : IBus
                 if (native != null && Cpu.AtInstructionBoundary && InterruptSafe(native.MaxCycles))
                 {
                     long before = Cpu.Cycles;
+                    ushort pc = Cpu.PC;
                     bool handled = NativeDispatch?.Invoke(native) ?? native.Execute(_nativeContext);
                     if (handled)
                     {
                         NativeCalls++;
-                        NativeCycles += Cpu.Cycles - before;
+                        if (pc >= IdleStart && pc < IdleEnd && Cpu.PC == pc)
+                            IdleCycles += Cpu.Cycles - before;           // a native skipping the busy wait
+                        else
+                            NativeCycles += Cpu.Cycles - before;
                         continue;
                     }
                 }

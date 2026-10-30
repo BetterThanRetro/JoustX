@@ -56,7 +56,7 @@ public class NativePortTests
         Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
         foreach (var name in new[]
                  {
-                     "IRQ", "RANDSYS", "SND", "DCOLOR",
+                     "IRQ", "EXECST", "EXEINT", "EMYOK@nap", "RANDSYS", "SND", "DCOLOR",
                      "CHROUT", "CHR35", "PHROUT",
                      "WRAPX", "ADDGRA", "ADDGRX", "ADDFLP", "CKGND", "BCKCOL",
                      "RUNR", "SKIDR", "STANDR", "SRCADA", "SRCADH",

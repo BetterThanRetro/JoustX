@@ -27,7 +27,12 @@ public sealed class Engine
         Bird.Troll = Troll;
         Transporter = new Transporter(s, Ground, Scheduler, Eggs, Deaths, Bird);
         Bird.Lava = Transporter;
+        FrameStart = new FrameStart(s, Scheduler);
+        Waves = new WaveMonitor(s, Scheduler);
     }
+
+    public FrameStart FrameStart { get; }
+    public WaveMonitor Waves { get; }
 
     public Transporter Transporter { get; }
     public InterruptHandler Irq { get; }
@@ -93,6 +98,14 @@ public sealed class TxJumpRoutine(
     [
         // The IRQ handler: palette, switches, and playing the DMA lists to the blitter
         new TxJumpRoutine("IRQ", (e, t) => e.Irq.Run(t)),
+
+        // Frame start: the wait for a free DMA table, the sound board, the list reset
+        new TxJumpRoutine("EXECST", (e, t) => e.FrameStart.Start(t)),
+        new TxJumpRoutine("EXEINT", (e, t) => e.FrameStart.Wait(t)),
+
+        // The wave controller's in-play loop
+        new TxJumpRoutine("EMY2", (e, t) => e.Waves.Run(t, WaveMonitor.L.Reset)),
+        new TxJumpRoutine("EMYOK@nap", (e, t) => e.Waves.Run(t, WaveMonitor.L.Check), e => e.Waves.Address(WaveMonitor.L.Check)),
 
         // Scheduler: sleeping, dying, walking the process list, end of frame
         new TxJumpRoutine("NAPTPC", (e, t) => e.Scheduler.Nap(t, fromJsr: true)),
