@@ -430,6 +430,16 @@ public class NativePortTests
     }
 
     [Fact]
+    public void GameOverMatchesTheOriginal()
+    {
+        string[] labels = ["GAMOVR", "GAMOVR@nap", "GAMOVR@credits", "GOVWAT@nap", "GAMOV1", "GAMOV1@nap"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 5, frames: 20000, twoPlayers: true);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[] { "GAMOVR", "GAMOVR@nap", "GOVWAT@nap", "GAMOV1@nap" })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+    }
+
+    [Fact]
     public void DeathPuffMatchesTheOriginal()
     {
         string[] labels = ["DEATH", "DEATH@frame2", "DEATH@frame3", "DEATH@end"];

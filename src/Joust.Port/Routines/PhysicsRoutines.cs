@@ -33,7 +33,10 @@ public sealed class Engine
         WaveSetup = new WaveSetup(s, Scheduler, Text, Scoring);
         Checksums = new Checksums(s, Scheduler);
         Puff = new DeathPuff(s, Ground, Scheduler);
+        GameOver = new GameOver(s, Scheduler, Text);
     }
+
+    public GameOver GameOver { get; }
 
     public DeathPuff Puff { get; }
 
@@ -123,6 +126,13 @@ public sealed class TxJumpRoutine(
 
         // The anti-tamper checksums: JZAP's summing loop in chunks, the KZAP process
         new TxJumpRoutine("JZAP.1S", (e, t) => e.Checksums.Sum(t)),
+
+        // Game over: the game's end and each player's game-over message
+        .. new (string Name, GameOver.L Label)[]
+        {
+            ("GAMOVR", GameOver.L.Start), ("GAMOVR@nap", GameOver.L.StartNap), ("GAMOVR@credits", GameOver.L.Credits),
+            ("GOVWAT@nap", GameOver.L.WaitNap), ("GAMOV1", GameOver.L.Player), ("GAMOV1@nap", GameOver.L.PlayerNap),
+        }.Select(g => new TxJumpRoutine(g.Name, (e, t) => e.GameOver.Run(t, g.Label), e => e.GameOver.Address(g.Label))),
 
         // The death puff process
         new TxJumpRoutine("DEATH", (e, t) => e.Puff.Run(t, DeathPuff.L.Start)),
