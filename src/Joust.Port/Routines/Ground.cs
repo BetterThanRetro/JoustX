@@ -385,6 +385,12 @@ public sealed class Ground
             QueueRiderAndHorse(t);
             return;
         }
+        DrawHorse(t, write);
+    }
+
+    /// <summary>WNORIA (write) / the horse-only half of CPLYR: queue just the PPICH,U image, if any.</summary>
+    public void DrawHorse(Tx t, bool write)
+    {
         t.Y = t.Read16(t.U + _picH);
         t.CC = Logic16(t.CC, t.Y);
         t.Cycles += 6 + Ix(_picH) + 3;                           // LDY PPICH,U / BEQ

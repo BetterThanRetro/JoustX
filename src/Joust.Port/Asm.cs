@@ -89,6 +89,8 @@ public sealed class Asm(Tx t)
     public void Bita(Ea e) { T.CC = Logic8(T.CC, (byte)(T.A & T.Read(e.Address))); Cy(4 + e.Extra); }
     public void BitaI(int v) { T.CC = Logic8(T.CC, (byte)(T.A & v)); Cy(2); }
     public void BitbI(int v) { T.CC = Logic8(T.CC, (byte)(T.B & v)); Cy(2); }
+    public void Bitb(Ea e) { T.CC = Logic8(T.CC, (byte)(T.B & T.Read(e.Address))); Cy(4 + e.Extra); }
+    public void Eorb(Ea e) { T.B ^= T.Read(e.Address); T.CC = Logic8(T.CC, T.B); Cy(4 + e.Extra); }
     public void AddaI(int v) { T.A = Add8(ref T.CC, T.A, (byte)v, withCarry: false); Cy(2); }
     public void CmpdI(int v) { Sub16(ref T.CC, T.D, (ushort)v); Cy(5); }
     public void SubdI(int v) { T.D = Sub16(ref T.CC, T.D, (ushort)v); Cy(4); }

@@ -471,6 +471,19 @@ public class NativePortTests
     }
 
     [Fact]
+    public void LedgeRefreshAndPterodactylMatchTheOriginal()
+    {
+        string[] labels = ["NOBCKR@nap", "NOBCKR@left", "NOBCKR@right", "SRCADP", "WNORIA"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in labels)
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+        var ledges = new LedgeRefresh(new Symbols(Program.Value.Symbols), new Scheduler(new Symbols(Program.Value.Symbols)));
+        foreach (var side in new[] { LedgeRefresh.L.Left, LedgeRefresh.L.Right })
+            Assert.Equal(0x10, Program.Value.Memory[ledges.Address(side)]);                     // LDY CLIF5
+    }
+
+    [Fact]
     public void SelfTestAndClearsMatchTheOriginal()
     {
         // Power-on: RAM fill and read-back, ROM sums, the start-up delay, and the memory clears.

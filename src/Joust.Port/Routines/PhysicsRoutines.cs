@@ -38,7 +38,13 @@ public sealed class Engine
         Image = new ImageDecoder(s);
         SelfTest = new SelfTest(s);
         Clear = new ScreenClear(s);
+        Ledges = new LedgeRefresh(s, Scheduler);
+        Ptero = new Pterodactyl(s, Ground, Physics);
     }
+
+    public LedgeRefresh Ledges { get; }
+
+    public Pterodactyl Ptero { get; }
 
     public ScreenClear Clear { get; }
 
@@ -184,6 +190,9 @@ public sealed class TxJumpRoutine(
         // The wave controller's in-play loop
         new TxJumpRoutine("EMY2", (e, t) => e.Waves.Run(t, WaveMonitor.L.Reset)),
         new TxJumpRoutine("EMYOK@nap", (e, t) => e.Waves.Run(t, WaveMonitor.L.Check), e => e.Waves.Address(WaveMonitor.L.Check)),
+        new TxJumpRoutine("NOBCKR@nap", (e, t) => e.Ledges.Run(t, LedgeRefresh.L.Idle), e => e.Ledges.Address(LedgeRefresh.L.Idle)),
+        new TxJumpRoutine("NOBCKR@left", (e, t) => e.Ledges.Run(t, LedgeRefresh.L.Left), e => e.Ledges.Address(LedgeRefresh.L.Left)),
+        new TxJumpRoutine("NOBCKR@right", (e, t) => e.Ledges.Run(t, LedgeRefresh.L.Right), e => e.Ledges.Address(LedgeRefresh.L.Right)),
 
         // Scheduler: sleeping, dying, walking the process list, end of frame
         new TxJumpRoutine("NAPTPC", (e, t) => e.Scheduler.Nap(t, fromJsr: true)),
@@ -451,6 +460,8 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
 
         // Draw / erase queue
         Always("WPLYR", (e, t) => e.Ground.DrawObject(t, write: true)),
+        Always("WNORIA", (e, t) => e.Ground.DrawHorse(t, write: true)),
+        Always("SRCADP", (e, t) => e.Ptero.SourceAndCheck(t)),
         Always("CPLYR", (e, t) => e.Ground.DrawObject(t, write: false)),
         Always("WRRIDR", (e, t) => e.Ground.QueueRiderAndHorse(t)),
         Always("WRHOR2", (e, t) => e.Ground.QueueImage(t)),
