@@ -65,6 +65,7 @@ public class NativePortTests
                      "SCODSP@idle", "SCODSP@digit", "BCDMSN", "BCDLSN",
                      "PLYRLP@nap", "PLYRS2", "UPDNO2@state", "FLAPLP@nap", "FLAPLP@air",
                      "FLIPLP@nap", "FLIPLP@air", "FLIPST@grav", "GOTFIT@ground", "AIROVR@joy", "P1JOY",
+                     "PLYCOL@nap", "OPPCOL.25S", "OSTWIN@dead", "OSTXT3@win",
                  })
             Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > 0, $"{name} was never exercised");
     }
@@ -202,6 +203,56 @@ public class NativePortTests
         Assert.Equal(0xAD, rom[state - 2]);                      // JSR [,X]
         Assert.Equal(0x94, rom[state - 1]);
         Assert.Equal((ushort)s["FLAST2"], (ushort)(s["GOFLAP"] + 10)); // GOFLAP's gravity call returns to FLAST2
+    }
+
+    [Fact]
+    public void JoustAndSweepResumePointsFollowTheExpectedCalls()
+    {
+        var s = Program.Value.Symbols;
+        var rom = Program.Value.Memory;
+        var engine = new Engine(new Symbols(s));
+        ushort Word(int a) => (ushort)((rom[a] << 8) | rom[a + 1]);
+
+        void AfterJsrIndirectY(ushort ret, string offset)
+        {
+            Assert.Equal(0xAD, rom[ret - 3]);                    // JSR indexed
+            Assert.Equal(0xB8, rom[ret - 2]);                    // [n8,Y]
+            Assert.Equal((byte)s[offset], rom[ret - 1]);
+        }
+
+        void AfterBsrHitem(ushort ret)
+        {
+            Assert.Equal(0x8D, rom[ret - 2]);                    // BSR
+            Assert.Equal((ushort)s["HITEM"], (ushort)(ret + (sbyte)rom[ret - 1]));
+        }
+
+        AfterJsrIndirectY(engine.Combat.OstwinAfterDeath, "DDEAD");
+        AfterJsrIndirectY(engine.Combat.OstwinAfterScore, "DVALUR");
+        foreach (var ret in new[] { engine.Combat.ULosesAfterWin, engine.Combat.XLosesAfterWin })
+        {
+            Assert.Equal(0xBD, rom[ret - 3]);
+            Assert.Equal((ushort)s["OSTWIN"], Word(ret - 2));
+        }
+
+        var a = engine.Sweeps.Addresses;
+        AfterBsrHitem(a[Sweeps.L.Ply35After]);
+        AfterBsrHitem(a[Sweeps.L.Ply45After]);
+        AfterBsrHitem(a[Sweeps.L.OppAfter]);
+        foreach (var afterNap in new[] { a[Sweeps.L.PlyAfterNap], a[Sweeps.L.OppOuter] })
+        {
+            Assert.Equal(0xBD, rom[afterNap - 3]);               // PCNAP 1: JSR VNAPTPC
+            Assert.Equal((ushort)s["VNAPTPC"], Word(afterNap - 2));
+        }
+    }
+
+    [Fact]
+    public void EggPickupAndKillsMatchWhenCalledFromOriginalCode()
+    {
+        // With the sweeps native these run inline; hook just them so the original HITEM calls them.
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => r.Symbol is "EGGSCR" or "OSTWIN"), seed: 1, frames: 40000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        Assert.True(v.Stats["EGGSCR"].Calls > 0, "no egg was collected");
+        Assert.True(v.Stats["OSTWIN"].Calls > 10, "too few kills");
     }
 
     [Fact]

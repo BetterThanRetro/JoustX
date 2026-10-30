@@ -9,13 +9,17 @@ public sealed class Engine
     {
         Physics = new Physics(s);
         Ground = new Ground(s, Physics.Sound);
-        Combat = new Combat(s, Physics);
+        Scoring = new Scoring(s);
+        Combat = new Combat(s, Physics, Ground, Scoring);
         Scheduler = new Scheduler(s);
         ScoreDisplay = new ScoreDisplay(s);
         Bird = new BirdProcess(s, Physics, Ground, Scheduler);
+        Sweeps = new Sweeps(s, Combat, Scheduler);
     }
 
     public BirdProcess Bird { get; }
+    public Scoring Scoring { get; }
+    public Sweeps Sweeps { get; }
 
     public Physics Physics { get; }
     public Ground Ground { get; }
@@ -50,7 +54,15 @@ public sealed class TxJumpRoutine(
     public override bool Execute(NativeContext c)
     {
         var t = new Tx(c);
-        ushort? next = body(_engine, t);
+        ushort? next;
+        try
+        {
+            next = body(_engine, t);
+        }
+        catch (HandBackException)
+        {
+            return false;                                        // nothing was applied
+        }
         return next != null && t.CommitJump(next.Value);
     }
 
@@ -79,6 +91,21 @@ public sealed class TxJumpRoutine(
             BirdName(l),
             (e, t) => e.Bird.Run(t, l),
             e => e.Bird.Address(l))),
+        // Collision: the pair test and the joust, with its resume points around the death routine
+        new TxJumpRoutine("HITEM", (e, t) => e.Combat.Hit(t) ?? BirdProcess.Return(t)),
+        new TxJumpRoutine("OSTWIN", (e, t) => e.Combat.Kill(t)),
+        new TxJumpRoutine("OSTWIN@dead", (e, t) => e.Combat.KillAfterDeath(t), e => e.Combat.OstwinAfterDeath),
+        new TxJumpRoutine("OSTWIN@score", (e, t) => e.Combat.KillAfterScore(t), e => e.Combat.OstwinAfterScore),
+        new TxJumpRoutine("OSTXT3@win", (e, t) => e.Combat.ULosesAfterKill(t) ?? BirdProcess.Return(t), e => e.Combat.ULosesAfterWin),
+        new TxJumpRoutine("OSTPYP@win", (e, t) => e.Combat.XLosesAfterKill(t) ?? BirdProcess.Return(t), e => e.Combat.XLosesAfterWin),
+        new TxJumpRoutine("EGGSCR", (e, t) => e.Combat.CollectEgg(t)),
+
+        // The collision sweeps, entered at any of their labels or resume points
+        .. Enum.GetValues<Sweeps.L>().Select(l => new TxJumpRoutine(
+            SweepName(l),
+            (e, t) => e.Sweeps.Run(t, l),
+            e => e.Sweeps.Address(l))),
+
         new TxJumpRoutine("AIROVR", (e, t) => e.Bird.AirOverhead(t) ?? BirdProcess.Return(t)),
         new TxJumpRoutine("AIROVR@joy", (e, t) =>
         {
@@ -86,6 +113,22 @@ public sealed class TxJumpRoutine(
             return BirdProcess.Return(t);
         }, e => e.Bird.AirJoyReturn),
     ];
+
+    public static string SweepName(Sweeps.L l) => l switch
+    {
+        Sweeps.L.PlyTop => "PLYCOL",
+        Sweeps.L.PlyAfterNap => "PLYCOL@nap",
+        Sweeps.L.PlyOuter => "PLYCOL.25S",
+        Sweeps.L.Ply35 => "PLYCOL.35S",
+        Sweeps.L.Ply35After => "PLYCOL.35S@hit",
+        Sweeps.L.Ply45 => "PLYCOL.45S",
+        Sweeps.L.Ply45After => "PLYCOL.45S@hit",
+        Sweeps.L.OppTop => "OPPCOL",
+        Sweeps.L.OppOuter => "OPPCOL.25S",
+        Sweeps.L.OppIn => "OPPCOL.45S",
+        Sweeps.L.OppAfter => "OPPCOL.45S@hit",
+        _ => throw new ArgumentOutOfRangeException(nameof(l)),
+    };
 
     /// <summary>Hook name for a bird label: the source label, or label@resume for return points.</summary>
     public static string BirdName(BirdProcess.L l) => l switch
@@ -136,7 +179,14 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
     public override bool Execute(NativeContext c)
     {
         var t = new Tx(c);
-        return body(_engine, t) && t.Commit();
+        try
+        {
+            return body(_engine, t) && t.Commit();
+        }
+        catch (HandBackException)
+        {
+            return false;                                        // nothing was applied
+        }
     }
 
     private static TxRoutine Always(string symbol, Action<Engine, Tx> body) =>
@@ -176,7 +226,6 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         Always("WR2CLS", (e, t) => e.Ground.Allocate(t, write: true, blocks: 2)),
 
         // Bird against bird
-        new TxRoutine("HITEM", (e, t) => e.Combat.Hit(t)),
         Always("OSTXUP", (e, t) => e.Combat.BumpUp(t)),
         Always("OSTXDN", (e, t) => e.Combat.BumpDown(t)),
         Always("OSTLR", (e, t) => e.Combat.BounceApart(t)),
