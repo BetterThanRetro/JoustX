@@ -164,6 +164,8 @@ public sealed class TxJumpRoutine(
         new TxJumpRoutine("WRPIXH", (e, t) => e.Attract.Stripe(t, across: false)),
         new TxJumpRoutine("WRPIXV", (e, t) => e.Attract.Stripe(t, across: true)),
 
+        new TxJumpRoutine("PHROT1.1S", (e, t) => e.Text.PhraseLoop(t)),
+
         // The power-on self-test's loops, in chunks
         new TxJumpRoutine("RAM3", (e, t) => e.SelfTest.Fill(t)),
         new TxJumpRoutine("RAM7", (e, t) => e.SelfTest.Check(t)),
@@ -450,6 +452,8 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         // Draw / erase queue
         Always("WPLYR", (e, t) => e.Ground.DrawObject(t, write: true)),
         Always("CPLYR", (e, t) => e.Ground.DrawObject(t, write: false)),
+        Always("WRRIDR", (e, t) => e.Ground.QueueRiderAndHorse(t)),
+        Always("WRHOR2", (e, t) => e.Ground.QueueImage(t)),
         Always("CL1CLS", (e, t) => e.Ground.Allocate(t, write: false, blocks: 1)),
         Always("WR1CLS", (e, t) => e.Ground.Allocate(t, write: true, blocks: 1)),
         Always("CL2CLS", (e, t) => e.Ground.Allocate(t, write: false, blocks: 2)),
@@ -487,6 +491,9 @@ public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : Nati
         // Joystick reads (widget PIA)
         Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),
         Always("P2JOY", (e, t) => e.Bird.Joystick(t, player1: false)),
+
+        // Text: one glyph (when the whole phrase did not fit), and a phrase's characters in chunks
+        Always("OUTPUT", (e, t) => e.Text.Output(t)),
 
         // Attract mode: one pixel of the Williams logo
         Always("WRANIB", (e, t) => e.Attract.Plot(t)),

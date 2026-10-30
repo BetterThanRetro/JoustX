@@ -16,7 +16,7 @@ public sealed class TextOut
 {
     private const byte BlitCharacter = 0x1A;                     // serial->block, colour substitute, zero suppress
 
-    private readonly ushort _font57, _font35, _phrases, _fontSave, _aSave, _blitControl, _blitColor, _blitSource, _blitDest, _blitSize;
+    private readonly ushort _font57, _font35, _phrases, _fontSave, _aSave, _blitControl, _blitColor, _blitSource, _blitDest, _blitSize, _phraseLoop;
 
     public TextOut(Symbols s)
     {
@@ -30,6 +30,7 @@ public sealed class TextOut
         _blitSource = s["ORG"];
         _blitDest = s["DES"];
         _blitSize = s["XSIZE"];
+        _phraseLoop = s["PHROT1.1S"];
     }
 
     /// <summary>The whole routine, including its final PULS U,Y,D,CC,PC (which is its return).</summary>
@@ -86,6 +87,45 @@ public sealed class TextOut
         }
         t.Cycles += 8 + 4 + Symbols.AddressCost(_aSave) + 2 + 2 + 3 + 4 + 14; // JSR OUTPUT / LDA ASAVE / ANDA / CMPA / BLE / JMP OUTPUT / PULS
         t.X = screen;
+    }
+
+    /// <summary>
+    /// OUTPUT on its own (Y = font, A = character), without its RTS: blit the glyph and leave the
+    /// registers as it does (A = width, B = 0, Y = glyph data, X advanced).
+    /// </summary>
+    public void Output(Tx t)
+    {
+        ushort glyph = Glyph(t, t.Y, t.A);
+        ushort screen = t.X;
+        Draw(t, t.Y, glyph, ref screen);
+        t.Cycles -= 5;
+        (t.A, t.B, t.X, t.Y) = (t.Read(glyph), 0, screen, (ushort)(glyph + 2));
+        t.CC = Alu6809.Set(Alu6809.Clr(t.CC), Alu6809.Z, t.X == 0);   // CLRB / LEAX D,X
+    }
+
+    /// <summary>
+    /// PHROT1.1S (a phrase's character loop): write characters while they fit before the next
+    /// interrupt edge; stop at the loop head, or at the RTS after the last character.
+    /// </summary>
+    public ushort? PhraseLoop(Tx t)
+    {
+        const int character = 4 + 6 + 8 + 64 + 8 + 3;            // LDA ,U / LDY XSAVE / JSR OUTPUT / TST ,U+ / BPL
+        int k = 0;
+        while (t.CanRun(character))
+        {
+            byte ch = t.Read(t.U);
+            ushort font = t.Read16(t.Var(_fontSave));
+            ushort glyph = Glyph(t, font, ch);
+            ushort screen = t.X;
+            Draw(t, font, glyph, ref screen);
+            (t.A, t.B, t.X, t.Y) = (t.Read(glyph), 0, screen, (ushort)(glyph + 2));
+            t.CC = Alu6809.Logic8(Alu6809.Clr(t.CC), t.Read(t.U)); // CLRB in OUTPUT, then TST ,U+
+            t.U++;
+            t.Cycles += 4 + 6 + 8 + 8 + 3;
+            k++;
+            if ((ch & 0x80) != 0) return (ushort)(_phraseLoop + 12);
+        }
+        return k == 0 ? null : _phraseLoop;
     }
 
     private static ushort Glyph(Tx t, ushort font, byte ch) => t.Read16(font + (sbyte)(byte)(ch << 1));

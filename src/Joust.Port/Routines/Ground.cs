@@ -382,13 +382,7 @@ public sealed class Ground
             Allocate(t, write, blocks: 2);
             t.Cycles += 5;
             if (!write) t.Cycles += 3;                           // BRA WRRIDR
-            QueueImage(t);                                       // WRRIDR: rider
-            t.X = (ushort)(t.X + 10);
-            t.CC = Set(t.CC, Z, t.X == 0);
-            t.Y = t.Read16(t.U + _picH);
-            t.CC = Logic16(t.CC, t.Y);
-            t.Cycles += 5 + 6 + Ix(_picH);                       // LEAX 10,X / LDY PPICH,U
-            QueueImage(t);                                       // WRHOR2: horse
+            QueueRiderAndHorse(t);
             return;
         }
         t.Y = t.Read16(t.U + _picH);
@@ -399,6 +393,18 @@ public sealed class Ground
         Allocate(t, write, blocks: 1);
         t.Cycles += 5 + 3;                                       // RTS / BRA WRHOR2
         QueueImage(t);
+    }
+
+    /// <summary>WRRIDR: the rider's block (Y = its image), then the horse's (PPICH,U) in the next one.</summary>
+    public void QueueRiderAndHorse(Tx t)
+    {
+        QueueImage(t);
+        t.X = (ushort)(t.X + 10);
+        t.CC = Set(t.CC, Z, t.X == 0);
+        t.Y = t.Read16(t.U + _picH);
+        t.CC = Logic16(t.CC, t.Y);
+        t.Cycles += 5 + 6 + Ix(_picH);                           // LEAX 10,X / LDY PPICH,U
+        QueueImage(t);                                           // WRHOR2: horse
     }
 
     /// <summary>Fill a DMA block from an image descriptor: destination, size, source.</summary>
