@@ -1,0 +1,197 @@
+using Joust.Emulation;
+
+namespace Joust.Port.Routines;
+
+/// <summary>The ported game logic, bound to one assembled program.</summary>
+public sealed class Engine
+{
+    public Engine(Symbols s)
+    {
+        Physics = new Physics(s);
+        Ground = new Ground(s, Physics.Sound);
+        Combat = new Combat(s, Physics);
+        Scheduler = new Scheduler(s);
+        ScoreDisplay = new ScoreDisplay(s);
+        Bird = new BirdProcess(s, Physics, Ground, Scheduler);
+    }
+
+    public BirdProcess Bird { get; }
+
+    public Physics Physics { get; }
+    public Ground Ground { get; }
+    public Combat Combat { get; }
+    public Scheduler Scheduler { get; }
+    public ScoreDisplay ScoreDisplay { get; }
+}
+
+/// <summary>
+/// A transaction-based native for code that leaves by jumping (scheduler, process slices).
+/// The body returns where execution continues, or null to hand the call back.
+/// </summary>
+public sealed class TxJumpRoutine(
+    string name,
+    Func<Engine, Tx, ushort?> body,
+    Func<Engine, ushort>? address = null) : NativeRoutine
+{
+    private Engine _engine = null!;
+
+    public override string Symbol => name;
+    public override int MaxCycles => 0;
+    public override bool EndsWithRts => false;
+
+    public override void Bind(IReadOnlyDictionary<string, long> symbols) => _engine = new Engine(new Symbols(symbols));
+
+    public override ushort ResolveAddress(IReadOnlyDictionary<string, long> symbols)
+    {
+        Bind(symbols);
+        return address?.Invoke(_engine) ?? base.ResolveAddress(symbols);
+    }
+
+    public override bool Execute(NativeContext c)
+    {
+        var t = new Tx(c);
+        ushort? next = body(_engine, t);
+        return next != null && t.CommitJump(next.Value);
+    }
+
+    public static IEnumerable<NativeRoutine> All() =>
+    [
+        // Scheduler: sleeping, dying, walking the process list, end of frame
+        new TxJumpRoutine("NAPTPC", (e, t) => e.Scheduler.Nap(t, fromJsr: true)),
+        new TxJumpRoutine("NAPTIM", (e, t) => e.Scheduler.Nap(t, fromJsr: false)),
+        new TxJumpRoutine("SUCIDE", (e, t) => e.Scheduler.Suicide(t)),
+        new TxJumpRoutine("EXEC", (e, t) => e.Scheduler.Walk(t, Scheduler.Label.Exec)),
+        new TxJumpRoutine("EXEPS", (e, t) => e.Scheduler.Walk(t, Scheduler.Label.Ps)),
+        new TxJumpRoutine("EXEPRI", (e, t) => e.Scheduler.Walk(t, Scheduler.Label.Pri)),
+        new TxJumpRoutine("EXEPEN", (e, t) => e.Scheduler.Walk(t, Scheduler.Label.Pen)),
+        new TxJumpRoutine("EXESEC", (e, t) => e.Scheduler.Walk(t, Scheduler.Label.Sec)),
+        new TxJumpRoutine("DTBOVR", (e, t) => e.Scheduler.LinkDmaTables(t)),
+
+        // The score display process, as coroutine slices
+        new TxJumpRoutine("SCODSP", (e, t) => e.ScoreDisplay.Start(t)),
+        new TxJumpRoutine("SCODSP@digit", (e, t) => e.ScoreDisplay.NextDigit(t), e => e.ScoreDisplay.AfterDigit),
+        new TxJumpRoutine("SCODSP@idle", (e, t) => e.ScoreDisplay.CheckChanged(t), e => e.ScoreDisplay.AfterIdle),
+        new DrawDigitRoutine(highNibble: true),
+        new DrawDigitRoutine(highNibble: false),
+
+        // The bird process (players and enemies), entered at any of its labels or resume points
+        .. Enum.GetValues<BirdProcess.L>().Select(l => new TxJumpRoutine(
+            BirdName(l),
+            (e, t) => e.Bird.Run(t, l),
+            e => e.Bird.Address(l))),
+        new TxJumpRoutine("AIROVR", (e, t) => e.Bird.AirOverhead(t) ?? BirdProcess.Return(t)),
+        new TxJumpRoutine("AIROVR@joy", (e, t) =>
+        {
+            e.Bird.AirAfterControls(t);
+            return BirdProcess.Return(t);
+        }, e => e.Bird.AirJoyReturn),
+    ];
+
+    /// <summary>Hook name for a bird label: the source label, or label@resume for return points.</summary>
+    public static string BirdName(BirdProcess.L l) => l switch
+    {
+        BirdProcess.L.PlyrLp => "PLYRLP",
+        BirdProcess.L.PlyrNap => "PLYRLP@nap",
+        BirdProcess.L.PlyrS2 => "PLYRS2",
+        BirdProcess.L.Updno2After => "UPDNO2@state",
+        BirdProcess.L.Pl2Rit => "PL2RIT",
+        BirdProcess.L.Pl2Edg => "PL2EDG",
+        BirdProcess.L.StFly => "STFLY",
+        BirdProcess.L.StFall => "STFALL",
+        BirdProcess.L.StLan => "STLAN",
+        BirdProcess.L.FlapLp => "FLAPLP",
+        BirdProcess.L.FlapNap => "FLAPLP@nap",
+        BirdProcess.L.FlapAir => "FLAPLP@air",
+        BirdProcess.L.FlapS2 => "FLAPS2",
+        BirdProcess.L.FlapGrav => "FLAPST@grav",
+        BirdProcess.L.WingFk => "WINGFK",
+        BirdProcess.L.WingFkGround => "WINGFK@ground",
+        BirdProcess.L.GoFlip => "GOFLIP",
+        BirdProcess.L.FlipLp => "FLIPLP",
+        BirdProcess.L.FlipNap => "FLIPLP@nap",
+        BirdProcess.L.FlipAir => "FLIPLP@air",
+        BirdProcess.L.FlipS2 => "FLIPS2",
+        BirdProcess.L.FlipGrav => "FLIPST@grav",
+        BirdProcess.L.GotFit => "GOTFIT",
+        BirdProcess.L.GotFitGround => "GOTFIT@ground",
+        BirdProcess.L.GoFlap => "GOFLAP",
+        BirdProcess.L.Flast2 => "FLAST2",
+        _ => throw new ArgumentOutOfRangeException(nameof(l)),
+    };
+}
+
+/// <summary>
+/// Installs one transaction-based routine at an original entry point. The body returns false
+/// to hand the call back to the original; the transaction then is simply not committed.
+/// </summary>
+public sealed class TxRoutine(string symbol, Func<Engine, Tx, bool> body) : NativeRoutine
+{
+    private Engine _engine = null!;
+
+    public override string Symbol => symbol;
+    public override int MaxCycles => 0; // exact cycles known at commit
+
+    public override void Bind(IReadOnlyDictionary<string, long> symbols) => _engine = new Engine(new Symbols(symbols));
+
+    public override bool Execute(NativeContext c)
+    {
+        var t = new Tx(c);
+        return body(_engine, t) && t.Commit();
+    }
+
+    private static TxRoutine Always(string symbol, Action<Engine, Tx> body) =>
+        new(symbol, (e, t) => { body(e, t); return true; });
+
+    public static IEnumerable<NativeRoutine> All() =>
+    [
+        // Flight physics and background collision
+        Always("WRAPX", (e, t) => e.Physics.WrapX(t)),
+        new TxRoutine("ADDGRA", (e, t) => e.Physics.AddGravity(t)),
+        new TxRoutine("ADDGRX", (e, t) => e.Physics.Integrate(t)),
+        Always("ADDFLP", (e, t) => e.Physics.Flap(t)),
+        new TxRoutine("CKGND", (e, t) => e.Physics.CheckGround(t)),
+        Always("BCKCOL", (e, t) => e.Physics.BackgroundCollision(t)),
+        Always("BCKPIX", (e, t) => e.Physics.PixelCollision(t)),
+        Always("BPCOL", (e, t) => e.Physics.ScanLines(t)),
+
+        // Ground movement state callbacks
+        Always("REVR", (e, t) => e.Ground.Reverse(t)),
+        Always("STANDR", (e, t) => e.Ground.Stand(t)),
+        Always("RUNR", (e, t) => e.Ground.Run(t)),
+        Always("RUNSR", (e, t) => e.Ground.StopRunning(t)),
+        Always("SKIDR", (e, t) => e.Ground.Skid(t)),
+
+        // Image selection and collision box
+        Always("SRCADG", (e, t) => e.Ground.SelectImage(t, storeImage: true, onGround: true)),
+        Always("SRCADH", (e, t) => e.Ground.SelectImage(t, storeImage: false, onGround: true)),
+        Always("SRCADA", (e, t) => e.Ground.SelectImage(t, storeImage: true, onGround: false)),
+        Always("SRCADR", (e, t) => e.Ground.SelectImage(t, storeImage: false, onGround: false)),
+
+        // Draw / erase queue
+        Always("WPLYR", (e, t) => e.Ground.DrawObject(t, write: true)),
+        Always("CPLYR", (e, t) => e.Ground.DrawObject(t, write: false)),
+        Always("CL1CLS", (e, t) => e.Ground.Allocate(t, write: false, blocks: 1)),
+        Always("WR1CLS", (e, t) => e.Ground.Allocate(t, write: true, blocks: 1)),
+        Always("CL2CLS", (e, t) => e.Ground.Allocate(t, write: false, blocks: 2)),
+        Always("WR2CLS", (e, t) => e.Ground.Allocate(t, write: true, blocks: 2)),
+
+        // Bird against bird
+        new TxRoutine("HITEM", (e, t) => e.Combat.Hit(t)),
+        Always("OSTXUP", (e, t) => e.Combat.BumpUp(t)),
+        Always("OSTXDN", (e, t) => e.Combat.BumpDown(t)),
+        Always("OSTLR", (e, t) => e.Combat.BounceApart(t)),
+        Always("OSTUTP", (e, t) => e.Combat.UOnTop(t)),
+        Always("OSTXTP", (e, t) => e.Combat.XOnTop(t)),
+        Always("OSTBMP", (e, t) => e.Combat.Bump(t)),
+        Always("PTEBRD", (e, t) => e.Combat.PterodactylHit(t)),
+
+        // Process list edits
+        Always("CRPROC", (e, t) => e.Scheduler.Create(t, afterRunning: true)),
+        Always("CUPROC", (e, t) => e.Scheduler.Create(t, afterRunning: false)),
+        Always("KLPROC", (e, t) => e.Scheduler.Kill(t)),
+
+        // Joystick reads (widget PIA)
+        Always("P1JOY", (e, t) => e.Bird.Joystick(t, player1: true)),
+        Always("P2JOY", (e, t) => e.Bird.Joystick(t, player1: false)),
+    ];
+}

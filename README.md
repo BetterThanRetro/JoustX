@@ -1,0 +1,59 @@
+# JoustX
+
+A C# port of Williams' 1982 **Joust** that keeps the original game mechanics exactly, with a path to modern (2026) graphics and sound.
+
+The approach is a *verified port*: the original 6809 program, assembled from source, runs on a C# reference machine. That machine is the ground truth that the native C# rewrite is checked against, routine by routine. See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Layout
+
+| Project | What it is |
+| --- | --- |
+| `joust-main-asm/` | Original source (SynaMax's rewrite for Macro Assembler {AS}), untouched |
+| `src/Joust.Assembler` | C# 6809 assembler for the AS dialect. Builds the 12 main-board ROMs from source |
+| `src/Joust.Emulation` | 6809 CPU, SC1 blitter, 6821 PIAs, CMOS, video timing (the reference machine), plus `GameStateReader` |
+| `src/Joust.Port` | The native C# port: routines that replace original subroutines, verified against them |
+| `src/Joust.App` | MonoGame window: plays the game (with native routines; `--original` for pure emulation), keyboard input, CMOS persistence |
+| `src/Joust.Tools` | CLI: `build-roms`, headless `run` with screenshots and scripted input |
+| `tests/Joust.Tests` | Assembler encodings, CPU semantics, ROM checksums, golden replay |
+
+## Run it
+
+Requires the .NET 10 SDK.
+
+```bash
+dotnet run --project src/Joust.App
+```
+
+The app assembles the game from `joust-main-asm/` at startup and refuses to run unless all 12 ROMs match the original ROM-test checksums. The first launch shows "FACTORY SETTINGS RESTORED" (blank CMOS); after that it boots straight to attract mode. CMOS is saved to `%LOCALAPPDATA%\JoustX\cmos.bin`.
+
+| Key | Action |
+| --- | --- |
+| `5` / `6` | Insert coin (left / right) |
+| `1` / `2` | 1 or 2 player start |
+| Left / Right or A / D, Space | Player 1 move, flap |
+| J / L, K | Player 2 move, flap |
+| F1 | Toggle object overlay (from `GameStateReader`) |
+| F2 | Service "advance" switch |
+| F3 | Reset |
+| Esc | Quit |
+
+## Tools
+
+```bash
+dotnet run --project src/Joust.Tools -- build-roms joust-main-asm/make.ASM build/roms
+dotnet run --project src/Joust.Tools -- run build/roms/joust_main_64k.bin 2200 build/play --cmos build/cmos.bin --shots 2000 --script "1200:coin 1300:start1"
+```
+
+```bash
+dotnet run --project src/Joust.Tools -- verify-native --frames 20000 --seeds 1,2,3
+```
+
+`verify-native` plays deterministic pseudo-random games and checks every native routine against the original two ways. Per call, it runs both versions from the same state and compares registers, flags, cycles and memory writes. In lockstep, it runs an all-original machine and a native machine side by side and compares them every frame.
+
+`build-roms` writes the 12 ROM files (MAME names), a 64K image and a symbol file, then checks every ROM against the game's own checksum table. `run` emulates headlessly (about 4,000 fps), saves PNG screenshots and lists live objects. `--watch C000-C00F` traces writes to an address range.
+
+## Tests
+
+```bash
+dotnet test
+```
