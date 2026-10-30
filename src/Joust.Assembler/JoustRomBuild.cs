@@ -48,6 +48,29 @@ public static class JoustRomBuild
         return new Assembler(options).AssembleFile(Path.Combine(sourceDir, MainFile));
     }
 
+    /// <summary>The sound board's program (6800 code), its own 4K ROM at $F000.</summary>
+    public const string SoundFile = "VSNDRM4.ASM";
+    public const int SoundRomBase = 0xF000;
+
+    public static AssemblyResult AssembleSound(string sourceDir) =>
+        new Assembler(new AssemblerOptions()).AssembleFile(Path.Combine(sourceDir, SoundFile));
+
+    /// <summary>
+    /// The sound ROM's checksum as the source's CKSUM tool made it: an add-with-carry of
+    /// $FFFF down to $F001, stored at $F000. Returns (computed, stored).
+    /// </summary>
+    public static (int Sum, int Stored) SoundChecksum(AssemblyResult result)
+    {
+        int sum = 0, carry = 0;
+        for (int a = 0xFFFF; a > SoundRomBase; a--)
+        {
+            int s = sum + result.Memory[a] + carry;
+            carry = s >> 8;
+            sum = s & 0xFF;
+        }
+        return (sum, result.Memory[SoundRomBase]);
+    }
+
     /// <summary>
     /// Sums each 4K ROM the way the game's own power-up ROM test does and compares against
     /// the expected values stored in its ROMTAB table.

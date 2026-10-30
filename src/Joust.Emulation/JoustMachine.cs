@@ -45,6 +45,9 @@ public sealed class JoustMachine : IBus
     /// <summary>Raised with the 6-bit command whenever the game writes the sound PIA.</summary>
     public event Action<byte>? SoundCommand;
 
+    /// <summary>Every write to the sound board's port (idle $3F included), with the CPU cycle it happened at.</summary>
+    public event Action<byte, long>? SoundPortWrite;
+
     /// <summary>Called for every CPU/blitter write (debug tracing); null in normal play.</summary>
     public Action<ushort, byte>? WriteHook { get; set; }
 
@@ -83,6 +86,7 @@ public sealed class JoustMachine : IBus
         // The sound board latches the low 6 bits; $3F is the idle value written between commands.
         Pia1.WritePortB = v =>
         {
+            SoundPortWrite?.Invoke(v, Cpu.Cycles);
             if ((v & 0x3F) != 0x3F) SoundCommand?.Invoke((byte)(v & 0x3F));
         };
     }

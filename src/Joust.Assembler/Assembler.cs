@@ -50,6 +50,7 @@ public sealed partial class Assembler
     private int _dpr = -1;
     private string _scope = "";
     private bool _final;
+    private bool _m6800;                                         // CPU 6800: the sound board's instruction set
     private bool _ended;
     private MacroBuilder? _defining;
     private string _file = "";
@@ -103,6 +104,7 @@ public sealed partial class Assembler
         _written = new bool[0x10000];
         _pc = 0;
         _dpr = -1;
+        _m6800 = false;
         _scope = "";
         _ended = false;
         _defining = null;
@@ -232,6 +234,15 @@ public sealed partial class Assembler
             return;
         }
 
+        if (op == "IRP")
+        {
+            // IRP P,v1,v2,...: repeat the block up to its ENDM once per value, with P replaced.
+            var items = SplitOperands(line.Operand);
+            if (items.Count == 0) throw new AsmException("IRP needs a parameter");
+            _defining = new MacroBuilder("", [items[0]]) { IrpValues = items.Skip(1).ToList() };
+            return;
+        }
+
         if (op is "EQU" or "SET" or "=")
         {
             if (line.Label == null) throw new AsmException($"{op} needs a label");
@@ -282,6 +293,8 @@ public sealed partial class Assembler
                 Assume(line.Operand);
                 return;
             case "CPU":
+                _m6800 = line.Operand.Trim() is "6800" or "6802" or "6808";
+                return;
             case "PLAINBASE":
             case "PAGE":
             case "LISTING":
@@ -290,7 +303,15 @@ public sealed partial class Assembler
                 throw new AsmException("ENDM without MACRO");
         }
 
-        if (Instructions6809.Table.TryGetValue(op, out var info))
+        if (_m6800)
+        {
+            if (Instructions6800.Table.TryGetValue(op, out var op6800))
+            {
+                Assemble6800(op, op6800, line.Operand);
+                return;
+            }
+        }
+        else if (Instructions6809.Table.TryGetValue(op, out var info))
         {
             AssembleInstruction(op, info, line.Operand);
             return;
@@ -395,20 +416,34 @@ public sealed partial class Assembler
         public string[] Params { get; } = parms;
         public List<string> Body { get; } = [];
         public int Depth { get; set; }
+        public List<string>? IrpValues { get; init; }
     }
 
     private void CollectMacroLine(string raw)
     {
         var parsed = Parse(raw);
         string op = parsed.Op.ToUpperInvariant();
-        if (op == "MACRO")
+        if (op is "MACRO" or "IRP")
             _defining!.Depth++;
         else if (op == "ENDM")
         {
             if (_defining!.Depth == 0)
             {
-                _macros[_defining.Name] = new Macro(_defining.Name, _defining.Params, _defining.Body);
+                var done = _defining;
                 _defining = null;
+                if (done.IrpValues is { } values)
+                {
+                    var block = new Macro("", done.Params, done.Body);
+                    foreach (var v in values)
+                    {
+                        ExpandMacro(block, v);
+                        if (_ended) return;
+                    }
+                }
+                else
+                {
+                    _macros[done.Name] = new Macro(done.Name, done.Params, done.Body);
+                }
                 return;
             }
             _defining.Depth--;
@@ -430,7 +465,8 @@ public sealed partial class Assembler
         }
     }
 
-    [GeneratedRegex(@"[A-Za-z_][A-Za-z0-9_]*")]
+    // Like AS, a parameter is also replaced in a name's '_'-separated parts (LT_C -> LT_7).
+    [GeneratedRegex(@"[A-Za-z][A-Za-z0-9]*")]
     private static partial Regex IdentifierRegex();
 
     /// <summary>Splits on top-level commas, respecting parentheses, brackets and quotes.</summary>

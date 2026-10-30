@@ -1,6 +1,7 @@
 using Joust.Assembler;
 using Joust.Emulation;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -30,6 +31,13 @@ public sealed class JoustGame : Game
     private bool _showObjects;
     private byte _lastSound;
     private string _cmosPath = "";
+
+    private const int SampleRate = 48000;
+    private const float StickDeadZone = 0.35f;
+    private SoundBridge _sound = null!;
+    private DynamicSoundEffectInstance _audio = null!;
+    private readonly float[] _samples = new float[SampleRate / 10];
+    private readonly byte[] _pcm = new byte[SampleRate / 10 * 2];
 
     public JoustGame()
     {
@@ -62,6 +70,15 @@ public sealed class JoustGame : Game
         _state = new GameStateReader(_machine, JoustLayout.FromSymbols(program.Symbols));
         _machine.SoundCommand += cmd => _lastSound = cmd;
 
+        var sound = JoustRomBuild.AssembleSound(source);
+        if (!sound.Success || JoustRomBuild.SoundChecksum(sound) is var (sum, stored) && sum != stored)
+            throw new InvalidOperationException("The sound ROM did not assemble to its checksum.");
+        var board = new SoundBoard(sound.Memory);
+        board.Reset();
+        _sound = new SoundBridge(_machine, board, SampleRate);
+        _audio = new DynamicSoundEffectInstance(SampleRate, AudioChannels.Mono);
+        _audio.Play();
+
         string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JoustX");
         Directory.CreateDirectory(dataDir);
         _cmosPath = Path.Combine(dataDir, "cmos.bin");
@@ -90,21 +107,27 @@ public sealed class JoustGame : Game
         if (Pressed(k, Keys.F3))
             _machine.Reset();
 
+        // Xbox (XInput) controllers: pad 1 and pad 2 are players 1 and 2. D-pad or left stick
+        // steers, A/B/X flaps, Start starts that player's game, Back drops a coin.
+        var pad1 = GamePad.GetState(PlayerIndex.One);
+        var pad2 = GamePad.GetState(PlayerIndex.Two);
+
         var i = _machine.Inputs;
-        i.P1Left = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.A);
-        i.P1Right = k.IsKeyDown(Keys.Right) || k.IsKeyDown(Keys.D);
-        i.P1Flap = k.IsKeyDown(Keys.Space) || k.IsKeyDown(Keys.LeftControl);
-        i.P2Left = k.IsKeyDown(Keys.J);
-        i.P2Right = k.IsKeyDown(Keys.L);
-        i.P2Flap = k.IsKeyDown(Keys.K) || k.IsKeyDown(Keys.RightControl);
-        i.Start1 = k.IsKeyDown(Keys.D1);
-        i.Start2 = k.IsKeyDown(Keys.D2);
-        i.CoinLeft = k.IsKeyDown(Keys.D5);
-        i.CoinRight = k.IsKeyDown(Keys.D6);
+        i.P1Left = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.A) || PadLeft(pad1);
+        i.P1Right = k.IsKeyDown(Keys.Right) || k.IsKeyDown(Keys.D) || PadRight(pad1);
+        i.P1Flap = k.IsKeyDown(Keys.Space) || k.IsKeyDown(Keys.LeftControl) || PadFlap(pad1);
+        i.P2Left = k.IsKeyDown(Keys.J) || PadLeft(pad2);
+        i.P2Right = k.IsKeyDown(Keys.L) || PadRight(pad2);
+        i.P2Flap = k.IsKeyDown(Keys.K) || k.IsKeyDown(Keys.RightControl) || PadFlap(pad2);
+        i.Start1 = k.IsKeyDown(Keys.D1) || pad1.IsButtonDown(Buttons.Start);
+        i.Start2 = k.IsKeyDown(Keys.D2) || pad2.IsButtonDown(Buttons.Start);
+        i.CoinLeft = k.IsKeyDown(Keys.D5) || pad1.IsButtonDown(Buttons.Back);
+        i.CoinRight = k.IsKeyDown(Keys.D6) || pad2.IsButtonDown(Buttons.Back);
         i.Advance = k.IsKeyDown(Keys.F2);
         i.AutoUp = k.IsKeyDown(Keys.F4);
 
         _machine.RunFrame();
+        SubmitAudio();
         _previousKeys = k;
         if (_machine.Frame % 30 == 0)
             Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
@@ -112,6 +135,32 @@ public sealed class JoustGame : Game
     }
 
     private bool Pressed(KeyboardState k, Keys key) => k.IsKeyDown(key) && !_previousKeys.IsKeyDown(key);
+
+    private static bool PadLeft(GamePadState p) =>
+        p.IsConnected && (p.IsButtonDown(Buttons.DPadLeft) || p.ThumbSticks.Left.X < -StickDeadZone);
+
+    private static bool PadRight(GamePadState p) =>
+        p.IsConnected && (p.IsButtonDown(Buttons.DPadRight) || p.ThumbSticks.Left.X > StickDeadZone);
+
+    private static bool PadFlap(GamePadState p) =>
+        p.IsConnected && (p.IsButtonDown(Buttons.A) || p.IsButtonDown(Buttons.B) || p.IsButtonDown(Buttons.X));
+
+    /// <summary>
+    /// Hands this frame's sound-board output to the audio device. If the device has fallen
+    /// behind by more than a few frames, the frame is dropped rather than letting latency grow.
+    /// </summary>
+    private void SubmitAudio()
+    {
+        int n = _sound.EndFrame(_samples);
+        if (n == 0 || _audio.PendingBufferCount > 4) return;
+        for (int s = 0; s < n; s++)
+        {
+            short v = (short)Math.Clamp(_samples[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
+            _pcm[2 * s] = (byte)v;
+            _pcm[2 * s + 1] = (byte)(v >> 8);
+        }
+        _audio.SubmitBuffer(_pcm, 0, n * 2);
+    }
 
     protected override void Draw(GameTime gameTime)
     {

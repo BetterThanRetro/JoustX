@@ -151,4 +151,4 @@ The original only decides *what* happens. A new renderer decides how it looks:
 ## Phase 4: 2026 audio
 
 - The game writes 6-bit sound commands (`JoustMachine.SoundCommand`; for example `$1F`/`$1E` wing flaps, `$35` coin, `$24` start). Map each command to a modern sample or synth patch, with mixing, positional panning from object X, and music stingers.
-- Optional "original sound" mode: assemble `VSNDRM4.ASM` (6800 code, Walsh-function macros) and emulate the sound board.
+- [x] Original sound: the assembler now handles `CPU 6800`, `IRP` and AS's `_`-separated macro parameters, so `VSNDRM4.ASM` (with its Walsh-function macros) builds from source and matches its own checksum ($74). `SoundBoard` emulates the 6808 board (128 bytes RAM, PIA at $0400, DAC on port A, command on port B with CB1 as strobe) and `SoundBridge` runs it beside the main board, taking each sound-port write at its own cycle. The host plays it at 48 kHz.
