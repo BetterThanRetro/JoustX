@@ -21,7 +21,10 @@ public sealed class Engine
         Eggs = new Eggs(s, Physics, Ground);
         Text = new TextOut(s);
         EggProcess = new EggProcess(s, Physics, Ground, Scheduler, Eggs, Text);
+        Irq = new InterruptHandler(s);
     }
+
+    public InterruptHandler Irq { get; }
 
     public Eggs Eggs { get; }
     public TextOut Text { get; }
@@ -81,6 +84,9 @@ public sealed class TxJumpRoutine(
 
     public static IEnumerable<NativeRoutine> All() =>
     [
+        // The IRQ handler: palette, switches, and playing the DMA lists to the blitter
+        new TxJumpRoutine("IRQ", (e, t) => e.Irq.Run(t)),
+
         // Scheduler: sleeping, dying, walking the process list, end of frame
         new TxJumpRoutine("NAPTPC", (e, t) => e.Scheduler.Nap(t, fromJsr: true)),
         new TxJumpRoutine("NAPTIM", (e, t) => e.Scheduler.Nap(t, fromJsr: false)),

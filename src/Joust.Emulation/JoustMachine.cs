@@ -182,6 +182,18 @@ public sealed class JoustMachine : IBus
             return false;
         if ((Cpu.CC & Cpu6809.FlagI) != 0)
             return true;
+        return EdgeFree(maxCycles);
+    }
+
+    /// <summary>
+    /// True if no PIA interrupt edge (CB1 falling at lines 0/64/128/192, CA1 at 240) arrives in the
+    /// next <paramref name="maxCycles"/> cycles and they end in this frame. Code that reads or
+    /// clears the interrupt flags itself (the IRQ handler) needs this even with IRQs masked.
+    /// </summary>
+    public bool EdgeFree(int maxCycles)
+    {
+        if (!FitsInFrame(maxCycles))
+            return false;
         long end = Cpu.Cycles + maxCycles;
         long boundary = _frameTarget;
         for (int line = _scanline + 1; end > boundary; line++, boundary += CyclesPerScanline)
@@ -253,8 +265,28 @@ public sealed class JoustMachine : IBus
             return 0;
         }
         if ((a & 0xFF00) == 0xCB00)
-            return (byte)(_scanline < 0x100 ? _scanline & 0xFC : 0xFC);
+            return VideoCounter(0);
         return 0;
+    }
+
+    /// <summary>
+    /// The scanline the beam is on <paramref name="cyclesFromNow"/> cycles from the current CPU
+    /// cycle. An instruction sees the line its first cycle falls in; in a normal run that is
+    /// always the current line, but this also follows the beam through code run outside the
+    /// frame loop (the verifier's replay of a native call).
+    /// </summary>
+    public int ScanlineAt(int cyclesFromNow)
+    {
+        long c = Cpu.Cycles + cyclesFromNow;
+        if (c < _frameTarget) return _scanline;
+        return Math.Min(ScanlinesPerFrame - 1, _scanline + 1 + (int)((c - _frameTarget) / CyclesPerScanline));
+    }
+
+    /// <summary>What reading VSCAN returns <paramref name="cyclesFromNow"/> cycles from now (6-bit counter, 4-line steps).</summary>
+    public byte VideoCounter(int cyclesFromNow)
+    {
+        int line = ScanlineAt(cyclesFromNow);
+        return (byte)(line < 0x100 ? line & 0xFC : 0xFC);
     }
 
     public void Write(ushort a, byte v)
@@ -321,6 +353,9 @@ public sealed class JoustMachine : IBus
 
     /// <summary>What reading widget port A would return with the multiplexer at <paramref name="player1"/>, without side effects.</summary>
     public byte PeekWidget(bool player1) => Pia0.PeekA(WidgetInputs(player1));
+
+    /// <summary>What reading the board PIA's port A (coin door switches) would return, without side effects.</summary>
+    public byte PeekCoinDoor() => Pia1.PeekA(ReadCoinDoor());
 
     /// <summary>Reads what a journaled address currently holds (RAM, palette, CMOS or blitter register).</summary>
     public byte Peek(ushort a) => a switch

@@ -26,6 +26,9 @@ public sealed class Asm(Tx t)
     /// <summary>A variable reached by address (direct page or extended).</summary>
     public Ea M(ushort address) => new(T.Var(address), Symbols.AddressCost(address));
 
+    /// <summary>A variable reached with forced extended addressing (`>label`).</summary>
+    public Ea E(ushort address) => new(address, 1);
+
     private void Cy(int n) => T.Cycles += n;
 
     // ------------------------------------------------------------------ loads and stores
@@ -35,10 +38,23 @@ public sealed class Asm(Tx t)
     public void Ldd(Ea e) { T.D = T.Read16(e.Address); T.CC = Logic16(T.CC, T.D); Cy(5 + e.Extra); }
     public void Ldx(Ea e) { T.X = T.Read16(e.Address); T.CC = Logic16(T.CC, T.X); Cy(5 + e.Extra); }
     public void Ldy(Ea e) { T.Y = T.Read16(e.Address); T.CC = Logic16(T.CC, T.Y); Cy(6 + e.Extra); }
-    public void Sta(Ea e) { T.Write(e.Address, T.A); T.CC = Logic8(T.CC, T.A); Cy(4 + e.Extra); }
-    public void Stb(Ea e) { T.Write(e.Address, T.B); T.CC = Logic8(T.CC, T.B); Cy(4 + e.Extra); }
+    public void Lds(Ea e) { T.S = T.Read16(e.Address); T.CC = Logic16(T.CC, T.S); Cy(6 + e.Extra); }
+    public void Sta(Ea e) { Put(e.Address, T.A); T.CC = Logic8(T.CC, T.A); Cy(4 + e.Extra); }
+    public void Stb(Ea e) { Put(e.Address, T.B); T.CC = Logic8(T.CC, T.B); Cy(4 + e.Extra); }
     public void Std(Ea e) { T.Write16(e.Address, T.D); T.CC = Logic16(T.CC, T.D); Cy(5 + e.Extra); }
     public void Stx(Ea e) { T.Write16(e.Address, T.X); T.CC = Logic16(T.CC, T.X); Cy(5 + e.Extra); }
+    public void Sts(Ea e) { T.Write16(e.Address, T.S); T.CC = Logic16(T.CC, T.S); Cy(6 + e.Extra); }
+
+    /// <summary>
+    /// A byte store: I/O registers (PIAs, bank latch, blitter, watchdog) go to the transaction's
+    /// ordered I/O log, everything else (RAM, palette, CMOS) is a pending memory write.
+    /// </summary>
+    private void Put(int address, byte value)
+    {
+        address &= 0xFFFF;
+        if (address is >= 0xC400 and < 0xCC00) T.IoWrite(address, value);
+        else T.Write(address, value);
+    }
 
     public void LdaI(int v) { T.A = (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
     public void LdbI(int v) { T.B = (byte)v; T.CC = Logic8(T.CC, T.B); Cy(2); }
@@ -52,6 +68,9 @@ public sealed class Asm(Tx t)
     public void Suba(Ea e) { T.A = Sub8(ref T.CC, T.A, T.Read(e.Address)); Cy(4 + e.Extra); }
     public void Subb(Ea e) { T.B = Sub8(ref T.CC, T.B, T.Read(e.Address)); Cy(4 + e.Extra); }
     public void Anda(Ea e) { T.A &= T.Read(e.Address); T.CC = Logic8(T.CC, T.A); Cy(4 + e.Extra); }
+    public void Andb(Ea e) { T.B &= T.Read(e.Address); T.CC = Logic8(T.CC, T.B); Cy(4 + e.Extra); }
+    public void Ora(Ea e) { T.A |= T.Read(e.Address); T.CC = Logic8(T.CC, T.A); Cy(4 + e.Extra); }
+    public void Orb(Ea e) { T.B |= T.Read(e.Address); T.CC = Logic8(T.CC, T.B); Cy(4 + e.Extra); }
     public void Cmpd(Ea e) { Sub16(ref T.CC, T.D, T.Read16(e.Address)); Cy(7 + e.Extra); }
     public void Subd(Ea e) { T.D = Sub16(ref T.CC, T.D, T.Read16(e.Address)); Cy(6 + e.Extra); }
     public void Addd(Ea e) { T.D = Add16(ref T.CC, T.D, T.Read16(e.Address)); Cy(6 + e.Extra); }
@@ -61,20 +80,24 @@ public sealed class Asm(Tx t)
     public void SubbI(int v) { T.B = Sub8(ref T.CC, T.B, (byte)v); Cy(2); }
     public void AddbI(int v) { T.B = Add8(ref T.CC, T.B, (byte)v, withCarry: false); Cy(2); }
     public void AndaI(int v) { T.A &= (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
+    public void AndbI(int v) { T.B &= (byte)v; T.CC = Logic8(T.CC, T.B); Cy(2); }
+    public void OraI(int v) { T.A |= (byte)v; T.CC = Logic8(T.CC, T.A); Cy(2); }
+    public void BitaI(int v) { T.CC = Logic8(T.CC, (byte)(T.A & v)); Cy(2); }
+    public void AddaI(int v) { T.A = Add8(ref T.CC, T.A, (byte)v, withCarry: false); Cy(2); }
     public void CmpdI(int v) { Sub16(ref T.CC, T.D, (ushort)v); Cy(5); }
     public void SubdI(int v) { T.D = Sub16(ref T.CC, T.D, (ushort)v); Cy(4); }
     public void AdddI(int v) { T.D = Add16(ref T.CC, T.D, (ushort)v); Cy(4); }
 
     // ------------------------------------------------------------------ read-modify-write
 
-    private void Modify(Ea e, Func<byte, byte> op) { T.Write(e.Address, op(T.Read(e.Address))); Cy(6 + e.Extra); }
+    private void Modify(Ea e, Func<byte, byte> op) { Put(e.Address, op(T.Read(e.Address))); Cy(6 + e.Extra); }
 
     public void Dec(Ea e) => Modify(e, m => Alu6809.Dec(ref T.CC, m));
     public void Inc(Ea e) => Modify(e, m => Alu6809.Inc(ref T.CC, m));
     public void Com(Ea e) => Modify(e, m => Com8(ref T.CC, m));
     public void Asr(Ea e) => Modify(e, m => Asr8(ref T.CC, m));
     public void Ror(Ea e) => Modify(e, m => Ror8(ref T.CC, m));
-    public void Clr(Ea e) { T.Write(e.Address, 0); T.CC = Alu6809.Clr(T.CC); Cy(6 + e.Extra); }
+    public void Clr(Ea e) { Put(e.Address, 0); T.CC = Alu6809.Clr(T.CC); Cy(6 + e.Extra); }
     public void Tst(Ea e) { T.CC = Logic8(T.CC, T.Read(e.Address)); Cy(6 + e.Extra); }
 
     // ------------------------------------------------------------------ inherent

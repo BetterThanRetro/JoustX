@@ -63,6 +63,7 @@ Still open here:
 | `ADDEGG` / `WEGG` / `WEGPAR` / `CEGG` / `CLIPER` / `EGGBKG` / `EGAREA` | Egg helpers: gravity and the egg's 4–288 wrap, tumble frame by speed, draw/erase, clipping at the lava line, cliff refresh, score position | Egg step |
 | `HITEM` contact path (`OSTHIT`, `OSTBO`, `OSTHT2`, `EGGSCR`, `OSTWIN` + resume points) | The joust: higher lance wins, equal lances bounce, enemies thud, pterodactyl only dies to a lance in its mouth while facing it, egg pickups (250/500/750/1000, +500 caught in the air), the kill and the winner's score | Joust step |
 | Enemy AI (`PJOY` routines): `LINET`, `BOUNDR`, `B2UNDR`, `SHADOW`, `PTERO` (+ `PATCH4`/`5`/`6`/`9`), `SEEKE`, `AUTOFF`, `PTEOFF`, `SELPLY`, and every label they store in `PJOY` (40 entries) | Line tracking until the wave needs smarter enemies; Bounder, Hunter and Shadow Lord seeking (vertical range seeks, level flight, cliff look-ahead, flapping out of the lava, sometimes turning around instead of copying the player); the pterodactyl's line tracking and attack run; a buzzard fetching its rider; flying off screen. Ported instruction by instruction (`Asm`) because decisions hinge on exact flags and original quirks such as a stale X. Run inline from the bird process; a rider mounting (`MOUNRI`) and leaving the screen hand back | AI step |
+| `IRQ` (the 4 ms interrupt handler) | Watchdog, random seed, ROM select for the blitter; on line 0 the palette copy, minutes of game time and coin-door switch debounce; then the frame's DMA table played to the blitter a quadrant at a time while the beam is elsewhere, freeing the table when all four are done. It reads the beam counter and clears the PIA flags itself, so it runs natively only when no interrupt edge lands inside it; switch presses (coin, advance, high-score reset) and the minute audit hand back | IRQ step |
 
 `verify-native` (4 seeds × 40,000 frames): about 2.3 million native calls in lockstep (identical every frame), 0 per-call mismatches. Natives handle about 46% of non-idle CPU time; the original code spends about 60% of all cycles idling until the blitter IRQ frees a DMA table. Mutation tests confirm the checks catch a single cycle, flag, memory-bit or register error, including in jump-style code.
 
@@ -78,7 +79,6 @@ Still open here:
 
 Still original code:
 - `EXECST`: frame start (busy-wait for a free DMA table and sending the queued sound to the sound board).
-- The IRQ handler: palette refresh, switch debounce, and playing the DMA lists to the blitter. This is now the largest remaining share of CPU time.
 - Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), transporters, lava troll, wave control, attract mode (including its `PJOY` pilots).
 - The processes the death routines start: the death puff (`DEATH`), game over (`GAMOVR`/`GAMOV1`). The attract mode's cycling egg score (`ATTEGG`) is handed back.
 - Rare joust cases hand the whole call back: an egg score that earns an extra mount, and the "fictitious collision" `SWI`.
@@ -97,7 +97,9 @@ Natives now handle about 52–54% of non-idle CPU time (4 seeds × 40,000 frames
 
 AI step: all 40 AI entries are exercised with 0 per-call mismatches and identical lockstep over 4 seeds × 40,000 frames plus 2 two-player seeds; natives handle about 54–56% of non-idle CPU time.
 
-Next: the IRQ handler (now the largest remaining share), then the lava troll and transporters. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
+IRQ step: VSCAN now follows the CPU clock (the line of the reading instruction's first cycle), so the verifier's replay of a native sees the beam where the frame loop would; normal emulation is unchanged (golden replay identical). The handler runs natively on all but about 1 in 6,000 interrupts, with 0 per-call mismatches and identical lockstep over 4 seeds × 40,000 frames plus 2 two-player seeds. Natives now handle about 82–85% of non-idle CPU time.
+
+Next: the lava troll and transporters, then `EXECST` (frame start) and wave control. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
 
 1. **Routine hooks.** Add a `NativeRoutines` table keyed by ROM address. When the PC reaches a hooked entry, the C# implementation runs against the *same* RAM, registers and stack, then returns as the original `RTS` would.
 2. **Lockstep verifier.** Run two machines side by side, pure original and hooked, with identical inputs. Compare RAM, palette and CMOS every frame and report the first diverging address, frame and routine. The golden replay script grows into a library of input recordings (wave 1–10, pterodactyls, lava troll, egg waves, two-player gladiator rounds, high-score entry).

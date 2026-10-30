@@ -89,6 +89,18 @@ public sealed class NativeContext
     /// <summary>True if <paramref name="cycles"/> from now still ends in the current video frame.</summary>
     public bool FitsInFrame(int cycles) => _m.FitsInFrame(cycles);
 
+    /// <summary>True if no PIA interrupt edge arrives in the next <paramref name="cycles"/> cycles (even with IRQs masked).</summary>
+    public bool EdgeFree(int cycles) => _m.EdgeFree(cycles);
+
+    /// <summary>What reading VSCAN returns <paramref name="cyclesFromNow"/> cycles from now.</summary>
+    public byte VideoCounter(int cyclesFromNow) => _m.VideoCounter(cyclesFromNow);
+
+    /// <summary>The coin door switches (board PIA port A) as a read would return them (no side effects).</summary>
+    public byte PeekCoinDoor() => _m.PeekCoinDoor();
+
+    /// <summary>The board PIA's interrupt outputs (IRQA, IRQB).</summary>
+    public (bool A, bool B) BoardIrq => (_m.Pia1.IrqA, _m.Pia1.IrqB);
+
     /// <summary>Leaves by jumping to <paramref name="pc"/> after <paramref name="cycles"/> cycles.</summary>
     public void Jump(ushort pc, int cycles)
     {
