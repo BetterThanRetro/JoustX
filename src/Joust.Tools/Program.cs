@@ -1,4 +1,4 @@
-﻿using Joust.Assembler;
+using Joust.Assembler;
 using Joust.Tools;
 
 if (args.Length == 0)
@@ -7,6 +7,7 @@ if (args.Length == 0)
     Console.WriteLine("  joust-tools build-roms <make.asm> <outdir> [-D SYMBOL ...]");
     Console.WriteLine("  joust-tools run <joust_main_64k.bin> <frames> <outdir> [--shots f1,f2] [--script \"f:action ...\"] [--cmos file]");
     Console.WriteLine("  joust-tools verify-native [--frames N] [--seeds 1,2,3]");
+    Console.WriteLine("  joust-tools hd-shots <outdir> [--frames f1,f2] [--crt]");
     return 1;
 }
 
@@ -16,6 +17,8 @@ switch (args[0].ToLowerInvariant())
         return RomBuilder.Run(args[1..]);
     case "run":
         return HeadlessRunner.Run(args[1..]);
+    case "hd-shots":
+        return HdShots.Run(args[1..]);
     case "verify-native":
         return NativeVerifyCommand.Run(args[1..]);
     default:

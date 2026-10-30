@@ -505,6 +505,21 @@ public sealed class JoustMachine : IBus
         }
     }
 
+    /// <summary>The frame buffer as one palette index (0-15) per pixel, row-major 304x256.</summary>
+    public void RenderIndices(Span<byte> target)
+    {
+        for (int y = 0; y < ScreenHeight; y++)
+        {
+            int row = y * ScreenWidth;
+            for (int col = 0; col < ScreenWidth / 2; col++)
+            {
+                byte b = _ram[(col << 8) | y];
+                target[row + col * 2] = (byte)(b >> 4);
+                target[row + col * 2 + 1] = (byte)(b & 0x0F);
+            }
+        }
+    }
+
     public static uint PaletteToArgb(byte entry)
     {
         // Weighted resistor DAC values from MAME's williams palette (rounded).

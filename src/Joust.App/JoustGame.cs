@@ -1,5 +1,6 @@
 using Joust.Assembler;
 using Joust.Emulation;
+using Joust.Render;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,6 +32,14 @@ public sealed class JoustGame : Game
     private bool _showObjects;
     private byte _lastSound;
     private string _cmosPath = "";
+
+    // HD presentation (F5 toggles classic, F6 CRT). It only reads the frame buffer.
+    private readonly HdRenderer _renderer = new();
+    private HdOptions _hdOptions = new() { Abgr = true };
+    private readonly byte[] _indices = new byte[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
+    private readonly uint[] _palette = new uint[16];
+    private Texture2D _hdScreen = null!;
+    private bool _hd = !Environment.GetCommandLineArgs().Contains("--classic");
 
     private const int SampleRate = 48000;
     private const float StickDeadZone = 0.35f;
@@ -93,6 +102,7 @@ public sealed class JoustGame : Game
     {
         _batch = new SpriteBatch(GraphicsDevice);
         _screen = new Texture2D(GraphicsDevice, JoustMachine.ScreenWidth, JoustMachine.ScreenHeight);
+        _hdScreen = new Texture2D(GraphicsDevice, HdRenderer.Width, HdRenderer.Height);
         _white = new Texture2D(GraphicsDevice, 1, 1);
         _white.SetData([Color.White]);
     }
@@ -106,6 +116,10 @@ public sealed class JoustGame : Game
             _showObjects = !_showObjects;
         if (Pressed(k, Keys.F3))
             _machine.Reset();
+        if (Pressed(k, Keys.F5))
+            _hd = !_hd;
+        if (Pressed(k, Keys.F6))
+            _hdOptions = _hdOptions with { Crt = !_hdOptions.Crt };
 
         // Xbox (XInput) controllers: pad 1 and pad 2 are players 1 and 2. D-pad or left stick
         // steers, A/B/X flaps, Start starts that player's game, Back drops a coin.
@@ -130,7 +144,7 @@ public sealed class JoustGame : Game
         SubmitAudio();
         _previousKeys = k;
         if (_machine.Frame % 30 == 0)
-            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
+            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
         base.Update(gameTime);
     }
 
@@ -164,18 +178,29 @@ public sealed class JoustGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        _machine.RenderArgb(_argb);
-        for (int p = 0; p < _argb.Length; p++)
-        {
-            uint c = _argb[p]; // AARRGGBB -> AABBGGRR (MonoGame Color is RGBA in memory)
-            _rgba[p] = (c & 0xFF00FF00) | ((c >> 16) & 0xFF) | ((c & 0xFF) << 16);
-        }
-        _screen.SetData(_rgba);
-
         GraphicsDevice.Clear(Color.Black);
         var dest = FitRectangle(GraphicsDevice.Viewport.Bounds, 4f / 3f);
-        _batch.Begin(samplerState: SamplerState.PointClamp);
-        _batch.Draw(_screen, dest, Visible, Color.White);
+        if (_hd)
+        {
+            _machine.RenderIndices(_indices);
+            for (int c = 0; c < 16; c++) _palette[c] = JoustMachine.PaletteToArgb(_machine.Palette[c]);
+            _renderer.Render(_indices, _palette, _machine.Frame, _hdOptions);
+            _hdScreen.SetData(_renderer.Output);
+            _batch.Begin(samplerState: SamplerState.LinearClamp);
+            _batch.Draw(_hdScreen, dest, Color.White);
+        }
+        else
+        {
+            _machine.RenderArgb(_argb);
+            for (int p = 0; p < _argb.Length; p++)
+            {
+                uint c = _argb[p]; // AARRGGBB -> AABBGGRR (MonoGame Color is RGBA in memory)
+                _rgba[p] = (c & 0xFF00FF00) | ((c >> 16) & 0xFF) | ((c & 0xFF) << 16);
+            }
+            _screen.SetData(_rgba);
+            _batch.Begin(samplerState: SamplerState.PointClamp);
+            _batch.Draw(_screen, dest, Visible, Color.White);
+        }
         if (_showObjects)
             DrawObjectBoxes(dest);
         _batch.End();
