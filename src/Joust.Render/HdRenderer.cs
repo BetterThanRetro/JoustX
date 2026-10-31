@@ -16,7 +16,7 @@ public sealed record HdOptions
     public bool Particles { get; init; } = true;
     public bool Crt { get; init; }
 
-    /// <summary>16:9 canvas: the field keeps its 4:3 shape, with cavern and pillars at the sides.</summary>
+    /// <summary>16:9 canvas: the field keeps its 4:3 shape, with dark cavern at the sides.</summary>
     public bool Widescreen { get; init; } = true;
 
     /// <summary>Write pixels as A,B,G,R in memory (MonoGame's Color) instead of 0xAARRGGBB.</summary>
@@ -38,7 +38,6 @@ public sealed class HdRenderer
 
     /// <summary>The 16:9 canvas width: the field is shown at 4:3, so its pixels are 1.096 wide.</summary>
     public const int WideWidth = Width * 4 / 3;
-    private const int PillarWidth = 34;
 
     private const int LavaTop = 196;                             // rows (of the visible field) where lava can be
 
@@ -80,7 +79,7 @@ public sealed class HdRenderer
         Parallel.For(0, Height, y =>
         {
             ComposeRow(y, t, flicker, options);
-            if (options.Widescreen) ComposeSides(y, flicker, options);
+            if (options.Widescreen) ComposeSides(y, options);
         });
         if (options.Particles)
         {
@@ -179,37 +178,19 @@ public sealed class HdRenderer
     }
 
     /// <summary>
-    /// The 16:9 side panels: more cavern (darkening outwards, lit by the lava below) and a stone
-    /// pillar framing each side of the field.
+    /// The 16:9 side panels: plain cavern, darkening towards the screen edges. The lava's glow
+    /// stays in the field (lit sides read as light bleeding out of it).
     /// </summary>
-    private void ComposeSides(int y, float flicker, HdOptions o)
+    private void ComposeSides(int y, HdOptions o)
     {
         int side = (WideWidth - Width) / 2;
-        float lavaLight = 0f;                                    // the lava's glow stays in the field: lit sides read as bleed
-        float v = y / (float)Height;
         for (int s = 0; s < side; s++)
         {
-            foreach (int x in new[] { s, WideWidth - 1 - s })
+            float fade = 0.35f + 0.65f * (s / (float)side);              // darker towards the screen edge
+            for (int x = s; x < WideWidth; x += WideWidth - 1 - 2 * s)   // s, then its mirror
             {
-                int fromField = side - 1 - s;                    // 0 next to the field
                 int bo = (y * WideWidth + x) * 3;
-                float fade = 0.35f + 0.65f * (s / (float)side);          // darker towards the screen edge
-                float r = _backdrop.Base[bo] * (1f + lavaLight * 2.2f) * fade + lavaLight * 0.04f * fade;
-                float g = _backdrop.Base[bo + 1] * (1f + lavaLight * 0.9f) * fade;
-                float b = _backdrop.Base[bo + 2] * fade;
-                if (fromField < PillarWidth)
-                {
-                    // A rounded stone column: shade across it, carved bands, warm light from below.
-                    float u = (fromField + 0.5f) / PillarWidth;
-                    float round = MathF.Sin(u * MathF.PI);
-                    float band = ((y / 6) % 16 == 0 || (y / 6) % 16 == 1) ? 0.7f : 1f;
-                    float stone = (0.10f + 0.16f * round) * band;
-                    float warm = 0.15f + 0.85f * v * v;
-                    r = stone * (1.15f + 0.9f * lavaLight) * warm + 0.03f;
-                    g = stone * (0.95f + 0.35f * lavaLight) * warm + 0.025f;
-                    b = stone * 0.85f * warm + 0.025f;
-                    if (fromField == 0) { r *= 0.4f; g *= 0.4f; b *= 0.4f; }   // seam against the field
-                }
+                float r = _backdrop.Base[bo] * fade, g = _backdrop.Base[bo + 1] * fade, b = _backdrop.Base[bo + 2] * fade;
                 if (o.Crt)
                 {
                     float scan = (y & 3) == 3 ? 0.62f : (y & 3) == 0 ? 0.9f : 1f;
