@@ -29,6 +29,7 @@ public sealed class JoustMachine : IBus
     private readonly byte[] _blitterRegs = new byte[8];
     private bool _romBank;
     private int _scanline;
+    private readonly byte[] _scanned = new byte[ScreenWidth / 2 * 256];   // video RAM as the beam last saw it
     private bool _mux;
     private long _frameTarget;
     private readonly NativeRoutine?[] _natives = new NativeRoutine?[0x10000];
@@ -146,6 +147,11 @@ public sealed class JoustMachine : IBus
                 else
                     Cpu.Step();
             }
+            // The monitor shows each line as the beam passes it, while the game is still erasing
+            // and redrawing objects elsewhere; latch the line now so the picture is what a CRT shows.
+            if (_scanline < ScreenHeight)
+                for (int col = 0; col < ScreenWidth / 2; col++)
+                    _scanned[(col << 8) | _scanline] = _ram[(col << 8) | _scanline];
         }
         Frame++;
     }
@@ -505,7 +511,7 @@ public sealed class JoustMachine : IBus
             int row = y * ScreenWidth;
             for (int col = 0; col < ScreenWidth / 2; col++)
             {
-                byte b = _ram[(col << 8) | y];
+                byte b = _scanned[(col << 8) | y];
                 target[row + col * 2] = lut[b >> 4];
                 target[row + col * 2 + 1] = lut[b & 0x0F];
             }
@@ -520,7 +526,7 @@ public sealed class JoustMachine : IBus
             int row = y * ScreenWidth;
             for (int col = 0; col < ScreenWidth / 2; col++)
             {
-                byte b = _ram[(col << 8) | y];
+                byte b = _scanned[(col << 8) | y];
                 target[row + col * 2] = (byte)(b >> 4);
                 target[row + col * 2 + 1] = (byte)(b & 0x0F);
             }

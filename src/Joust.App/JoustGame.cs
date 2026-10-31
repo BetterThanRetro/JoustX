@@ -51,6 +51,11 @@ public sealed class JoustGame : Game
     private readonly byte[] _pcm = new byte[SampleRate / 10 * 4];
     private readonly CavernReverb _reverb = new(SampleRate);
     private bool _reverbOn = true;                               // F7: original sound only
+
+    // Timing shown in the title bar, to see whether a slow machine is dropping frames.
+    private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+    private double _updateMs, _drawMs, _lastTitle;
+    private int _draws, _updates, _fps, _ups;
     private float _dcIn, _dcOut;
 
     public JoustGame()
@@ -167,12 +172,19 @@ public sealed class JoustGame : Game
         i.Advance = k.IsKeyDown(Keys.F2);
         i.AutoUp = k.IsKeyDown(Keys.F4);
 
+        double start = _clock.Elapsed.TotalMilliseconds;
         _machine.RunFrame();
         _events.Update();
         SubmitAudio();
+        _updateMs = 0.9 * _updateMs + 0.1 * (_clock.Elapsed.TotalMilliseconds - start);
+        _updates++;
         _previousKeys = k;
-        if (_machine.Frame % 30 == 0)
-            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
+        if (start - _lastTitle >= 1000)
+        {
+            _fps = _draws; _ups = _updates; _draws = _updates = 0; _lastTitle = start;
+            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  |  5 coin  1/2 start  |  " +
+                $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}";
+        }
         base.Update(gameTime);
     }
 
@@ -222,6 +234,7 @@ public sealed class JoustGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        double start = _clock.Elapsed.TotalMilliseconds;
         GraphicsDevice.Clear(Color.Black);
         bool wide = _hd && _hdOptions.Widescreen;
         var dest = FitRectangle(GraphicsDevice.Viewport.Bounds, wide ? 16f / 9f : 4f / 3f);
@@ -252,6 +265,8 @@ public sealed class JoustGame : Game
         if (_showObjects)
             DrawObjectBoxes(dest);
         _batch.End();
+        _drawMs = 0.9 * _drawMs + 0.1 * (_clock.Elapsed.TotalMilliseconds - start);
+        _draws++;
         base.Draw(gameTime);
     }
 
