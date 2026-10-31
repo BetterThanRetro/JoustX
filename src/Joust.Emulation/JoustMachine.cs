@@ -366,6 +366,9 @@ public sealed class JoustMachine : IBus
     /// <summary>Byte of the program image (ROM), regardless of the bank switch.</summary>
     public byte ReadRom(ushort a) => _rom[a];
 
+    /// <summary>Changes one ROM byte, as a modified or bootleg chip would (for tests).</summary>
+    public void PatchRom(ushort a, byte value) => _rom[a] = value;
+
     /// <summary>State of the PIAs and bank/mux latches, so a native call's I/O can be undone.</summary>
     public IoState SaveIo() => new(Pia0.Save(), Pia1.Save(), _mux, _romBank);
 

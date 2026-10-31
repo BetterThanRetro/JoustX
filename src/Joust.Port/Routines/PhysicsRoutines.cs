@@ -186,6 +186,14 @@ public sealed class TxJumpRoutine(
         new TxJumpRoutine("KZAP", (e, t) => e.Checksums.Run(t, Checksums.L.KzapStart)),
         new TxJumpRoutine("KZAP.1S@nap", (e, t) => e.Checksums.Run(t, Checksums.L.KzapNap), e => e.Checksums.Address(Checksums.L.KzapNap)),
         new TxJumpRoutine("KZAP@raddr", (e, t) => e.Checksums.Run(t, Checksums.L.KzapFailed), e => e.Checksums.Address(Checksums.L.KzapFailed)),
+        // The copy-protection sabotage steps themselves: if a check's last step ran as original
+        // code and found the program changed, stop instead of corrupting the game.
+        new TxJumpRoutine("JZAP@sabotage", (e, t) => throw new RomTamperedException("JZAP", "INC LXPOS2+1 reached"),
+            e => (ushort)(e.Symbols["JZAP.2S"] - 2)),            // INC <LXPOS2+1 (direct page)
+        new TxJumpRoutine("LZAP@sabotage", (e, t) => throw new RomTamperedException("LZAP", "LDX [PFREE] / INC 1,X reached"),
+            e => (ushort)(e.Symbols["LZAP.2S"] - 4 - 2)),        // LDX [PFREE] / INC 1,X
+        new TxJumpRoutine("KZAP@sabotage", (e, t) => throw new RomTamperedException("KZAP", "JSR RADDR reached"),
+            e => (ushort)(e.Checksums.Address(Checksums.L.KzapFailed) - 3)),   // JSR RADDR
 
         // The wave controller's in-play loop
         new TxJumpRoutine("EMY2", (e, t) => e.Waves.Run(t, WaveMonitor.L.Reset)),

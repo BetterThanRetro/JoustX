@@ -13,6 +13,8 @@ namespace Joust.Port.Routines;
 ///   against KZAP1 and starts over. A wrong sum corrupts a random RAM byte (RADDR, left to the
 ///   original).</item>
 /// </list>
+/// The port keeps every sum and its cycles, so timing and the random sequence stay identical,
+/// but never runs a sabotage step: a wrong sum stops the game with <see cref="RomTamperedException"/>.
 /// </summary>
 public sealed class Checksums
 {
@@ -59,7 +61,12 @@ public sealed class Checksums
             Sub16(ref t.CC, t.X, 0xD000);                        // CMPX #$D000
             t.Cycles += LoopCycles;
             k++;
-            if (t.X == 0xD000) return (ushort)(JzapLoop + 2 + 3 + 2);   // BNE falls through
+            if (t.X == 0xD000)
+            {
+                // EORA #$A1 / BEQ .2S follow; the original's INC LXPOS2+1 on a mismatch is never run.
+                if (t.A != 0xA1) throw new RomTamperedException("JZAP", $"$D000-$8FFF sums to ${t.A:X2}, expected $A1");
+                return (ushort)(JzapLoop + 2 + 3 + 2);           // BNE falls through
+            }
         }
         return k == 0 ? null : JzapLoop;
     }
@@ -108,9 +115,8 @@ public sealed class Checksums
         if (a.Br(a.Pl)) return Nap(t, a);                        // not yet at $8000
         a.Cmpa(a.M(_kzap1));
         if (a.Br(a.Eq)) return Restart(t, a);                    // the sum is right
-        t.Cycles += 8;                                           // JSR RADDR: tamper response (original)
-        t.Push16(_address[L.KzapFailed]);
-        return _raddr;
+        // The original would JSR RADDR and corrupt a random RAM byte.
+        throw new RomTamperedException("KZAP", $"$0000-$7FFF sums to ${t.A:X2}, expected ${t.Read(_kzap1):X2}");
     }
 
     // ------------------------------------------------------------------ cliff table loops
@@ -186,4 +192,14 @@ public sealed class Checksums
         t.Push16(_address[L.KzapNap]);
         return _scheduler.Nap(t, fromJsr: true) ?? throw new InvalidOperationException("nap without a continuation");
     }
+}
+
+/// <summary>
+/// One of the original copy-protection checks found the program changed. The arcade code would
+/// quietly corrupt the game to crash later; the port stops here instead and names the check.
+/// </summary>
+public sealed class RomTamperedException(string check, string detail)
+    : Exception($"Copy-protection check {check} failed: {detail}. The program differs from the original ROMs.")
+{
+    public string Check { get; } = check;
 }

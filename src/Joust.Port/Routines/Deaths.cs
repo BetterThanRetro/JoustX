@@ -414,8 +414,9 @@ public sealed class Deaths
     }
 
     /// <summary>
-    /// LZAP: an anti-tamper check. Sums 34 bytes of ROM at LZAP1; if the sum is wrong it
-    /// quietly corrupts the free process list (a bootleg ROM eventually crashes).
+    /// LZAP: an anti-tamper check. Sums 34 bytes of ROM at LZAP1; if the sum is wrong the
+    /// original quietly corrupts the free process list (a bootleg ROM eventually crashes). The
+    /// port keeps the sum and its cycles but stops with <see cref="RomTamperedException"/> instead.
     /// </summary>
     private void CheckRomIntegrity(Tx t)
     {
@@ -435,10 +436,8 @@ public sealed class Deaths
         Sub8(ref t.CC, t.A, 0x32);
         t.Cycles += 2 + 3;
         if (t.A == 0x32) return;
-        t.X = t.Read16(t.Read16(_free));                         // LDX [PFREE]
-        t.CC = Logic16(t.CC, t.X);
-        t.Write(t.X + 1, Inc(ref t.CC, t.Read(t.X + 1)));
-        t.Cycles += 10 + 7;
+        // The original would LDX [PFREE] / INC 1,X.
+        throw new RomTamperedException("LZAP", $"34 bytes at ${t.Read16(_zapPointer):X4} sum to ${t.A:X2}, expected $32");
     }
 
     // ------------------------------------------------------------------ helpers

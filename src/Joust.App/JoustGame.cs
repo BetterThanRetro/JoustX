@@ -56,6 +56,7 @@ public sealed class JoustGame : Game
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
     private double _updateMs, _drawMs, _lastTitle;
     private int _draws, _updates, _fps, _ups;
+    private string? _halted;                                     // a copy-protection check found the program changed
     private float _dcIn, _dcOut;
 
     public JoustGame()
@@ -173,7 +174,20 @@ public sealed class JoustGame : Game
         i.AutoUp = k.IsKeyDown(Keys.F4);
 
         double start = _clock.Elapsed.TotalMilliseconds;
-        _machine.RunFrame();
+        if (_halted != null)
+        {
+            Window.Title = "JoustX stopped: " + _halted;
+            base.Update(gameTime);
+            return;
+        }
+        try
+        {
+            _machine.RunFrame();
+        }
+        catch (Port.Routines.RomTamperedException e)
+        {
+            _halted = e.Message;                                 // freeze on the last picture
+        }
         _events.Update();
         SubmitAudio();
         _updateMs = 0.9 * _updateMs + 0.1 * (_clock.Elapsed.TotalMilliseconds - start);
