@@ -101,7 +101,7 @@ public sealed class HdRenderer
         });
         if (options.Particles)
         {
-            Effects.Step(_low, _hot, LavaTop);
+            Effects.Step(_low, _hot, LavaTop, embers: _arena > 0.5f);   // embers rise only off real lava
             Effects.Draw(Output, OutputWidth, (OutputWidth - Width) / 2, options.Abgr);
         }
     }

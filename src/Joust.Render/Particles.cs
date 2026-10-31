@@ -34,10 +34,10 @@ public sealed class Particles
         }
     }
 
-    /// <summary>Spawn embers above lava pixels and age everything by one frame.</summary>
-    internal void Step(ReadOnlySpan<byte> low, bool[] hot, int lavaTop)
+    /// <summary>Spawn embers above lava pixels (when <paramref name="embers"/>) and age everything by one frame.</summary>
+    internal void Step(ReadOnlySpan<byte> low, bool[] hot, int lavaTop, bool embers)
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < (embers ? 3 : 0); i++)
         {
             int x = _rng.Next(HdRenderer.VisibleWidth), y = lavaTop + _rng.Next(HdRenderer.VisibleHeight - lavaTop);
             if (!hot[low[y * HdRenderer.VisibleWidth + x]]) continue;
