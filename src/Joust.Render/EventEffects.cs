@@ -42,6 +42,8 @@ public sealed class EventEffects(GameStateReader reader, Particles particles)
             _ => (0f, 0f, 0f),
         };
         if (r == 0) return;
+        // Leaving through the side of the screen (the demo's riders fly off) is not a death.
+        if (o.X < HdRenderer.VisibleX + 8 || o.X + 16 > HdRenderer.VisibleX + HdRenderer.VisibleWidth - 8) return;
         // Positions are the bottom-left of a 16x20 box in original pixels.
         particles.Burst(o.X + 8, o.Y - 10, r, g, b, o.Kind == ObjectKind.Pterodactyl ? 90 : 45);
     }

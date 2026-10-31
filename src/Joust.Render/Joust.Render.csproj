@@ -4,6 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Per-pixel work at 1557x960: unoptimized it takes ~37 ms a frame instead of ~8, so the
+         game drops to ~25 drawn frames a second even in a Debug `dotnet run`. -->
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

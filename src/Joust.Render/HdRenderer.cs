@@ -185,7 +185,7 @@ public sealed class HdRenderer
     private void ComposeSides(int y, float flicker, HdOptions o)
     {
         int side = (WideWidth - Width) / 2;
-        float lavaLight = _backdrop.LavaLight[y] * flicker;
+        float lavaLight = 0f;                                    // the lava's glow stays in the field: lit sides read as bleed
         float v = y / (float)Height;
         for (int s = 0; s < side; s++)
         {
