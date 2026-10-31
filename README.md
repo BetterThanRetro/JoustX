@@ -36,6 +36,8 @@ The app assembles the game from `joust-main-asm/` at startup and refuses to run 
 | F2 | Service "advance" switch |
 | F3 | Reset |
 | F5 / F6 / F7 / F8 | HD or classic graphics / CRT effect / reverb / widescreen (remembered between runs) |
+| F11 or Alt+Enter | Fullscreen (remembered between runs) |
+| Alt+1 … Alt+8 | Same as F1 … F8, for keyboards whose top row sends media keys |
 | Esc | Quit |
 
 Xbox (XInput) pads 1 and 2 play players 1 and 2: D-pad or left stick to steer, A/B/X to flap, Start to start, Back to insert a coin. `--classic` starts with the original graphics.

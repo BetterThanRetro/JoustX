@@ -145,19 +145,23 @@ public sealed class JoustGame : Game
     protected override void Update(GameTime gameTime)
     {
         var k = Keyboard.GetState();
+        // Alt+1..Alt+8 stand in for F1..F8, for keyboards whose top row sends media keys.
+        bool alt = k.IsKeyDown(Keys.LeftAlt) || k.IsKeyDown(Keys.RightAlt);
         if (k.IsKeyDown(Keys.Escape))
             Exit();
-        if (Pressed(k, Keys.F1))
+        if (Pressed(k, Keys.F11) || (alt && Pressed(k, Keys.Enter)))
+            ToggleFullScreen();
+        if (FnPressed(k, alt, 1))
             _showObjects = !_showObjects;
-        if (Pressed(k, Keys.F3))
+        if (FnPressed(k, alt, 3))
             _machine.Reset();
-        if (Pressed(k, Keys.F5))
+        if (FnPressed(k, alt, 5))
             _hd = !_hd;
-        if (Pressed(k, Keys.F8))
+        if (FnPressed(k, alt, 8))
             _hdOptions = _hdOptions with { Widescreen = !_hdOptions.Widescreen };
-        if (Pressed(k, Keys.F7))
+        if (FnPressed(k, alt, 7))
             _reverbOn = !_reverbOn;
-        if (Pressed(k, Keys.F6))
+        if (FnPressed(k, alt, 6))
             _hdOptions = _hdOptions with { Crt = !_hdOptions.Crt };
 
         // Xbox (XInput) controllers: pad 1 and pad 2 are players 1 and 2. D-pad or left stick
@@ -172,13 +176,14 @@ public sealed class JoustGame : Game
         i.P2Left = k.IsKeyDown(Keys.J) || PadLeft(pad2);
         i.P2Right = k.IsKeyDown(Keys.L) || PadRight(pad2);
         i.P2Flap = k.IsKeyDown(Keys.K) || k.IsKeyDown(Keys.RightControl) || PadFlap(pad2);
-        i.Start1 = k.IsKeyDown(Keys.D1) || pad1.IsButtonDown(Buttons.Start);
-        i.Start2 = k.IsKeyDown(Keys.D2) || pad2.IsButtonDown(Buttons.Start);
-        i.CoinLeft = k.IsKeyDown(Keys.D5) || pad1.IsButtonDown(Buttons.Back)
+        bool Digit(Keys d) => !alt && k.IsKeyDown(d);                // with Alt, digits are the F-keys
+        i.Start1 = Digit(Keys.D1) || pad1.IsButtonDown(Buttons.Start);
+        i.Start2 = Digit(Keys.D2) || pad2.IsButtonDown(Buttons.Start);
+        i.CoinLeft = Digit(Keys.D5) || pad1.IsButtonDown(Buttons.Back)
             || (_autoCoin && _machine.Frame % 300 is >= 0 and < 4 && _machine.Frame > 600);   // --autocoin: a coin every 5 s
-        i.CoinRight = k.IsKeyDown(Keys.D6) || pad2.IsButtonDown(Buttons.Back);
-        i.Advance = k.IsKeyDown(Keys.F2);
-        i.AutoUp = k.IsKeyDown(Keys.F4);
+        i.CoinRight = Digit(Keys.D6) || pad2.IsButtonDown(Buttons.Back);
+        i.Advance = FnDown(k, alt, 2);
+        i.AutoUp = FnDown(k, alt, 4);
 
         double start = _clock.Elapsed.TotalMilliseconds;
         if (_halted != null)
@@ -203,7 +208,7 @@ public sealed class JoustGame : Game
         if (start - _lastTitle >= 1000)
         {
             _fps = _draws; _ups = _updates; _draws = _updates = 0; _lastTitle = start;
-            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  |  5 coin  1/2 start  |  " +
+            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  F11 fullscreen (Alt+1..8 = F1..F8)  |  5 coin  1/2 start  |  " +
                 $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}  |  " +
                 $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_soundCommands} sounds (last ${_lastSound:X2})";
             _peak = 0;
@@ -212,6 +217,22 @@ public sealed class JoustGame : Game
     }
 
     private bool Pressed(KeyboardState k, Keys key) => k.IsKeyDown(key) && !_previousKeys.IsKeyDown(key);
+
+    /// <summary>F<paramref name="n"/>, or Alt+<paramref name="n"/>, just pressed.</summary>
+    private bool FnPressed(KeyboardState k, bool alt, int n) =>
+        Pressed(k, Keys.F1 + (n - 1)) || (alt && Pressed(k, Keys.D1 + (n - 1)));
+
+    /// <summary>F<paramref name="n"/>, or Alt+<paramref name="n"/>, held down.</summary>
+    private static bool FnDown(KeyboardState k, bool alt, int n) =>
+        k.IsKeyDown(Keys.F1 + (n - 1)) || (alt && k.IsKeyDown(Keys.D1 + (n - 1)));
+
+    /// <summary>F11 / Alt+Enter: borderless fullscreen at the desktop's resolution, or back to the window.</summary>
+    private void ToggleFullScreen()
+    {
+        _graphics.HardwareModeSwitch = false;
+        _graphics.IsFullScreen = !_graphics.IsFullScreen;
+        _graphics.ApplyChanges();
+    }
 
     private static bool PadLeft(GamePadState p) =>
         p.IsConnected && (p.IsButtonDown(Buttons.DPadLeft) || p.ThumbSticks.Left.X < -StickDeadZone);
@@ -347,7 +368,7 @@ public sealed class JoustGame : Game
     /// <summary>The CMOS keeps 4-bit values; if every one is the same, nothing was ever stored.</summary>
     private static bool IsBlank(byte[] cmos) => cmos.All(b => (b & 0x0F) == (cmos[0] & 0x0F));
 
-    /// <summary>The F5-F8 choices, kept between runs as "name=true|false" lines.</summary>
+    /// <summary>The F5-F8 and fullscreen choices, kept between runs as "name=true|false" lines.</summary>
     private void LoadSettings()
     {
         if (!File.Exists(_settingsPath)) return;
@@ -359,6 +380,7 @@ public sealed class JoustGame : Game
         if (s.TryGetValue("crt", out bool crt)) _hdOptions = _hdOptions with { Crt = crt };
         if (s.TryGetValue("widescreen", out bool wide)) _hdOptions = _hdOptions with { Widescreen = wide };
         if (s.TryGetValue("reverb", out bool reverb)) _reverbOn = reverb;
+        if (s.TryGetValue("fullscreen", out bool full) && full) ToggleFullScreen();
     }
 
     private void SaveSettings()
@@ -367,6 +389,7 @@ public sealed class JoustGame : Game
         File.WriteAllLines(_settingsPath,
         [
             $"hd={_hd}", $"crt={_hdOptions.Crt}", $"widescreen={_hdOptions.Widescreen}", $"reverb={_reverbOn}",
+            $"fullscreen={_graphics.IsFullScreen}",
         ]);
     }
 }
