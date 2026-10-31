@@ -14,6 +14,13 @@
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
   </ItemGroup>
 
+  <!-- The window icon (DesktopGL loads an embedded "Icon.bmp"): player 1's knight, cut from the
+       game by `joust-tools make-icon`. Icon.ico holds the same picture at 16-256 px. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
+    <None Include="Icon.ico" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Joust.Emulation\Joust.Emulation.csproj" />
     <ProjectReference Include="..\Joust.Assembler\Joust.Assembler.csproj" />

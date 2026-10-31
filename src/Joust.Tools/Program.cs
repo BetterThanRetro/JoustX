@@ -25,6 +25,8 @@ switch (args[0].ToLowerInvariant())
         return HdShots.Run(args[1..]);
     case "verify-native":
         return NativeVerifyCommand.Run(args[1..]);
+    case "make-icon":
+        return MakeIcon.Run(args[1..]);
     case "census":
         return CensusCommand.Run(args[1..]);
     default:

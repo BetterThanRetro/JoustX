@@ -1,5 +1,7 @@
 # JoustX
 
+<img src="docs/images/icon.png" width="96" alt="JoustX icon: the yellow knight on his ostrich above the lava">
+
 A C# port of Williams' 1982 **Joust** that keeps the original game mechanics exactly, with a path to modern (2026) graphics and sound.
 
 The approach is a *verified port*: the original 6809 program, assembled from source, runs on a C# reference machine. That machine is the ground truth that the native C# rewrite is checked against, routine by routine. See [docs/ROADMAP.md](docs/ROADMAP.md).
