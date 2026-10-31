@@ -39,7 +39,7 @@ public sealed class Engine
         SelfTest = new SelfTest(s);
         Clear = new ScreenClear(s);
         Ledges = new LedgeRefresh(s, Scheduler);
-        Ptero = new Pterodactyl(s, Ground, Physics);
+        Ptero = new Pterodactyl(s, Ground, Physics, Bird, Scheduler);
     }
 
     public LedgeRefresh Ledges { get; }
@@ -257,6 +257,12 @@ public sealed class TxJumpRoutine(
             TrollName(l),
             (e, t) => e.Troll.Run(t, l),
             e => e.Troll.Address(l))),
+
+        // The pterodactyl's flight loop, at PTEFLY, its nap and PTESTF
+        .. Enum.GetValues<Pterodactyl.L>().Select(l => new TxJumpRoutine(
+            l switch { Pterodactyl.L.Fly => "PTEFLY", Pterodactyl.L.Nap => "PTEFLY@nap", _ => "PTESTF" },
+            (e, t) => e.Ptero.Run(t, l),
+            e => e.Ptero.Address(l))),
 
         new TxJumpRoutine("AIROVR",(e, t) => e.Bird.AirOverhead(t) ?? BirdProcess.Return(t)),
         new TxJumpRoutine("AIROVR@joy", (e, t) =>

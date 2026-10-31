@@ -484,6 +484,17 @@ public class NativePortTests
     }
 
     [Fact]
+    public void PterodactylFlightMatchesTheOriginal()
+    {
+        string[] labels = ["PTEFLY", "PTEFLY@nap", "PTESTF"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        Assert.True(v.Stats.TryGetValue("PTEFLY@nap", out var s) && s.Calls > s.Declined, "the flight loop never ran natively");
+        var ptero = new Pterodactyl(new Symbols(Program.Value.Symbols), null!, null!, null!, null!);
+        Assert.Equal(ptero.Address(Pterodactyl.L.Step), ptero.Address(Pterodactyl.L.Nap) + 3);   // JSR AIROVR returns to PTESTF
+    }
+
+    [Fact]
     public void SelfTestAndClearsMatchTheOriginal()
     {
         // Power-on: RAM fill and read-back, ROM sums, the start-up delay, and the memory clears.
