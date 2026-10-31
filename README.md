@@ -24,7 +24,7 @@ Requires the .NET 10 SDK.
 dotnet run --project src/Joust.App
 ```
 
-The app assembles the game from `joust-main-asm/` at startup and refuses to run unless all 12 ROMs match the original ROM-test checksums. The first launch shows "FACTORY SETTINGS RESTORED" (blank CMOS); after that it boots straight to attract mode. CMOS is saved to `%LOCALAPPDATA%\JoustX\cmos.bin`.
+The app assembles the game from `joust-main-asm/` at startup and refuses to run unless all 12 ROMs match the original ROM-test checksums. With blank CMOS, the first launch restores factory settings behind the scenes and power-cycles, so it boots straight to attract mode. CMOS is saved to `%LOCALAPPDATA%\JoustX\cmos.bin`.
 
 | Key | Action |
 | --- | --- |

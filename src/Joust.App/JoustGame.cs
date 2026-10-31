@@ -103,6 +103,16 @@ public sealed class JoustGame : Game
         _cmosPath = Path.Combine(dataDir, "cmos.bin");
         if (File.Exists(_cmosPath))
             File.ReadAllBytes(_cmosPath).AsSpan(0, _machine.Cmos.Length).CopyTo(_machine.Cmos);
+        else
+        {
+            // Blank CMOS: the game restores factory settings and then halts on that message until
+            // the operator power-cycles. Do that first boot out of sight, as hd-shots does.
+            var factory = new JoustMachine(program.Memory);
+            factory.Reset();
+            for (int f = 0; f < 1300; f++) factory.RunFrame();
+            factory.Cmos.CopyTo(_machine.Cmos, 0);
+            File.WriteAllBytes(_cmosPath, _machine.Cmos);
+        }
         _settingsPath = Path.Combine(dataDir, "display.txt");
         LoadSettings();
 
