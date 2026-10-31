@@ -36,8 +36,11 @@ public sealed class HdRenderer
     public const int VisibleX = 6, VisibleY = 7, VisibleWidth = 292, VisibleHeight = 240;
     public const int Width = VisibleWidth * Scale, Height = VisibleHeight * Scale;
 
-    /// <summary>The 16:9 canvas width: the field is shown at 4:3, so its pixels are 1.096 wide.</summary>
-    public const int WideWidth = Width * 4 / 3;
+    /// <summary>
+    /// The 16:9 canvas width: the field is shown at 4:3, so its pixels are 1.096 wide. Rounded up
+    /// to an even width so the two side panels and the field between them cover every column.
+    /// </summary>
+    public const int WideWidth = (Width * 4 / 3 + 1) & ~1;
 
     private const int LavaTop = 196;                             // rows (of the visible field) where lava can be
 

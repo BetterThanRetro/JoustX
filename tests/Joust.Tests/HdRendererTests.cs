@@ -70,6 +70,17 @@ public class HdRendererTests
     }
 
     [Fact]
+    public void WidescreenDrawsEveryColumn()
+    {
+        var r = new HdRenderer();
+        Array.Fill(r.Output, 0xDEADBEEFu);                       // stale pixels from an earlier frame
+        r.Render(new byte[HdRenderer.SourceWidth * HdRenderer.SourceHeight], new uint[16], 0, new HdOptions());
+        for (int y = 0; y < HdRenderer.Height; y += 97)
+            for (int x = 0; x < HdRenderer.WideWidth; x++)
+                Assert.True(r.Output[y * HdRenderer.WideWidth + x] != 0xDEADBEEFu, $"column {x} (row {y}) was not drawn");
+    }
+
+    [Fact]
     public void FlatAreasStayFlat()
     {
         var src = Enumerable.Repeat((byte)7, 16).ToArray();
