@@ -102,11 +102,9 @@ the runtime no longer needs. Update the README and roadmap.
    bytes left by an interrupt are ignored. Recommended: yes. Matching them would require
    recreating the mid-routine register values of the original, at great cost, for bytes nothing
    reads.
-2. **Operator menus and hardware self-test.** Port them too (needed for a true no-CPU build, and
-   the operator menus hold the game settings), or keep the hardware diagnostics (RAM/ROM/colour
-   tests, sound test) on the emulated board as a documented exception. Recommended: port the
-   operator menus and high-score handling; decide on the diagnostics after the census shows how
-   large they are.
+2. **Operator menus and hardware self-test.** Decided: keep everything. The operator menus,
+   bookkeeping, adjustments, hardware diagnostics and the attract demo are all translated, none cut
+   or left on the emulated board. The no-CPU build matches the original from power-on.
 
 ## Cost
 
