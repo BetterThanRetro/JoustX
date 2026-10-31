@@ -5,6 +5,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- No per-build Joust.App.exe: Smart App Control blocks that unsigned launcher at random,
+         so `dotnet run` starts the game through the signed dotnet.exe instead. -->
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
