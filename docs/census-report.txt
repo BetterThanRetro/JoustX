@@ -1,0 +1,1011 @@
+census: 10 scenarios, 1009 labels with original code still running, 7936 distinct instructions
+kind        label        share      instr  scenarios
+not ported  JNAP         12.5700%      8  operator menus and self-test
+not ported  CURSOR        1.7641%     24  operator menus and self-test
+not ported  DIAG1         0.4069%     10  operator menus and self-test
+not ported  AVCHK         0.3422%      5  operator menus and self-test
+not ported  AVCHK1        0.2737%      2  operator menus and self-test
+not ported  COLOR2        0.1804%     11  operator menus and self-test
+not ported  RAND          0.1543%     18  operator menus and self-test
+not ported  RAMBA2        0.1504%     10  operator menus and self-test
+not ported  SWDIS2        0.0879%      9  operator menus and self-test
+not ported  G1JOY         0.0776%     11  attract
+not ported  PEON          0.0565%     75  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SWDIS0        0.0550%      3  operator menus and self-test
+not ported  VNAPTPC       0.0456%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  RCMOS         0.0405%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  ATTRCT        0.0402%     33  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SWSCN0        0.0347%      7  operator menus and self-test
+not ported  CMTST4        0.0331%     13  operator menus and self-test
+not ported  DIAG3         0.0322%      9  operator menus and self-test
+not ported  CMTST3        0.0281%      9  operator menus and self-test
+not ported  SRCNOF        0.0277%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADGCEI        0.0274%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCDOT1        0.0261%     17  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SRCCOM        0.0229%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  THORSE        0.0229%     15  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CREID         0.0227%     43  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CREPLY        0.0224%     37  attract, two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  AIRRTS        0.0219%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  READEM        0.0217%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTTX1        0.0197%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  FLASH         0.0196%     43  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AMODE         0.0188%     44  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCD35         0.0186%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  REST          0.0171%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  LINE          0.0160%     27  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRPRTS        0.0158%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SIM2A         0.0151%     87  attract
+not ported  DEMO          0.0149%     46  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SUB3          0.0137%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  LNDXUP        0.0136%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AIRTIM        0.0127%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  STRIP         0.0118%     26  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RCMOSB        0.0103%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  AVWAIT        0.0098%      6  operator menus and self-test
+not ported  EXELOP        0.0093%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKPTER        0.0089%      9  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  LAVAB         0.0087%      5  troll and lava deaths
+not ported  L1FLY         0.0080%     36  attract
+not ported  SWTES1        0.0079%     14  operator menus and self-test
+not ported  CL2NOF        0.0079%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  TREFF         0.0074%     50  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBA1         0.0074%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CRENPR        0.0073%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCKXUP        0.0071%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WPNORI        0.0070%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  L1EMY         0.0069%     16  attract
+not ported  WR2NOF        0.0068%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRHORS        0.0068%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ENTINT        0.0064%     33  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  L1EGG         0.0063%     25  attract
+not ported  BCDOUT        0.0062%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  WRPWRD        0.0061%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBD1         0.0060%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSS3        0.0060%     11  operator menus and self-test
+not ported  HSTDBK        0.0060%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DRTS          0.0059%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  DTBC1         0.0054%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MSCCK1        0.0052%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SETP1         0.0050%     26  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BLKMV1        0.0050%      5  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBC2         0.0049%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  L2EGG         0.0047%     14  attract
+not ported  VWR2CLS       0.0047%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCKYUP        0.0046%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WCMOS         0.0045%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  DTBEN         0.0045%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRRTS         0.0045%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MSCCK0        0.0042%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  UPDSTA        0.0042%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKENT2        0.0041%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CLREGY        0.0041%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM6          0.0040%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  VCL2CLS       0.0040%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBD2         0.0040%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  FCHK1         0.0040%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SELARE        0.0039%     11  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRXMIN        0.0039%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GENDMA        0.0039%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SIM1A         0.0039%     80  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PLNFLY        0.0038%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBC2A        0.0037%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBD2A        0.0037%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADECEI        0.0037%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBA4A        0.0037%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GOTR4         0.0036%     15  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSS5        0.0035%      8  operator menus and self-test
+not ported  AUD2          0.0034%     29  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBA2         0.0034%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKF1        0.0034%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  TRBOND        0.0034%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WR1ALL        0.0033%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAMBK0        0.0033%      5  operator menus and self-test
+not ported  CMTST1        0.0032%      5  operator menus and self-test
+not ported  TEST          0.0031%     22  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CNORIA        0.0031%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  HIGHPO        0.0030%    107  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  UPDNON        0.0029%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRREGY        0.0029%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRXMAX        0.0028%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RCMSA         0.0027%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  PLFRIT        0.0027%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  HITEM1        0.0026%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  FREET         0.0025%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DTBA3         0.0024%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKG2          0.0023%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM6B         0.0022%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SWT999        0.0022%      3  operator menus and self-test
+not ported  NEWCHK        0.0021%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  STP1          0.0021%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CL1NOF        0.0020%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKENT4        0.0020%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2DIR         0.0020%     20  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  VWR1CLS       0.0018%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ENTI2         0.0018%     50  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WR1NOF        0.0017%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SWTES2        0.0017%      2  operator menus and self-test
+not ported  SWSCN5        0.0017%      1  operator menus and self-test
+not ported  SWDIS4        0.0017%      1  operator menus and self-test
+not ported  CMMV1         0.0017%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2DILR        0.0017%     17  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  CLIFER        0.0017%     28  one player A
+not ported  DTBA4         0.0017%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WEGY          0.0016%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VCL1CLS       0.0016%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  FGODC1        0.0016%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CKENT1        0.0016%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  OUTPHR        0.0016%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BODIR         0.0016%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTEDIS        0.0016%     14  attract, one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CREALL        0.0016%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHDIR         0.0015%     25  attract, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM17         0.0015%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  IRQDMA        0.0015%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CMPSC2        0.0015%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKF0        0.0015%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTB35        0.0015%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  OUTC35        0.0015%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  RAM25         0.0015%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  DECLIV        0.0014%     29  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSS7        0.0014%     11  operator menus and self-test
+not ported  CMPSC1        0.0013%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WCUR          0.0013%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM10         0.0013%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  RUNFRM        0.0013%     18  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKC2        0.0013%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ATTRC2        0.0012%     13  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SWDISP        0.0012%      2  operator menus and self-test
+not ported  MESS          0.0012%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  EGGWR2        0.0012%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  TOP           0.0012%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUT1          0.0012%      3  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CRTST5        0.0012%      7  operator menus and self-test
+not ported  UPDN          0.0011%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTTEXT       0.0011%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  RAM4          0.0011%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BPYX4         0.0010%     10  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKS         0.0010%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BAITST        0.0010%     49  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WAVEN3        0.0010%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  INLMAX        0.0010%     17  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SELPLY        0.0010%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOOK0         0.0010%     44  operator menus and self-test
+not ported  SHDILR        0.0009%     17  attract, two players, cliffs (wave 81), high-score entry
+not ported  WMSG2         0.0009%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BPYX0         0.0009%     10  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BPYX8         0.0009%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SWDIS9        0.0009%      1  operator menus and self-test
+not ported  LNTFLP        0.0009%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTHSC        0.0008%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SNDCY5        0.0008%      4  operator menus and self-test
+not ported  LFTRT         0.0008%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CMPSCR        0.0008%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SWACT         0.0008%     24  operator menus and self-test
+not ported  OPO2          0.0008%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BPYXC         0.0008%     10  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTELEV        0.0008%     29  attract, one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKENT         0.0008%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2FDIR        0.0008%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  OPO1          0.0008%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOLEVB        0.0008%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  RAM8          0.0008%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SHFDIR        0.0007%      5  attract, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  TEXT          0.0007%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  ADJS11        0.0007%     33  operator menus and self-test
+not ported  ENT10S        0.0007%      3  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MOVY          0.0007%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRQNSL        0.0007%     24  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  WCMOSB        0.0007%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EXTBL1        0.0007%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EXESEN        0.0007%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BUBDN1        0.0007%      7  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ALCK1         0.0007%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BPXY4         0.0007%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCH2          0.0007%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BODN1C        0.0007%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCKUP         0.0006%     62  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ENTRET        0.0006%      3  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  STFLY2        0.0006%      9  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKENT8        0.0006%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  ATTEMY        0.0006%     26  attract
+not ported  WRCUR         0.0006%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AUTSCR        0.0006%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CMPSC4        0.0006%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKHS7         0.0006%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CRTST4        0.0006%      2  operator menus and self-test
+not ported  LAVVI3        0.0006%     13  troll and lava deaths
+not ported  BPXY8         0.0006%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MOUNRI        0.0006%     20  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  COINS         0.0006%     19  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VSND          0.0006%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTTX2        0.0005%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  GOTR3         0.0005%      3  attract, one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WEGUP         0.0005%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BODIRL        0.0005%      3  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  LNTTRK        0.0005%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BPYONX        0.0005%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DCRE2         0.0005%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BCKB27        0.0005%     13  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PLINIT        0.0005%     29  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BPXY0         0.0005%     10  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKFR        0.0005%      2  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTBCD        0.0005%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CKHS5         0.0005%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  PTEDIR        0.0005%     16  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  CROSS9        0.0005%     13  operator menus and self-test
+not ported  BPXYC         0.0005%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EXESND        0.0005%     22  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKL2        0.0005%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GOVID         0.0005%     11  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSSB        0.0005%     10  operator menus and self-test
+not ported  CROSSA        0.0005%      9  operator menus and self-test
+not ported  SEEKSP        0.0005%      4  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRQSLM        0.0004%     12  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  EGGWR3        0.0004%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKHS6         0.0004%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  GOVERM        0.0004%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCKB15        0.0004%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WLAVAT        0.0004%      7  troll and lava deaths
+not ported  SNDCY4        0.0004%      2  operator menus and self-test
+not ported  CRTST2        0.0004%      7  operator menus and self-test
+not ported  FSCCK         0.0004%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SHDIRA        0.0004%      3  attract, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2DIRA        0.0004%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  COIN1         0.0004%     13  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SUB2          0.0004%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  VRAND         0.0004%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKR2        0.0004%      2  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKL         0.0004%      4  one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKSD        0.0004%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  INCLIV        0.0004%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRQNXT        0.0004%     11  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GOTR2         0.0004%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUT2          0.0004%     18  operator menus and self-test
+not ported  SEEKFS        0.0004%     12  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETSUB        0.0003%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETSB2        0.0003%      5  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WEGRIT        0.0003%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKFL        0.0003%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2DIRL        0.0003%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  FGODC0        0.0003%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CROSSC        0.0003%     10  operator menus and self-test
+not ported  RAM5          0.0003%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BCKB2         0.0003%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHLEPB        0.0003%      8  attract, one player B, two players, cliffs (wave 81), high-score entry
+not ported  WAVEN         0.0003%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WEGD2         0.0003%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PLYINT        0.0003%     18  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTP35        0.0003%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SHDIRB        0.0003%      5  one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AUTFLP        0.0003%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AUDX          0.0003%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHDN          0.0003%      7  one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WEGVM         0.0003%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VWR1ALL       0.0003%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRQSKD        0.0003%      9  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BODN11        0.0003%      2  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  AUD1          0.0003%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2DN1C        0.0003%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  AUT2          0.0003%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCK13         0.0003%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOLEV         0.0003%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  GOTTR         0.0003%     23  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AUTTRK        0.0003%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EMSGS         0.0003%     19  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SPN3PL        0.0003%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  NOSND         0.0003%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRQRTS        0.0003%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHDN1C        0.0002%      3  attract, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SUB1          0.0002%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BP1STB        0.0002%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PATCH9        0.0002%      7  one player A, one player B, two players, high-score entry, tilt and coin slots
+not ported  EGGHCH        0.0002%      3  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CSWIT         0.0002%     32  operator menus and self-test
+not ported  B2UP11        0.0002%      6  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  BODIR3        0.0002%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETBT3        0.0002%      6  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2LE11        0.0002%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  BLKMOV        0.0002%      1  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETSB1        0.0002%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BPEN          0.0002%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKSM        0.0002%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BODN          0.0002%      5  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry
+not ported  LNTLF2        0.0002%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  NOBCKB        0.0002%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTSPC        0.0002%     19  operator menus and self-test
+not ported  OSTXYP        0.0002%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  COIN2         0.0002%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM9          0.0002%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BCKB3         0.0002%      3  one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DIVAB1        0.0002%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CRTST1        0.0002%      2  operator menus and self-test
+not ported  BCDHEX        0.0002%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OUTCMOS       0.0002%      6  operator menus and self-test
+not ported  BOUP11        0.0002%      2  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  RERR0         0.0002%      8  troll and lava deaths
+not ported  PLYRUL        0.0002%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOOK2         0.0002%     37  operator menus and self-test
+not ported  GOTR1         0.0002%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  DIVAB         0.0002%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCKB1         0.0002%      4  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  TODCK1        0.0002%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTEDN2        0.0002%      5  attract, one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADVS90        0.0002%      5  operator menus and self-test
+not ported  SEEKR         0.0002%      4  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EGGVX0        0.0002%     15  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WCMOSD        0.0002%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETBT1        0.0002%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MARQUE        0.0002%     40  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GOTR12        0.0002%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCKB04        0.0002%     14  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MOVX          0.0002%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETPC1        0.0002%      4  operator menus and self-test
+not ported  LAVVFY        0.0002%      3  troll and lava deaths
+not ported  OSTHT2        0.0002%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  BCDADC        0.0002%      8  operator menus and self-test
+not ported  BCKB6         0.0002%      3  two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRQ2          0.0002%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  STLDIR        0.0002%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ACRD0         0.0002%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHLEVA        0.0002%      2  attract, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ROM2          0.0002%      6  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  LNDB7         0.0002%     27  one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BODN10        0.0002%      1  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  BOUP22        0.0002%      8  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  EGGBON        0.0002%     10  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CLPRTS        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OSTHIT        0.0001%     21  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  LT1TRK        0.0001%      4  troll and lava deaths
+not ported  SHLEP         0.0001%      8  attract, one player B, two players, cliffs (wave 81), high-score entry
+not ported  SWPRNT        0.0001%     16  operator menus and self-test
+not ported  SN1NS         0.0001%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  MARKET        0.0001%     18  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  LND47         0.0001%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  LAVVI2        0.0001%      2  troll and lava deaths
+not ported  WLADMA        0.0001%      2  troll and lava deaths
+not ported  SHUNDN        0.0001%      2  attract, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  NOPLY2        0.0001%     21  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHUNUP        0.0001%      7  one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCK47         0.0001%      5  two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRNHSR        0.0001%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PATCH6        0.0001%     12  attract, one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ENDGAM        0.0001%     78  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTEUP         0.0001%      5  one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WAVMSG        0.0001%     10  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  NOBCK2        0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCH1          0.0001%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  NOBCK         0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOFAST        0.0001%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  SEEKBL        0.0001%      9  one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  GAM1P         0.0001%     15  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DIVPTC        0.0001%     32  operator menus and self-test
+not ported  BCKB0         0.0001%      4  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADXMX2        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOLEVA        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  LND18         0.0001%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  KLPLOP        0.0001%      7  one player B, two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  BOUP          0.0001%      8  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  BOUNDN        0.0001%      2  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry
+not ported  BCLFTV        0.0001%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  INLDON        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  KLPSEC        0.0001%      7  two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  CKENT3        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  OUT35A        0.0001%      2  attract, operator menus and self-test
+not ported  OUTT35        0.0001%      1  attract, operator menus and self-test
+not ported  AUTLF2        0.0001%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WINGDN        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ACRED         0.0001%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SCREDIT       0.0001%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCCOMR        0.0001%      9  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRNADV        0.0001%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOUP1B        0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  HITEM2        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  BCLR          0.0001%      7  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DCLNON        0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADXMAX        0.0001%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  LVVIN         0.0001%      2  troll and lava deaths
+not ported  VCRPROC       0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  LNDB7C        0.0001%      2  one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2LEVA        0.0001%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  B2DN11        0.0001%      2  attract, one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  BCLFTE        0.0001%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2LEV         0.0001%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  B2UP1B        0.0001%      2  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  PWRUP0        0.0001%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  ATTEGG        0.0001%     19  attract
+not ported  GODESB        0.0001%     44  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2UP2D        0.0001%      5  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  NOSPL2        0.0001%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  LAVVIC        0.0001%      1  troll and lava deaths
+not ported  TEXT35        0.0001%      1  attract, operator menus and self-test
+not ported  ROMBOT        0.0001%      2  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BOUP1A        0.0001%      3  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  SHFAST        0.0001%      4  one player B, two players, cliffs (wave 81), high-score entry
+not ported  RAM6C         0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  ROM0          0.0001%      2  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2UP1A        0.0001%      6  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  SPNONE        0.0001%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OSTXP2        0.0001%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  DIVAB0        0.0001%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OFFLES        0.0001%     10  attract
+not ported  LNTUP         0.0001%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GETHM2        0.0001%     35  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRNLCO        0.0001%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AUDIT1        0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ERSHSC        0.0001%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  COINL         0.0001%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  AUD           0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  IRNRCO        0.0001%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EGGMAN        0.0001%     14  two players, egg waves, cliffs (wave 81), high-score entry
+not ported  SHLEV         0.0001%      6  two players, cliffs (wave 81), high-score entry
+not ported  OSTH11        0.0001%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  RCMSB         0.0001%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  AVWAT2        0.0001%      3  operator menus and self-test
+not ported  RAMBA1        0.0000%      3  operator menus and self-test
+not ported  BCCOML        0.0000%     10  one player A, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOBRAIN       0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  B2DIR2        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  WRPBLF        0.0000%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOUP12        0.0000%      3  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  FCHK          0.0000%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  IRQBUF        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PEONS         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  P2NJMP        0.0000%      5  two players, troll and lava deaths, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  VSUCIDE       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTEDN         0.0000%      6  attract, one player A, one player B, high-score entry
+not ported  B2UP          0.0000%      5  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  DCREDIT       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BCLFT         0.0000%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2UP22        0.0000%      3  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  SEEKAR        0.0000%      3  one player B, two players, egg waves, cliffs (wave 81), high-score entry
+not ported  RCMOSD        0.0000%      1  operator menus and self-test
+not ported  B2DN          0.0000%      5  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  SCCLR         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BARS0         0.0000%      8  operator menus and self-test
+not ported  SNDCY1        0.0000%     13  operator menus and self-test
+not ported  VNAPTIM       0.0000%      1  troll and lava deaths
+not ported  OSTBO         0.0000%     11  attract, two players, troll and lava deaths, egg waves, cliffs (wave 81)
+not ported  P2SAM         0.0000%      6  two players, troll and lava deaths, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  BCKB4         0.0000%      3  two players, troll and lava deaths, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  VKLPROC       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  KLPNXT        0.0000%      2  one player B, two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  SPRYX         0.0000%      7  attract
+not ported  SCRLEV        0.0000%     15  two players, cliffs (wave 81), high-score entry
+not ported  IRNCCO        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EGSUB1        0.0000%     19  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  BOUNUP        0.0000%      2  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  CKHS67        0.0000%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  AVWAT5        0.0000%      3  operator menus and self-test
+not ported  PTELES        0.0000%      8  attract
+not ported  COLR1         0.0000%      2  operator menus and self-test
+not ported  CROSSD        0.0000%     12  operator menus and self-test
+not ported  STKILL        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ERCUR         0.0000%      3  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EMYLES        0.0000%     11  attract
+not ported  BCTOP         0.0000%      7  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTEKL2        0.0000%     36  one player A
+not ported  EGGSC3        0.0000%      4  attract, one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCDDI2        0.0000%      8  operator menus and self-test
+not ported  PTEGON        0.0000%      7  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CRPRAM        0.0000%     12  attract, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+not ported  OPTSTS        0.0000%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  OVERFLO       0.0000%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  KLPKIL        0.0000%      2  two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  VDCOLOR       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CKADJ         0.0000%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  LEDGE         0.0000%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSS6        0.0000%      3  operator menus and self-test
+not ported  HSTD          0.0000%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PWRUP4        0.0000%     19  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SPRYY         0.0000%      7  attract
+not ported  BCLFTH        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCTOPC        0.0000%     13  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PWRUP         0.0000%     17  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  AVWAT4        0.0000%      3  operator menus and self-test
+not ported  NOCURS        0.0000%      5  operator menus and self-test
+not ported  UNCOM         0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOBRA2        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  PATCH8        0.0000%      5  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  EMYDIE        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKF3        0.0000%      5  one player B, two players, egg waves, cliffs (wave 81), high-score entry
+not ported  ADVSWS        0.0000%     15  operator menus and self-test
+not ported  SHLEPA        0.0000%      1  attract, one player B, two players, cliffs (wave 81), high-score entry
+not ported  LAVA          0.0000%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADGDWN        0.0000%      2  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SWTES0        0.0000%      3  operator menus and self-test
+not ported  LNDB5         0.0000%      4  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WRPBRM        0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2DN1B        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  SCRPLY        0.0000%      8  two players, cliffs (wave 81), high-score entry
+not ported  B2FAST        0.0000%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  PTEADN        0.0000%      6  one player A, one player B, two players, high-score entry
+not ported  BCK15C        0.0000%      9  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SWNOAC        0.0000%      1  operator menus and self-test
+not ported  BCBOT         0.0000%      8  two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RCMSD         0.0000%      1  operator menus and self-test
+not ported  TODCHK        0.0000%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ALLCHK        0.0000%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VCREDIT       0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PATCH5        0.0000%      8  one player A, one player B, two players, high-score entry
+not ported  BCDAD2        0.0000%      3  operator menus and self-test
+not ported  DONE          0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VCUPROC       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSS4        0.0000%      4  operator menus and self-test
+not ported  OSTURT        0.0000%     21  one player B, egg waves, cliffs (wave 81), high-score entry
+not ported  B2UNDN        0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  NOMOVE        0.0000%      3  operator menus and self-test
+not ported  BCCOM         0.0000%      2  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OSTXLF        0.0000%     22  one player B, egg waves, cliffs (wave 81)
+not ported  NEWCL5        0.0000%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAMBA3        0.0000%      3  operator menus and self-test
+not ported  CURS          0.0000%      3  operator menus and self-test
+not ported  SHUPST        0.0000%      2  two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOLEVV        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  B2DN22        0.0000%      5  one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  BCKB5         0.0000%      8  two players, egg waves, high-score entry, tilt and coin slots
+not ported  DCLDON        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  COINLV        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM99         0.0000%      7  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SHBRA2        0.0000%      1  attract, one player B, two players, cliffs (wave 81), high-score entry
+not ported  COLOR3        0.0000%      3  operator menus and self-test
+not ported  PTEALE        0.0000%      2  one player A, one player B, high-score entry
+not ported  CMPSC5        0.0000%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  FGODC         0.0000%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  WEGD3         0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BODN22        0.0000%      6  one player B, two players, troll and lava deaths, egg waves, high-score entry
+not ported  DIAG6         0.0000%      7  operator menus and self-test
+not ported  LAVATF        0.0000%      4  troll and lava deaths
+not ported  B2UPST        0.0000%      3  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  MKGODC        0.0000%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SPRLOX        0.0000%      4  attract
+not ported  BCRIT         0.0000%      3  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DIELES        0.0000%     18  attract
+not ported  FCHKS         0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2DICL        0.0000%      5  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  SEEKR3        0.0000%      3  two players, egg waves, cliffs (wave 81), high-score entry
+not ported  SHUP0         0.0000%      2  two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CMOSMV        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  MAKCHK        0.0000%      5  operator menus and self-test
+not ported  ERTEXT        0.0000%      2  attract
+not ported  LND13         0.0000%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  WAVEN2        0.0000%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BOUP2A        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  MKSCCK        0.0000%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADLX          0.0000%     10  troll and lava deaths
+not ported  CKHS1         0.0000%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2UNUP        0.0000%      2  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  BOOK          0.0000%      6  operator menus and self-test
+not ported  SPRLOY        0.0000%      3  attract
+not ported  OPOUT         0.0000%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CKCMOS        0.0000%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  GO            0.0000%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SEEKL3        0.0000%      3  one player B, two players, egg waves, cliffs (wave 81)
+not ported  AVWAT3        0.0000%      1  operator menus and self-test
+not ported  TSTPAT        0.0000%     15  operator menus and self-test
+not ported  LNDB4         0.0000%      4  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SNDCYC        0.0000%      4  operator menus and self-test
+not ported  SNDC55        0.0000%      4  operator menus and self-test
+not ported  SNDCY6        0.0000%      4  operator menus and self-test
+not ported  SNDCY3        0.0000%      5  operator menus and self-test
+not ported  CMTST2        0.0000%      3  operator menus and self-test
+not ported  GODSPC        0.0000%      8  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PLYRUP        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2UP2A        0.0000%      1  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  CROSS2        0.0000%      2  operator menus and self-test
+not ported  SRCSKP        0.0000%      5  attract
+not ported  SCTRNS        0.0000%     11  two players, cliffs (wave 81), high-score entry
+not ported  LNTSMT        0.0000%      6  one player A, one player B, high-score entry, tilt and coin slots
+not ported  RAMTST        0.0000%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SCRCOM        0.0000%     14  two players, cliffs (wave 81), high-score entry
+not ported  SHUP3B        0.0000%      2  two players, cliffs (wave 81)
+not ported  CRTST3        0.0000%      5  operator menus and self-test
+not ported  PATCH4        0.0000%      5  one player A, one player B, two players, high-score entry, tilt and coin slots
+not ported  LNDB2         0.0000%      4  one player B, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SETGOD        0.0000%      5  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SIM3A         0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCUP          0.0000%      2  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SPDIE2        0.0000%     26  two players, troll and lava deaths
+not ported  BLKLED        0.0000%      7  troll and lava deaths, operator menus and self-test
+not ported  TODBYE        0.0000%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RAM17C        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CKHS          0.0000%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  EGGPXM        0.0000%      8  attract, two players, high-score entry
+not ported  CROSS         0.0000%     14  operator menus and self-test
+not ported  BCRITB        0.0000%      2  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DIAG77        0.0000%      9  operator menus and self-test
+not ported  CKSRT0        0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  GETHM3        0.0000%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SYSV          0.0000%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  B2LEVV        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  GETHM4        0.0000%     13  two players, cliffs (wave 81)
+not ported  LNDB3         0.0000%      4  one player B, two players, egg waves, cliffs (wave 81), high-score entry
+not ported  PATCH2        0.0000%      6  troll and lava deaths
+not ported  LVVOUT        0.0000%      2  troll and lava deaths
+not ported  BCRITM        0.0000%      2  one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  KLPNOM        0.0000%      1  one player B, two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  BOOK3         0.0000%      5  operator menus and self-test
+not ported  MOUNRN        0.0000%      3  one player B, two players, egg waves, cliffs (wave 81), high-score entry
+not ported  OPTST         0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  BUBDN         0.0000%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHUP3         0.0000%      6  cliffs (wave 81), high-score entry
+not ported  RUNRST        0.0000%      4  one player A, troll and lava deaths, cliffs (wave 81), high-score entry
+not ported  LNDB0         0.0000%      4  one player A, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTEASH        0.0000%      8  one player A
+not ported  PTEKLP        0.0000%      6  one player A
+not ported  MOUNTM        0.0000%      5  one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2BRAIN       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  DE3HRD        0.0000%     14  cliffs (wave 81)
+not ported  GODCHK        0.0000%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  HIGH          0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  VTEST         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  VCYCLE        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  ADVSC         0.0000%      2  operator menus and self-test
+not ported  ETEXT         0.0000%      1  attract
+not ported  STENMY        0.0000%      1  one player A, one player B, two players, troll and lava deaths, high-score entry
+not ported  WVMRTS        0.0000%      1  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  B2BRA2        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+not ported  CKSMRT        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  COINR         0.0000%      3  tilt and coin slots
+not ported  COINC         0.0000%      3  tilt and coin slots
+not ported  BODN1A        0.0000%      4  one player B, troll and lava deaths, egg waves
+not ported  LNDB1         0.0000%      4  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry
+not ported  INITCM        0.0000%      2  operator menus and self-test
+not ported  VNEWCL5       0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCLFTB        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CROSS8        0.0000%      2  operator menus and self-test
+not ported  B2UP3B        0.0000%      2  one player B, two players, egg waves, high-score entry, tilt and coin slots
+not ported  STPLY1        0.0000%      6  two players, tilt and coin slots
+not ported  PSSUB         0.0000%      9  troll and lava deaths
+not ported  ATMEND        0.0000%      7  attract
+not ported  BUBDUN        0.0000%      1  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DIAG66        0.0000%      5  operator menus and self-test
+not ported  OSTPX         0.0000%      2  one player A, one player B, egg waves, high-score entry
+not ported  OPCHK         0.0000%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  WCMSA         0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  BCDHX         0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PTCRTS        0.0000%      1  operator menus and self-test
+not ported  BCDDIV        0.0000%      3  operator menus and self-test
+not ported  B2UP3         0.0000%      6  one player B, two players, egg waves, high-score entry
+not ported  SWTEST        0.0000%      8  operator menus and self-test
+not ported  SPRXY         0.0000%      2  attract
+not ported  DIAG2         0.0000%      7  operator menus and self-test
+not ported  EXESE2        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  SHDICL        0.0000%      5  cliffs (wave 81)
+not ported  ATMRTS        0.0000%      1  attract
+not ported  LAVLES        0.0000%      6  attract
+not ported  SPRXX         0.0000%      2  attract
+not ported  BCBOTM        0.0000%      1  two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  DIAG0         0.0000%      6  operator menus and self-test
+not ported  ADVSC2        0.0000%      3  operator menus and self-test
+not ported  ADVSC3        0.0000%      3  operator menus and self-test
+not ported  ADVSC4        0.0000%      3  operator menus and self-test
+not ported  ADVSC6        0.0000%      3  operator menus and self-test
+not ported  ADVSC5        0.0000%      3  operator menus and self-test
+not ported  ADVSC8        0.0000%      3  operator menus and self-test
+not ported  NOAUT         0.0000%      2  operator menus and self-test
+not ported  FSCHK         0.0000%      3  operator menus and self-test
+not ported  OSTH12        0.0000%      3  one player A, one player B, egg waves, high-score entry
+not ported  GAMEND        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OPTRTS        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CKHS3         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  EGGSMN        0.0000%     20  high-score entry
+not ported  ZLED          0.0000%      6  operator menus and self-test
+not ported  ADLFRE        0.0000%     22  troll and lava deaths
+not ported  GAMSIM        0.0000%      6  attract
+not ported  DAG999        0.0000%      7  operator menus and self-test
+not ported  SNDC91        0.0000%      1  operator menus and self-test
+not ported  SETBSS        0.0000%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VATTRT        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  CRTEST        0.0000%      5  operator menus and self-test
+not ported  EGGLES        0.0000%      4  attract
+not ported  EGGDN2        0.0000%      1  one player B, egg waves, cliffs (wave 81), high-score entry
+not ported  SPN2PL        0.0000%      1  attract
+not ported  RAM99S        0.0000%      3  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  OSTNLR        0.0000%      1  one player B, egg waves, cliffs (wave 81), high-score entry
+not ported  BOULES        0.0000%      4  attract
+not ported  HUNLES        0.0000%      4  attract
+not ported  CMSMOV        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  CKHSV         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  GAMORG        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  RAM2          0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  DIAG4         0.0000%      4  operator menus and self-test
+not ported  SETBOT        0.0000%      6  two players, cliffs (wave 81)
+not ported  ROMTST        0.0000%      2  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  SETBT0        0.0000%      2  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  OPWRT         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  VDCRE2        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PWRUP1        0.0000%      2  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  PSSUB1        0.0000%      4  troll and lava deaths
+not ported  SHALES        0.0000%      3  attract
+not ported  RAM0          0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  DIAG22        0.0000%      5  operator menus and self-test
+not ported  SPDIE         0.0000%      8  two players, troll and lava deaths
+not ported  OSTXTT        0.0000%      2  troll and lava deaths, egg waves, cliffs (wave 81)
+not ported  KLPRTS        0.0000%      1  one player B, two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  DELA1         0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  EGGVXM        0.0000%      1  attract, one player B, two players, egg waves, cliffs (wave 81), tilt and coin slots
+not ported  SETPCR        0.0000%      1  operator menus and self-test
+not ported  WAVSUR        0.0000%      6  two players, high-score entry
+not ported  BCBOT2        0.0000%      1  two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  ADVS33        0.0000%      1  operator menus and self-test
+not ported  PULSE4        0.0000%      8  troll and lava deaths
+not ported  DIG11S        0.0000%      4  operator menus and self-test
+not ported  SNDSR1        0.0000%      3  operator menus and self-test
+not ported  COINCV        0.0000%      1  tilt and coin slots
+not ported  COINRV        0.0000%      1  tilt and coin slots
+not ported  IWAVE2        0.0000%      4  one player A, two players, high-score entry
+not ported  EGGMRT        0.0000%      1  egg waves, cliffs (wave 81), high-score entry
+not ported  BODN2A        0.0000%      1  one player B, two players, troll and lava deaths, egg waves, high-score entry
+not ported  OSTX12        0.0000%      2  troll and lava deaths, egg waves, cliffs (wave 81)
+not ported  ADVANC        0.0000%      1  operator menus and self-test
+not ported  RER099        0.0000%     11  troll and lava deaths
+not ported  PSSUB2        0.0000%      2  troll and lava deaths
+not ported  ERTT35        0.0000%      2  attract
+not ported  ADVSCV        0.0000%      1  operator menus and self-test
+not ported  GETHM5        0.0000%      1  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  PULS12        0.0000%      6  troll and lava deaths
+not ported  CKCMSV        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  POWRUP        0.0000%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  EGGWAK        0.0000%      8  high-score entry
+not ported  BP1STA        0.0000%      1  egg waves
+not ported  ROMDUN        0.0000%      1  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+not ported  PULSE8        0.0000%      4  troll and lava deaths
+not ported  DIG111        0.0000%      1  operator menus and self-test
+not ported  PTERST        0.0000%      1  attract
+not ported  SPDIE3        0.0000%      6  two players, troll and lava deaths
+not ported  RERR6         0.0000%      8  troll and lava deaths
+not ported  ADJUST        0.0000%      1  operator menus and self-test
+not ported  PATCH1        0.0000%      6  troll and lava deaths
+not ported  SNDSRT        0.0000%      1  operator menus and self-test
+not ported  EGGPYM        0.0000%      2  attract, two players, high-score entry
+not ported  SCRRTS        0.0000%      1  two players, cliffs (wave 81), high-score entry
+not ported  PTEKLL        0.0000%      5  one player A
+not ported  GETHIM        0.0000%      1  two players, cliffs (wave 81), tilt and coin slots
+not ported  BOLAVA        0.0000%      4  cliffs (wave 81)
+not ported  PULSE0        0.0000%      3  troll and lava deaths
+not ported  BARS          0.0000%      2  operator menus and self-test
+not ported  RAMBAR        0.0000%      2  operator menus and self-test
+not ported  CMTEST        0.0000%      2  operator menus and self-test
+not ported  RAMBAK        0.0000%      2  operator menus and self-test
+not ported  GETHM8        0.0000%      2  two players, cliffs (wave 81)
+not ported  SETPEON       0.0000%      1  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  GET789        0.0000%      1  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+not ported  RERROR        0.0000%      7  troll and lava deaths
+not ported  RERR2         0.0000%      4  troll and lava deaths
+not ported  ETEXT35       0.0000%      1  attract
+not ported  VSIM          0.0000%      1  attract
+not ported  RERR5         0.0000%      5  troll and lava deaths
+not ported  CMTBYE        0.0000%      1  operator menus and self-test
+not ported  SWTBYE        0.0000%      1  operator menus and self-test
+not ported  PATC10        0.0000%      4  one player A
+not ported  PULSE1        0.0000%      3  troll and lava deaths
+not ported  PULSE3        0.0000%      3  troll and lava deaths
+not ported  PULSE5        0.0000%      3  troll and lava deaths
+not ported  PULSE7        0.0000%      3  troll and lava deaths
+not ported  PULSE9        0.0000%      3  troll and lava deaths
+not ported  PULS11        0.0000%      3  troll and lava deaths
+not ported  WAVRTS        0.0000%      1  one player A, two players, high-score entry
+not ported  RERR1         0.0000%      5  troll and lava deaths
+not ported  RER098        0.0000%      4  troll and lava deaths
+not ported  PULSE         0.0000%      3  troll and lava deaths
+not ported  PULSE2        0.0000%      2  troll and lava deaths
+not ported  PULSE6        0.0000%      2  troll and lava deaths
+not ported  PULS10        0.0000%      2  troll and lava deaths
+not ported  BOLAV4        0.0000%      2  cliffs (wave 81)
+not ported  PLYEGG        0.0000%      2  high-score entry
+not ported  RAMERJ        0.0000%      1  operator menus and self-test
+not ported  DIAG78        0.0000%      1  operator menus and self-test
+not ported  CRTTSS        0.0000%      1  operator menus and self-test
+not ported  EGGDB1        0.0000%      4  high-score entry
+not ported  OSTYTT        0.0000%      2  cliffs (wave 81)
+not ported  PULS95        0.0000%      2  troll and lava deaths
+not ported  REROR7        0.0000%      2  troll and lava deaths
+not ported  ADEDWN        0.0000%      1  egg waves, cliffs (wave 81)
+not ported  DELAY         0.0000%      1  troll and lava deaths
+hand-back   EXESEC        0.0944%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   OPPCOL        0.0534%     17  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRRIDR        0.0532%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WR2CLS        0.0470%     23  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRPIXH        0.0448%     15  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   FLIPLP        0.0430%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CL2CLS        0.0420%     23  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRHOR2        0.0394%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   AIROVR        0.0380%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRPIXV        0.0285%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   WPLYR         0.0275%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EXEPRI        0.0245%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CPLYR         0.0228%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRANIB        0.0215%     26  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CKGND         0.0197%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRPIX         0.0187%     28  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   FILLDN        0.0166%     16  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SCCLER        0.0162%     16  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   COUNTS        0.0155%     38  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SRCADP        0.0154%     26  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   ADDGRX        0.0154%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WR1CLS        0.0151%     19  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   DTBOVR        0.0147%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   HITEM         0.0145%     22  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGLPA        0.0144%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CL1CLS        0.0130%     19  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   GOTFIT        0.0127%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   UPDNO2        0.0126%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   ADDGRA        0.0124%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SRCADR        0.0107%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PTESTF        0.0103%     16  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   UNCLP         0.0099%     25  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   FLIPST        0.0097%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   KZAP          0.0087%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   NAPTIM        0.0086%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   FLAPLP        0.0082%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PHROUT        0.0081%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   JZAP          0.0081%      8  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EXEPS         0.0070%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   TREFF2        0.0063%     92  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PL2RIT        0.0058%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SEEKE         0.0050%     14  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PLYRS2        0.0045%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PL2EDG        0.0045%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   REWMSG        0.0039%     20  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PHROT1        0.0039%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   NAPTPC        0.0038%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   DELA2         0.0033%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   SRCADA        0.0031%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WRAPX         0.0031%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PLYCOL        0.0029%     27  attract, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   EXEPEN        0.0028%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WNORIA        0.0025%      2  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CEGG          0.0024%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   ADDEGG        0.0024%     16  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WINGFK        0.0022%      3  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   GOFLAP        0.0022%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WEGG          0.0021%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   LINET         0.0021%     19  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SRCADH        0.0021%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   ADDFLP        0.0021%     16  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PLYRLP        0.0021%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PHR35         0.0020%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   WEGPAR        0.0019%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   FLAST2        0.0019%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BOLEV1        0.0018%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   ROM1          0.0018%      8  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   SCODSP        0.0018%     34  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CRELP         0.0017%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SND           0.0016%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BCKCOL        0.0016%      8  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGLN2        0.0016%     52  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BCKPIX        0.0016%     11  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CHECK         0.0015%     43  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGBCK        0.0015%     11  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BPCOL         0.0014%     12  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   RAM3          0.0013%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   NEXTLN        0.0013%     15  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PTEFLY        0.0013%      3  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EMYOK         0.0013%     36  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   IRQ           0.0013%     32  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   FLIPS2        0.0012%      1  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGSC2        0.0012%      8  attract, one player A, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   OUTPUT        0.0012%     14  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   GOFLIP        0.0010%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGNXF        0.0010%     19  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   RAM7          0.0009%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   EXECST        0.0009%      4  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   SHADOW        0.0008%     13  attract, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BODN1         0.0008%      7  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   EGGBKG        0.0008%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WAVEGG        0.0007%     75  egg waves, cliffs (wave 81)
+hand-back   SHLEV1        0.0007%     10  attract, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   AUTOFF        0.0007%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   FLAPST        0.0007%      5  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PTERO         0.0007%     31  attract, one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BOUNDR        0.0007%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   CHR35         0.0006%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   CLIPER        0.0006%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WCLFEW        0.0006%     48  cliffs (wave 81)
+hand-back   BURSTR        0.0006%     26  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   PTEATK        0.0006%     30  one player A, one player B, two players, high-score entry, tilt and coin slots
+hand-back   GSTART        0.0006%     42  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   RANDSYS       0.0005%      9  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), tilt and coin slots
+hand-back   BCDLSN        0.0005%     20  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WAVDEL        0.0005%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   INIT2         0.0005%     38  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   SHLEP1        0.0005%      7  attract, one player B, two players, cliffs (wave 81), high-score entry
+hand-back   RUNR          0.0004%      5  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BOUP1         0.0004%      5  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   B2LEV1        0.0004%     10  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   EGGLLP        0.0004%      5  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   CREGG         0.0004%     45  egg waves, cliffs (wave 81)
+hand-back   GAMOV1        0.0004%     19  two players, tilt and coin slots
+hand-back   B2UP1         0.0004%      5  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+hand-back   CHROUT        0.0004%      6  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   B2DN1         0.0004%      8  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   EXEINT        0.0003%     17  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   LAVAT1        0.0003%     12  troll and lava deaths
+hand-back   SHDN2         0.0002%     15  one player B, two players, cliffs (wave 81), tilt and coin slots
+hand-back   B2UNDR        0.0002%     13  attract, one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   PTEUP2        0.0002%      5  one player A, one player B, two players, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGHIT        0.0002%     70  attract, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   SHUP3A        0.0002%     17  two players, cliffs (wave 81), high-score entry
+hand-back   BOUP2         0.0001%      5  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   SP1           0.0001%     10  one player A, one player B, two players, troll and lava deaths, high-score entry, tilt and coin slots
+hand-back   DEATH         0.0001%     32  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   LT1HT         0.0001%     14  troll and lava deaths
+hand-back   IWAVE         0.0001%     17  one player A, two players, high-score entry
+hand-back   PTEOFF        0.0001%     35  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   SEEKF2        0.0001%      5  one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   FLAPS2        0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   MOUNLP        0.0001%      6  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   STFLY         0.0001%      3  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   B2UP3A        0.0001%     13  one player B, two players, egg waves, high-score entry, tilt and coin slots
+hand-back   B2UP2         0.0001%      5  one player A, one player B, two players, egg waves, high-score entry, tilt and coin slots
+hand-back   WCREATE       0.0001%     25  one player A, one player B, two players, troll and lava deaths, high-score entry, tilt and coin slots
+hand-back   WINTRO        0.0001%      8  one player A, one player B, two players, troll and lava deaths, high-score entry, tilt and coin slots
+hand-back   IRQVEC        0.0001%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots, operator menus and self-test
+hand-back   STLAN         0.0001%      7  attract, one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   STFALL        0.0001%     19  one player A, one player B, two players, troll and lava deaths, cliffs (wave 81), high-score entry
+hand-back   STANDR        0.0001%      3  attract, one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   GOVWAT        0.0001%      7  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BOLEV2        0.0000%      2  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   SKIDR         0.0000%      9  one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WPAUS3        0.0000%      9  one player A, one player B, two players, troll and lava deaths, high-score entry, tilt and coin slots
+hand-back   B2AV          0.0000%      4  one player A, one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   SHUP1         0.0000%      7  two players, cliffs (wave 81)
+hand-back   SHLEP2        0.0000%      2  one player B, two players, cliffs (wave 81), high-score entry
+hand-back   OSTUTP        0.0000%      6  one player B, troll and lava deaths, egg waves, cliffs (wave 81)
+hand-back   P1JOY         0.0000%      3  two players, troll and lava deaths, egg waves, cliffs (wave 81), tilt and coin slots
+hand-back   LAVAT2        0.0000%     16  troll and lava deaths
+hand-back   LZAP          0.0000%      8  two players, troll and lava deaths
+hand-back   SHLEV2        0.0000%      2  attract, two players, cliffs (wave 81), high-score entry
+hand-back   LNTOFP        0.0000%      4  one player A, one player B, two players, troll and lava deaths, egg waves
+hand-back   OSTBMP        0.0000%      5  one player B, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   OSTXTP        0.0000%      5  troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   SUCIDE        0.0000%      9  one player A, troll and lava deaths, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   AUTOFP        0.0000%      4  attract, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   ADDLAV        0.0000%     13  troll and lava deaths
+hand-back   B2DN2         0.0000%      5  one player B, two players, troll and lava deaths, egg waves, high-score entry, tilt and coin slots
+hand-back   PTEBRD        0.0000%     41  one player B, egg waves
+hand-back   GAMOVR        0.0000%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   BODN2         0.0000%      5  one player B, two players, troll and lava deaths, egg waves, high-score entry
+hand-back   LAVATC        0.0000%      1  troll and lava deaths
+hand-back   PLYLI2        0.0000%      2  one player A, one player B, two players, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WATWAV        0.0000%      8  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   B2LEV2        0.0000%      2  attract, one player A, one player B, two players, high-score entry, tilt and coin slots
+hand-back   SHAV          0.0000%      4  cliffs (wave 81), high-score entry
+hand-back   BCDMSN        0.0000%      4  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   NOBCKR        0.0000%      2  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   WNRM          0.0000%     30  one player A, two players, high-score entry
+hand-back   RUNSR         0.0000%      6  one player B, two players, egg waves, cliffs (wave 81)
+hand-back   LT1DRP        0.0000%      4  troll and lava deaths
+hand-back   OSTXDN        0.0000%     11  troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   WPAUS2        0.0000%      2  one player A, one player B, two players, troll and lava deaths, high-score entry, tilt and coin slots
+hand-back   EGAREA        0.0000%     10  attract, two players, high-score entry
+hand-back   DEATH3        0.0000%     25  cliffs (wave 81)
+hand-back   OSTLR         0.0000%      4  one player B, egg waves, cliffs (wave 81), high-score entry
+hand-back   LT1GRP        0.0000%     23  troll and lava deaths
+hand-back   OSTXUP        0.0000%     11  one player B, troll and lava deaths, egg waves
+hand-back   OSTXT3        0.0000%      5  attract, two players, troll and lava deaths, egg waves, cliffs (wave 81)
+hand-back   OSTWIN        0.0000%     10  two players, troll and lava deaths, cliffs (wave 81)
+hand-back   PLAYR         0.0000%      4  one player A, one player B, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   CUPROC        0.0000%      2  attract, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry
+hand-back   SCRTEN        0.0000%     10  two players, high-score entry
+hand-back   EGGDON        0.0000%      1  one player B, egg waves, cliffs (wave 81), high-score entry
+hand-back   KLPROC        0.0000%      4  one player B, two players, egg waves, cliffs (wave 81), tilt and coin slots
+hand-back   SPECIAL       0.0000%      5  one player B, troll and lava deaths
+hand-back   OSTPYP        0.0000%      7  cliffs (wave 81)
+hand-back   SRCADG        0.0000%      1  one player A, one player B, two players, troll and lava deaths, egg waves, cliffs (wave 81), high-score entry, tilt and coin slots
+hand-back   EGGSCR        0.0000%      8  high-score entry
+hand-back   REVR          0.0000%      1  egg waves, high-score entry
+hand-back   SP2           0.0000%      2  one player A, high-score entry
+hand-back   SCRAIR        0.0000%      3  attract
+hand-back   LT1DON        0.0000%      2  troll and lava deaths
+hand-back   CRPROC        0.0000%      1  two players, cliffs (wave 81), high-score entry
+hand-back   SCRHUN        0.0000%      4  cliffs (wave 81), high-score entry
+hand-back   WCOOP         0.0000%      4  two players, high-score entry
+hand-back   EGGLND        0.0000%      1  egg waves
+hand-back   LAV2LP        0.0000%      1  troll and lava deaths
+hand-back   DEATH1        0.0000%      3  troll and lava deaths
+hand-back   DEATH2        0.0000%      2  two players
+hand-back   BOLAV1        0.0000%      3  cliffs (wave 81)
+hand-back   EMY2          0.0000%      2  high-score entry
+hand-back   WPAUSE        0.0000%      1  high-score entry

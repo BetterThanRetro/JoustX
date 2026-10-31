@@ -64,6 +64,10 @@ Each phase ends verified in lockstep and committed, and the game stays playable 
 Record every original instruction that still executes, split into "not ported" and "hand-back".
 This turns the remaining work into a definite list.
 
+*Done: see [CENSUS.md](CENSUS.md). The census found about 5,500 cold, unported instructions, which
+is more than hand-porting can cover cheaply. It recommends generating C# for the cold code (phase
+1 below) instead.*
+
 **1. Port what the census finds.** First the game paths (lava death, troll appearance, coin
 handling and audits in the interrupt handler, high-score entry), then the operator menus. Finish
 when the census shows only hand-backs.
