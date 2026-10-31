@@ -41,7 +41,13 @@ public sealed class Engine
         Ledges = new LedgeRefresh(s, Scheduler);
         Ptero = new Pterodactyl(s, Ground, Physics, Bird, Scheduler);
         Lava = new LavaProcess(s, Scheduler, Physics.Sound);
+        Colors = new ColorCycle(s, Scheduler);
+        Start = new GameStart(s, Scheduler);
     }
+
+    public GameStart Start { get; }
+
+    public ColorCycle Colors { get; }
 
     public LavaProcess Lava { get; }
 
@@ -266,6 +272,14 @@ public sealed class TxJumpRoutine(
             "LAVA@" + l,
             (e, t) => e.Lava.Run(t, l),
             e => e.Lava.Address(l))),
+
+        // GSTART's idle poll of the credits and start buttons
+        new TxJumpRoutine("GSTART@wait", (e, t) => e.Start.Run(t, GameStart.L.Wait), e => e.Start.Address(GameStart.L.Wait)),
+        new TxJumpRoutine("GSTART@poll", (e, t) => e.Start.Run(t, GameStart.L.Poll), e => e.Start.Address(GameStart.L.Poll)),
+
+        // The high-score table's colour cycler
+        new TxJumpRoutine("CYCLE", (e, t) => e.Colors.Run(t, ColorCycle.L.Start)),
+        new TxJumpRoutine("CYCLE@nap", (e, t) => e.Colors.Run(t, ColorCycle.L.Tick), e => e.Colors.Address(ColorCycle.L.Tick)),
 
         // The pterodactyl's flight loop, at PTEFLY, its nap and PTESTF
         .. Enum.GetValues<Pterodactyl.L>().Select(l => new TxJumpRoutine(

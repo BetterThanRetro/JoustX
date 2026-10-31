@@ -504,6 +504,22 @@ public class NativePortTests
     }
 
     [Fact]
+    public void ColorCycleAndGameStartPollMatchTheOriginal()
+    {
+        var cycle = new ColorCycle(new Symbols(Program.Value.Symbols), null!);
+        int tick = cycle.Address(ColorCycle.L.Tick);
+        Assert.True(Program.Value.Memory[tick - 5] == 0x86 && Program.Value.Memory[tick - 4] == 4, "CYCLE@nap does not follow PCNAP 4");
+        var start = new GameStart(new Symbols(Program.Value.Symbols), null!);
+        int poll = start.Address(GameStart.L.Poll);
+        Assert.True(Program.Value.Memory[poll - 5] == 0x86 && Program.Value.Memory[poll - 4] == 1, "GSTART@poll does not follow PCNAP 1");
+        string[] labels = ["CYCLE", "CYCLE@nap", "GSTART@wait", "GSTART@poll"];
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in labels)
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+    }
+
+    [Fact]
     public void PterodactylFlightMatchesTheOriginal()
     {
         string[] labels = ["PTEFLY", "PTEFLY@nap", "PTESTF"];
