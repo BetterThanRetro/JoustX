@@ -484,6 +484,26 @@ public class NativePortTests
     }
 
     [Fact]
+    public void LavaMatchesTheOriginal()
+    {
+        var lava = new LavaProcess(new Symbols(Program.Value.Symbols), null!, null!);
+        var mem = Program.Value.Memory;
+        foreach (var l in new[] { LavaProcess.L.Line, LavaProcess.L.Bubble, LavaProcess.L.Bubble2, LavaProcess.L.Bubble3,
+                                  LavaProcess.L.Burst2, LavaProcess.L.Burst3, LavaProcess.L.Burst4 })
+        {
+            int at = lava.Address(l);
+            Assert.True(mem[at - 5] == 0x86 && mem[at - 3] == 0xBD, $"{l} at {at:X4} does not follow a PCNAP");   // LDA # / JSR ext
+        }
+        string[] labels = Enum.GetNames<LavaProcess.L>().Select(n => "LAVA@" + n).ToArray();
+        var v = VerifiedRun(NativeRoutines.Create().Where(r => labels.Contains(r.Symbol)), seed: 1, frames: 20000);
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        foreach (var name in new[] { "LAVA@Line", "LAVA@LeftLoop", "LAVA@Bubble", "LAVA@Burst2", "LAVA@Bubble2" })
+            Assert.True(v.Stats.TryGetValue(name, out var s) && s.Calls > s.Declined, $"{name} never ran natively");
+        var line = v.Stats["LAVA@Line"];
+        Assert.True(line.Declined * 4 < line.Calls, $"the line fill was handed back {line.Declined} of {line.Calls} times");
+    }
+
+    [Fact]
     public void PterodactylFlightMatchesTheOriginal()
     {
         string[] labels = ["PTEFLY", "PTEFLY@nap", "PTESTF"];

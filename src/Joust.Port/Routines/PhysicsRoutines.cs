@@ -40,7 +40,10 @@ public sealed class Engine
         Clear = new ScreenClear(s);
         Ledges = new LedgeRefresh(s, Scheduler);
         Ptero = new Pterodactyl(s, Ground, Physics, Bird, Scheduler);
+        Lava = new LavaProcess(s, Scheduler, Physics.Sound);
     }
+
+    public LavaProcess Lava { get; }
 
     public LedgeRefresh Ledges { get; }
 
@@ -257,6 +260,12 @@ public sealed class TxJumpRoutine(
             TrollName(l),
             (e, t) => e.Troll.Run(t, l),
             e => e.Troll.Address(l))),
+
+        // The lava: rising a line at a time, then bubbling, at every label and resume point
+        .. Enum.GetValues<LavaProcess.L>().Select(l => new TxJumpRoutine(
+            "LAVA@" + l,
+            (e, t) => e.Lava.Run(t, l),
+            e => e.Lava.Address(l))),
 
         // The pterodactyl's flight loop, at PTEFLY, its nap and PTESTF
         .. Enum.GetValues<Pterodactyl.L>().Select(l => new TxJumpRoutine(
