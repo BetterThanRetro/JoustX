@@ -35,7 +35,10 @@ The app assembles the game from `joust-main-asm/` at startup and refuses to run 
 | F1 | Toggle object overlay (from `GameStateReader`) |
 | F2 | Service "advance" switch |
 | F3 | Reset |
+| F5 / F6 / F7 / F8 | HD or classic graphics / CRT effect / reverb / widescreen (remembered between runs) |
 | Esc | Quit |
+
+Xbox (XInput) pads 1 and 2 play players 1 and 2: D-pad or left stick to steer, A/B/X to flap, Start to start, Back to insert a coin. `--classic` starts with the original graphics.
 
 ## Tools
 
