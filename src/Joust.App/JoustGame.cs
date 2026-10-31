@@ -38,7 +38,7 @@ public sealed class JoustGame : Game
     private HdOptions _hdOptions = new() { Abgr = true };
     private readonly byte[] _indices = new byte[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
     private readonly uint[] _palette = new uint[16];
-    private Texture2D _hdScreen = null!;
+    private Texture2D _hdScreen = null!, _hdWide = null!;
     private EventEffects _events = null!;
     private bool _hd = !Environment.GetCommandLineArgs().Contains("--classic");
 
@@ -113,6 +113,7 @@ public sealed class JoustGame : Game
         _batch = new SpriteBatch(GraphicsDevice);
         _screen = new Texture2D(GraphicsDevice, JoustMachine.ScreenWidth, JoustMachine.ScreenHeight);
         _hdScreen = new Texture2D(GraphicsDevice, HdRenderer.Width, HdRenderer.Height);
+        _hdWide = new Texture2D(GraphicsDevice, HdRenderer.WideWidth, HdRenderer.Height);
         _white = new Texture2D(GraphicsDevice, 1, 1);
         _white.SetData([Color.White]);
     }
@@ -128,6 +129,8 @@ public sealed class JoustGame : Game
             _machine.Reset();
         if (Pressed(k, Keys.F5))
             _hd = !_hd;
+        if (Pressed(k, Keys.F8))
+            _hdOptions = _hdOptions with { Widescreen = !_hdOptions.Widescreen };
         if (Pressed(k, Keys.F7))
             _reverbOn = !_reverbOn;
         if (Pressed(k, Keys.F6))
@@ -157,7 +160,7 @@ public sealed class JoustGame : Game
         SubmitAudio();
         _previousKeys = k;
         if (_machine.Frame % 30 == 0)
-            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
+            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  |  5 coin  1/2 start  |  native calls {_machine.NativeCalls}  |  last sound ${_lastSound:X2}";
         base.Update(gameTime);
     }
 
@@ -208,15 +211,19 @@ public sealed class JoustGame : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.Black);
-        var dest = FitRectangle(GraphicsDevice.Viewport.Bounds, 4f / 3f);
+        bool wide = _hd && _hdOptions.Widescreen;
+        var dest = FitRectangle(GraphicsDevice.Viewport.Bounds, wide ? 16f / 9f : 4f / 3f);
         if (_hd)
         {
             _machine.RenderIndices(_indices);
             for (int c = 0; c < 16; c++) _palette[c] = JoustMachine.PaletteToArgb(_machine.Palette[c]);
             _renderer.Render(_indices, _palette, _machine.Frame, _hdOptions);
-            _hdScreen.SetData(_renderer.Output);
+            var texture = wide ? _hdWide : _hdScreen;
+            texture.SetData(_renderer.Output, 0, texture.Width * texture.Height);
             _batch.Begin(samplerState: SamplerState.LinearClamp);
-            _batch.Draw(_hdScreen, dest, Color.White);
+            _batch.Draw(texture, dest, Color.White);
+            if (wide)                                            // the object boxes (F1) are relative to the field
+                dest = new Rectangle(dest.X + dest.Width / 8, dest.Y, dest.Width * 3 / 4, dest.Height);
         }
         else
         {

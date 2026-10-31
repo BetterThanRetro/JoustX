@@ -51,7 +51,7 @@ public class HdRendererTests
             for (int x = 100; x < 160; x++)
                 indices[y * HdRenderer.SourceWidth + x] = 3;
         var r = new HdRenderer();
-        r.Render(indices, palette, 0, new HdOptions { Bloom = 0, Heat = 0, Bevel = 0, Backdrop = false, Shimmer = false });
+        r.Render(indices, palette, 0, new HdOptions { Bloom = 0, Heat = 0, Bevel = 0, Backdrop = false, Shimmer = false, Widescreen = false });
         int hx = (130 - HdRenderer.VisibleX) * HdRenderer.Scale, hy = (120 - HdRenderer.VisibleY) * HdRenderer.Scale;
         Assert.Equal(0xFF4080C0u, r.Output[hy * HdRenderer.Width + hx]);
         Assert.Equal(0xFF000000u, r.Output[0]);

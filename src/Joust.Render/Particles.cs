@@ -66,14 +66,14 @@ public sealed class Particles
     }
 
     /// <summary>Additively splat each particle as a soft dot into the packed output.</summary>
-    internal void Draw(uint[] output, bool abgr)
+    internal void Draw(uint[] output, int stride, int offsetX, bool abgr)
     {
         foreach (var p in _live)
         {
             float fade = p.Life / p.MaxLife;
             float intensity = fade * fade * 1.4f;
             int radius = (int)MathF.Ceiling(p.Size * 1.8f);
-            int cx = (int)p.X, cy = (int)p.Y;
+            int cx = (int)p.X + offsetX, cy = (int)p.Y;
             for (int dy = -radius; dy <= radius; dy++)
             {
                 int y = cy + dy;
@@ -81,11 +81,11 @@ public sealed class Particles
                 for (int dx = -radius; dx <= radius; dx++)
                 {
                     int x = cx + dx;
-                    if (x < 0 || x >= HdRenderer.Width) continue;
+                    if (x < 0 || x >= stride) continue;
                     float d2 = (dx * dx + dy * dy) / (p.Size * p.Size);
                     float w = MathF.Exp(-d2) * intensity;
                     if (w < 0.01f) continue;
-                    output[y * HdRenderer.Width + x] = Add(output[y * HdRenderer.Width + x], p.R * w, p.G * w, p.B * w, abgr);
+                    output[y * stride + x] = Add(output[y * stride + x], p.R * w, p.G * w, p.B * w, abgr);
                 }
             }
         }

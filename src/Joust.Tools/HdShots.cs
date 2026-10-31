@@ -59,7 +59,7 @@ internal static class HdShots
             sw.Stop();
             if (!frames.Contains(f)) continue;
             string path = Path.Combine(outDir, $"hd_{f:D5}{(crt ? "_crt" : "")}.png");
-            PngWriter.Write(path, renderer.Output, HdRenderer.Width, HdRenderer.Height);
+            PngWriter.Write(path, renderer.Output, renderer.OutputWidth, HdRenderer.Height);
             Console.WriteLine($"{path}  ({sw.Elapsed.TotalMilliseconds:F1} ms)");
         }
         return 0;

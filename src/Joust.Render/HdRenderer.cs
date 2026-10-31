@@ -16,6 +16,9 @@ public sealed record HdOptions
     public bool Particles { get; init; } = true;
     public bool Crt { get; init; }
 
+    /// <summary>16:9 canvas: the field keeps its 4:3 shape, with cavern and pillars at the sides.</summary>
+    public bool Widescreen { get; init; } = true;
+
     /// <summary>Write pixels as A,B,G,R in memory (MonoGame's Color) instead of 0xAARRGGBB.</summary>
     public bool Abgr { get; init; }
 }
@@ -33,6 +36,10 @@ public sealed class HdRenderer
     public const int VisibleX = 6, VisibleY = 7, VisibleWidth = 292, VisibleHeight = 240;
     public const int Width = VisibleWidth * Scale, Height = VisibleHeight * Scale;
 
+    /// <summary>The 16:9 canvas width: the field is shown at 4:3, so its pixels are 1.096 wide.</summary>
+    public const int WideWidth = Width * 4 / 3;
+    private const int PillarWidth = 34;
+
     private const int LavaTop = 196;                             // rows (of the visible field) where lava can be
 
     private readonly byte[] _low = new byte[VisibleWidth * VisibleHeight];
@@ -43,9 +50,12 @@ public sealed class HdRenderer
     private readonly float[] _blurTemp = new float[VisibleWidth * VisibleHeight * 3];
     private readonly float[] _palette = new float[16 * 3];
     private readonly bool[] _hot = new bool[16];
-    private readonly Backdrop _backdrop = new(Width, Height);
+    private readonly Backdrop _backdrop = new(WideWidth, Height);
 
-    public uint[] Output { get; } = new uint[Width * Height];
+    public uint[] Output { get; } = new uint[WideWidth * Height];
+
+    /// <summary>Width of the image in <see cref="Output"/> (rows are this long): <see cref="Width"/> or <see cref="WideWidth"/>.</summary>
+    public int OutputWidth { get; private set; } = WideWidth;
 
     /// <param name="indices">The whole 304x256 frame, one palette index per pixel.</param>
     /// <param name="palette">The 16 palette colours as 0xAARRGGBB.</param>
@@ -66,11 +76,16 @@ public sealed class HdRenderer
 
         float t = frame;
         float flicker = 1f + 0.10f * MathF.Sin(t * 0.071f) + 0.05f * MathF.Sin(t * 0.23f + 1.3f);
-        Parallel.For(0, Height, y => ComposeRow(y, t, flicker, options));
+        OutputWidth = options.Widescreen ? WideWidth : Width;
+        Parallel.For(0, Height, y =>
+        {
+            ComposeRow(y, t, flicker, options);
+            if (options.Widescreen) ComposeSides(y, flicker, options);
+        });
         if (options.Particles)
         {
             Effects.Step(_low, _hot, LavaTop);
-            Effects.Draw(Output, options.Abgr);
+            Effects.Draw(Output, OutputWidth, (OutputWidth - Width) / 2, options.Abgr);
         }
     }
 
@@ -106,6 +121,7 @@ public sealed class HdRenderer
         int shift = lavaRow ? (int)MathF.Round(MathF.Sin(y * 0.11f + t * 0.16f) * 2.2f) : 0;
         float lavaLight = _backdrop.LavaLight[y] * flicker;
         float vy = (y - Height / 2f) / (Height / 2f);
+        int stride = o.Widescreen ? WideWidth : Width, ox = (stride - Width) / 2, backdropX = (WideWidth - Width) / 2;
         for (int x = 0; x < Width; x++)
         {
             int idx = _high[y * Width + x];
@@ -120,7 +136,7 @@ public sealed class HdRenderer
             {
                 if (o.Backdrop)
                 {
-                    int bo = (y * Width + x) * 3;
+                    int bo = (y * WideWidth + backdropX + x) * 3;
                     float warm = 1f + lavaLight * 2.2f;
                     r = _backdrop.Base[bo] * warm + lavaLight * 0.05f;
                     g = _backdrop.Base[bo + 1] * (1f + lavaLight * 0.9f) + lavaLight * 0.012f;
@@ -158,7 +174,49 @@ public sealed class HdRenderer
                 r *= scan * vignette; g *= scan * vignette; b *= scan * vignette;
             }
 
-            Output[y * Width + x] = Pack(r, g, b, o.Abgr);
+            Output[y * stride + ox + x] = Pack(r, g, b, o.Abgr);
+        }
+    }
+
+    /// <summary>
+    /// The 16:9 side panels: more cavern (darkening outwards, lit by the lava below) and a stone
+    /// pillar framing each side of the field.
+    /// </summary>
+    private void ComposeSides(int y, float flicker, HdOptions o)
+    {
+        int side = (WideWidth - Width) / 2;
+        float lavaLight = _backdrop.LavaLight[y] * flicker;
+        float v = y / (float)Height;
+        for (int s = 0; s < side; s++)
+        {
+            foreach (int x in new[] { s, WideWidth - 1 - s })
+            {
+                int fromField = side - 1 - s;                    // 0 next to the field
+                int bo = (y * WideWidth + x) * 3;
+                float fade = 0.35f + 0.65f * (s / (float)side);          // darker towards the screen edge
+                float r = _backdrop.Base[bo] * (1f + lavaLight * 2.2f) * fade + lavaLight * 0.04f * fade;
+                float g = _backdrop.Base[bo + 1] * (1f + lavaLight * 0.9f) * fade;
+                float b = _backdrop.Base[bo + 2] * fade;
+                if (fromField < PillarWidth)
+                {
+                    // A rounded stone column: shade across it, carved bands, warm light from below.
+                    float u = (fromField + 0.5f) / PillarWidth;
+                    float round = MathF.Sin(u * MathF.PI);
+                    float band = ((y / 6) % 16 == 0 || (y / 6) % 16 == 1) ? 0.7f : 1f;
+                    float stone = (0.10f + 0.16f * round) * band;
+                    float warm = 0.15f + 0.85f * v * v;
+                    r = stone * (1.15f + 0.9f * lavaLight) * warm + 0.03f;
+                    g = stone * (0.95f + 0.35f * lavaLight) * warm + 0.025f;
+                    b = stone * 0.85f * warm + 0.025f;
+                    if (fromField == 0) { r *= 0.4f; g *= 0.4f; b *= 0.4f; }   // seam against the field
+                }
+                if (o.Crt)
+                {
+                    float scan = (y & 3) == 3 ? 0.62f : (y & 3) == 0 ? 0.9f : 1f;
+                    r *= scan; g *= scan; b *= scan;
+                }
+                Output[y * WideWidth + x] = Pack(r, g, b, o.Abgr);
+            }
         }
     }
 
