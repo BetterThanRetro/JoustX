@@ -31,7 +31,7 @@ public sealed class JoustGame : Game
     private KeyboardState _previousKeys;
     private bool _showObjects;
     private byte _lastSound;
-    private string _cmosPath = "";
+    private string _cmosPath = "", _settingsPath = "";
 
     // HD presentation (F5 toggles classic, F6 CRT). It only reads the frame buffer.
     private readonly HdRenderer _renderer = new();
@@ -103,6 +103,8 @@ public sealed class JoustGame : Game
         _cmosPath = Path.Combine(dataDir, "cmos.bin");
         if (File.Exists(_cmosPath))
             File.ReadAllBytes(_cmosPath).AsSpan(0, _machine.Cmos.Length).CopyTo(_machine.Cmos);
+        _settingsPath = Path.Combine(dataDir, "display.txt");
+        LoadSettings();
 
         _machine.Reset();
         base.Initialize();
@@ -288,6 +290,29 @@ public sealed class JoustGame : Game
     {
         if (_machine != null && _cmosPath.Length > 0)
             File.WriteAllBytes(_cmosPath, _machine.Cmos);
+        SaveSettings();
         base.OnExiting(sender, args);
+    }
+    /// <summary>The F5-F8 choices, kept between runs as "name=true|false" lines.</summary>
+    private void LoadSettings()
+    {
+        if (!File.Exists(_settingsPath)) return;
+        var s = File.ReadAllLines(_settingsPath)
+            .Select(l => l.Split('=', 2))
+            .Where(p => p.Length == 2 && bool.TryParse(p[1], out _))
+            .ToDictionary(p => p[0].Trim(), p => bool.Parse(p[1]));
+        if (s.TryGetValue("hd", out bool hd) && !Environment.GetCommandLineArgs().Contains("--classic")) _hd = hd;
+        if (s.TryGetValue("crt", out bool crt)) _hdOptions = _hdOptions with { Crt = crt };
+        if (s.TryGetValue("widescreen", out bool wide)) _hdOptions = _hdOptions with { Widescreen = wide };
+        if (s.TryGetValue("reverb", out bool reverb)) _reverbOn = reverb;
+    }
+
+    private void SaveSettings()
+    {
+        if (_settingsPath.Length == 0) return;
+        File.WriteAllLines(_settingsPath,
+        [
+            $"hd={_hd}", $"crt={_hdOptions.Crt}", $"widescreen={_hdOptions.Widescreen}", $"reverb={_reverbOn}",
+        ]);
     }
 }
