@@ -56,7 +56,11 @@ public sealed class JoustGame : Game
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
     private double _updateMs, _drawMs, _lastTitle;
     private int _draws, _updates, _fps, _ups;
-    private string? _halted;                                     // a copy-protection check found the program changed
+    private string? _halted;
+    private float _peak;                                         // loudest sample sent this second
+    private int _soundCommands;
+    private readonly bool _autoCoin = Environment.GetCommandLineArgs().Contains("--autocoin");   // for checking sound unattended
+    private int _dropped;                                       // frames of audio dropped because the device lagged                                     // a copy-protection check found the program changed
     private float _dcIn, _dcOut;
 
     public JoustGame()
@@ -89,7 +93,7 @@ public sealed class JoustGame : Game
             Port.NativeRoutines.InstallAll(_machine, program.Symbols);
         _state = new GameStateReader(_machine, JoustLayout.FromSymbols(program.Symbols));
         _events = new EventEffects(_state, _renderer.Effects);
-        _machine.SoundCommand += cmd => _lastSound = cmd;
+        _machine.SoundCommand += cmd => { _lastSound = cmd; _soundCommands++; };
         // SND stores the accepted sound in SNDPTR while the process that asked for it is still
         // running (the board gets it next frame): pan toward that object, or centre for the rest.
         _machine.WatchAddress = (int)program.Symbols["SNDPTR"];
@@ -107,12 +111,14 @@ public sealed class JoustGame : Game
         string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JoustX");
         Directory.CreateDirectory(dataDir);
         _cmosPath = Path.Combine(dataDir, "cmos.bin");
-        if (File.Exists(_cmosPath))
-            File.ReadAllBytes(_cmosPath).AsSpan(0, _machine.Cmos.Length).CopyTo(_machine.Cmos);
+        var saved = File.Exists(_cmosPath) ? File.ReadAllBytes(_cmosPath) : [];
+        if (saved.Length >= _machine.Cmos.Length && !IsBlank(saved))
+            saved.AsSpan(0, _machine.Cmos.Length).CopyTo(_machine.Cmos);
         else
         {
-            // Blank CMOS: the game restores factory settings and then halts on that message until
-            // the operator power-cycles. Do that first boot out of sight, as hd-shots does.
+            // Blank CMOS (no file, or one saved before the game ever set it up): the game restores
+            // factory settings and then halts on that message, coins silent, until the operator
+            // power-cycles. Do that first boot out of sight, as hd-shots does.
             var factory = new JoustMachine(program.Memory);
             factory.Reset();
             for (int f = 0; f < 1300; f++) factory.RunFrame();
@@ -168,7 +174,8 @@ public sealed class JoustGame : Game
         i.P2Flap = k.IsKeyDown(Keys.K) || k.IsKeyDown(Keys.RightControl) || PadFlap(pad2);
         i.Start1 = k.IsKeyDown(Keys.D1) || pad1.IsButtonDown(Buttons.Start);
         i.Start2 = k.IsKeyDown(Keys.D2) || pad2.IsButtonDown(Buttons.Start);
-        i.CoinLeft = k.IsKeyDown(Keys.D5) || pad1.IsButtonDown(Buttons.Back);
+        i.CoinLeft = k.IsKeyDown(Keys.D5) || pad1.IsButtonDown(Buttons.Back)
+            || (_autoCoin && _machine.Frame % 300 is >= 0 and < 4 && _machine.Frame > 600);   // --autocoin: a coin every 5 s
         i.CoinRight = k.IsKeyDown(Keys.D6) || pad2.IsButtonDown(Buttons.Back);
         i.Advance = k.IsKeyDown(Keys.F2);
         i.AutoUp = k.IsKeyDown(Keys.F4);
@@ -197,7 +204,9 @@ public sealed class JoustGame : Game
         {
             _fps = _draws; _ups = _updates; _draws = _updates = 0; _lastTitle = start;
             Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  |  5 coin  1/2 start  |  " +
-                $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}";
+                $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}  |  " +
+                $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_soundCommands} sounds (last ${_lastSound:X2})";
+            _peak = 0;
         }
         base.Update(gameTime);
     }
@@ -220,7 +229,8 @@ public sealed class JoustGame : Game
     private void SubmitAudio()
     {
         int n = _sound.EndFrame(_samples);
-        if (n == 0 || _audio.PendingBufferCount > 4) return;
+        if (n == 0) return;
+        if (_audio.PendingBufferCount > 4) { _dropped++; return; }
         for (int s = 0; s < n; s++)
         {
             // DC blocker: the DAC rests at whatever level a sound left it, which would click.
@@ -239,6 +249,7 @@ public sealed class JoustGame : Game
         }
         for (int s = 0; s < 2 * n; s++)
         {
+            _peak = Math.Max(_peak, Math.Abs(_stereo[s]));
             short v = (short)Math.Clamp(_stereo[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
             _pcm[2 * s] = (byte)v;
             _pcm[2 * s + 1] = (byte)(v >> 8);
@@ -327,11 +338,15 @@ public sealed class JoustGame : Game
 
     protected override void OnExiting(object sender, ExitingEventArgs args)
     {
-        if (_machine != null && _cmosPath.Length > 0)
+        if (_machine != null && _cmosPath.Length > 0 && !IsBlank(_machine.Cmos))
             File.WriteAllBytes(_cmosPath, _machine.Cmos);
         SaveSettings();
         base.OnExiting(sender, args);
     }
+
+    /// <summary>The CMOS keeps 4-bit values; if every one is the same, nothing was ever stored.</summary>
+    private static bool IsBlank(byte[] cmos) => cmos.All(b => (b & 0x0F) == (cmos[0] & 0x0F));
+
     /// <summary>The F5-F8 choices, kept between runs as "name=true|false" lines.</summary>
     private void LoadSettings()
     {

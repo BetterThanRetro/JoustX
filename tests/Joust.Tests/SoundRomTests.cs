@@ -95,6 +95,38 @@ public class SoundRomTests
         Assert.True(fromPlayer > 5, $"{fromPlayer} of {total} sounds traced to the player");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TheGameDrivesTheBoardThroughTheBridge(bool native)
+    {
+        var program = JoustRomBuild.Assemble(JoustRomBuild.FindSourceDirectory(AppContext.BaseDirectory)!);
+        var factory = new Joust.Emulation.JoustMachine(program.Memory);
+        factory.Reset();
+        for (int f = 0; f < 1300; f++) factory.RunFrame();
+        var m = new Joust.Emulation.JoustMachine(program.Memory);
+        factory.Cmos.CopyTo(m.Cmos, 0);
+        if (native) Joust.Port.NativeRoutines.InstallAll(m, program.Symbols);
+        var board = new Joust.Emulation.SoundBoard(Sound.Value.Memory);
+        board.Reset();
+        var bridge = new Joust.Emulation.SoundBridge(m, board, 48000);
+        m.Reset();
+        var samples = new float[4800];
+        int commands = 0, loud = 0, total = 0;
+        m.SoundCommand += _ => commands++;
+        for (int f = 0; f < 1100; f++)
+        {
+            m.Inputs.CoinLeft = f is >= 900 and < 904;
+            m.RunFrame();
+            int n = bridge.EndFrame(samples);
+            total += n;
+            if (f >= 900) loud += samples.Take(n).Count(s => Math.Abs(s) > 0.05f);
+        }
+        Assert.True(commands > 0, "the game never wrote a sound command");
+        Assert.InRange(total / 1100.0, 790, 810);                    // ~800 samples a frame at 48 kHz
+        Assert.True(loud > 1000, $"only {loud} loud samples after the coin ({commands} commands)");
+    }
+
     [Fact]
     public void SoundRomVectorsPointIntoTheRom()
     {
