@@ -56,6 +56,8 @@ public sealed class HdRenderer
 
     public uint[] Output { get; } = new uint[WideWidth * Height];
 
+    private float _arena;                                        // 0..1: how much of the cavern backdrop shows
+
     /// <summary>Width of the image in <see cref="Output"/> (rows are this long): <see cref="Width"/> or <see cref="WideWidth"/>.</summary>
     public int OutputWidth { get; private set; } = WideWidth;
 
@@ -75,6 +77,19 @@ public sealed class HdRenderer
 
         PixelScaler.Scale4x(_low, VisibleWidth, VisibleHeight, _mid, _high);
         BuildLight(options);
+
+        // The cavern belongs to the arena: shown while the lava is on screen (play and the attract
+        // demo), faded out on the title, high-score and self-test screens, which are black in the
+        // original. Lava is solid rows of red: red text (CREDITS) or the RAM test's noise is not.
+        int lavaRows = 0;
+        for (int y = LavaTop; y < VisibleHeight; y++)
+        {
+            int hot = 0;
+            for (int x = 0; x < VisibleWidth; x++)
+                if (_hot[_low[y * VisibleWidth + x]]) hot++;
+            if (hot * 2 > VisibleWidth) lavaRows++;
+        }
+        _arena += ((lavaRows >= 3 ? 1f : 0f) - _arena) * 0.08f;
 
         float t = frame;
         float flicker = 1f + 0.10f * MathF.Sin(t * 0.071f) + 0.05f * MathF.Sin(t * 0.23f + 1.3f);
@@ -140,9 +155,9 @@ public sealed class HdRenderer
                 {
                     int bo = (y * WideWidth + backdropX + x) * 3;
                     float warm = 1f + lavaLight * 2.2f;
-                    r = _backdrop.Base[bo] * warm + lavaLight * 0.05f;
-                    g = _backdrop.Base[bo + 1] * (1f + lavaLight * 0.9f) + lavaLight * 0.012f;
-                    b = _backdrop.Base[bo + 2];
+                    r = (_backdrop.Base[bo] * warm + lavaLight * 0.05f) * _arena;
+                    g = (_backdrop.Base[bo + 1] * (1f + lavaLight * 0.9f) + lavaLight * 0.012f) * _arena;
+                    b = _backdrop.Base[bo + 2] * _arena;
                 }
                 else r = g = b = 0;
             }
@@ -189,7 +204,7 @@ public sealed class HdRenderer
         int side = (WideWidth - Width) / 2;
         for (int s = 0; s < side; s++)
         {
-            float fade = 0.35f + 0.65f * (s / (float)side);              // darker towards the screen edge
+            float fade = (0.35f + 0.65f * (s / (float)side)) * _arena;   // darker towards the screen edge
             for (int x = s; x < WideWidth; x += WideWidth - 1 - 2 * s)   // s, then its mirror
             {
                 int bo = (y * WideWidth + x) * 3;
