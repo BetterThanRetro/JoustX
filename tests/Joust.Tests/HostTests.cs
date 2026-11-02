@@ -50,6 +50,7 @@ public class HostTests
         Assert.Equal(0, session.Machine.CpuSteps);                           // no CPU by default
         Assert.InRange(samples, 2000 * 48000 / 61, 2000 * 48000 / 59);        // a frame's worth each frame
         Assert.True(session.SoundCommands > 20 && peak > 0.2f, $"{session.SoundCommands} sounds, peak {peak}");
+        Assert.True(peak <= 0.951f, $"the mix reached {peak}: it would clip");     // the limiter's ceiling
         Assert.Contains(session.State.ReadObjects(), o => o.Kind == ObjectKind.Player);
     }
 

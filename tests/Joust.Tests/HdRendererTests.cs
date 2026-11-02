@@ -32,6 +32,27 @@ public class HdRendererTests
     }
 
     [Fact]
+    public void TheLimiterPassesQuietSoundAndNeverClips()
+    {
+        var limiter = new Limiter(48000);
+        int lag = 48;                                            // 1 ms look-ahead
+        var quiet = new float[2 * 4800];
+        for (int i = 0; i < 4800; i++) quiet[2 * i] = quiet[2 * i + 1] = 0.5f * MathF.Sin(i * 0.05f);
+        var outQuiet = (float[])quiet.Clone();
+        limiter.Process(outQuiet);
+        for (int i = lag; i < 4800; i++)                         // the same sound, 1 ms later, at 0.8 level
+            Assert.Equal(quiet[2 * (i - lag)] * 0.8f, outQuiet[2 * i], 5);
+
+        // Full-scale steps of ±2.5 (louder than the game ever gets): squeezed, never past the ceiling.
+        var loud = new float[2 * 48000];
+        for (int i = 0; i < 48000; i++) loud[2 * i] = loud[2 * i + 1] = (i / 120 % 2 == 0 ? 2.5f : -2.5f) * (i % 18000 < 3000 ? 1 : 0.1f);
+        limiter.Process(loud);
+        Assert.All(loud, s => Assert.InRange(s, -0.951f, 0.951f));
+        // A third of a second after a loud stretch the level is back: 0.8 x 0.25 = 0.2.
+        Assert.InRange(MathF.Abs(loud[2 * 17900]), 0.195f, 0.201f);
+    }
+
+    [Fact]
     public void ObjectsDoNotFlickerOnTheScannedPicture()
     {
         var program = Joust.Assembler.JoustRomBuild.Assemble(Joust.Assembler.JoustRomBuild.FindSourceDirectory(AppContext.BaseDirectory)!);

@@ -202,7 +202,7 @@ public sealed class JoustGame : Game
         for (int s = 0; s < stereo.Length; s++)
         {
             _peak = Math.Max(_peak, Math.Abs(stereo[s]));
-            short v = (short)Math.Clamp(stereo[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
+            short v = (short)(stereo[s] * short.MaxValue);           // the session's mix never passes ±1
             _pcm[2 * s] = (byte)v;
             _pcm[2 * s + 1] = (byte)(v >> 8);
         }

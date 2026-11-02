@@ -31,6 +31,7 @@ public sealed class JoustSession
 
     private readonly SoundBridge _sound;
     private readonly CavernReverb _reverb;
+    private readonly Limiter _limiter;
     private readonly EventEffects _events;
     private readonly float[] _samples;
     private readonly float[] _stereo;
@@ -55,6 +56,7 @@ public sealed class JoustSession
 
         SampleRate = sampleRate;
         _reverb = new CavernReverb(sampleRate);
+        _limiter = new Limiter(sampleRate);
         _samples = new float[sampleRate / 10];
         _stereo = new float[sampleRate / 10 * 2];
         var board = new SoundBoard(image.Sound);
@@ -124,7 +126,10 @@ public sealed class JoustSession
     /// <summary>Power-cycles the board (the saved settings stay).</summary>
     public void Reset() => Machine.Reset();
 
-    /// <summary>The last frame's sound: interleaved stereo samples in -1..1.</summary>
+    /// <summary>
+    /// The last frame's sound: interleaved stereo samples at output level, always within -1..1
+    /// (a limiter squeezes loud moments instead of letting them clip).
+    /// </summary>
     public ReadOnlySpan<float> Audio => _stereo.AsSpan(0, 2 * _audioFrames);
 
     private void MixAudio()
@@ -142,6 +147,7 @@ public sealed class JoustSession
             _reverb.Process(_samples.AsSpan(0, n), _stereo);
         else
             for (int s = 0; s < n; s++) _stereo[2 * s] = _stereo[2 * s + 1] = _samples[s];
+        _limiter.Process(_stereo.AsSpan(0, 2 * n));
     }
 
     /// <summary>
