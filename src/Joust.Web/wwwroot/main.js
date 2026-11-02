@@ -91,7 +91,9 @@ function buttons() {
         if (code in BUTTONS) bits |= 1 << BUTTONS[code];
         if (left <= 1) tapped.delete(code); else tapped.set(code, left - 1);
     }
-    const pads = navigator.getGamepads?.() ?? [];
+    // The first pad the browser reports plays player 1 and the next player 2, whatever their
+    // slots: a stick can sit in slot 2 with slot 1 empty.
+    const pads = [...(navigator.getGamepads?.() ?? [])].filter((p) => p?.connected);
     return bits | padBits(pads[0], 0) | padBits(pads[1], 3);
 }
 
