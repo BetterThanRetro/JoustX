@@ -8,6 +8,10 @@
     <!-- No per-build Joust.App.exe: Smart App Control blocks that unsigned launcher at random,
          so `dotnet run` starts the game through the signed dotnet.exe instead. -->
     <UseAppHost>false</UseAppHost>
+    <!-- Methods with loops (the renderer's per-pixel work) get optimized code on their first
+         call, not after a slow first phase: that phase made the first draws take up to 170 ms,
+         and the fixed time step then ran a burst of frames whose sound overflowed the queue. -->
+    <TieredCompilationQuickJitForLoops>false</TieredCompilationQuickJitForLoops>
   </PropertyGroup>
 
   <ItemGroup>

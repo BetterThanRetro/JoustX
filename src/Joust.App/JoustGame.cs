@@ -41,7 +41,7 @@ public sealed class JoustGame : Game
 
     // Timing shown in the title bar, to see whether a slow machine is dropping frames.
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
-    private double _updateMs, _drawMs, _lastTitle;
+    private double _updateMs, _drawMs, _lastTitle, _lastUpdate;
     private int _draws, _updates, _fps, _ups;
     private float _peak;                                         // loudest sample sent this second
     private readonly bool _autoCoin = Environment.GetCommandLineArgs().Contains("--autocoin");   // for checking sound unattended
@@ -94,6 +94,16 @@ public sealed class JoustGame : Game
         _hdWide = new Texture2D(GraphicsDevice, HdRenderer.WideWidth, HdRenderer.Height);
         _white = new Texture2D(GraphicsDevice, 1, 1);
         _white.SetData([Color.White]);
+
+        // Draw both pictures once now, so the renderer is compiled and the textures are on the
+        // GPU before the game starts. Then start the clock afresh: otherwise the fixed time step
+        // makes up for the loading time by running a burst of frames back to back, and their
+        // sound overflows the audio queue.
+        _hdScreen.SetData(_session.RenderHd(_hdOptions with { Widescreen = false }), 0, _hdScreen.Width * _hdScreen.Height);
+        _hdWide.SetData(_session.RenderHd(_hdOptions with { Widescreen = true }), 0, _hdWide.Width * _hdWide.Height);
+        _session.RenderClassic(_rgba, abgr: true);
+        _screen.SetData(_rgba);
+        ResetElapsedTime();
     }
 
     protected override void Update(GameTime gameTime)
@@ -142,6 +152,12 @@ public sealed class JoustGame : Game
         _previousKeys = k;
 
         double start = _clock.Elapsed.TotalMilliseconds;
+        // After a stall (the GPU's first-frame set-up, dragging the window), the fixed time step
+        // would make up the lost time with a burst of frames back to back: the game would jump
+        // and the burst's sound would overflow the audio queue. Let the game pause instead.
+        bool stalled = start - _lastUpdate > 100;
+        _lastUpdate = start;
+        if (stalled) ResetElapsedTime();
         if (_session.Halted != null)
         {
             Window.Title = "JoustX stopped: " + _session.Halted;
@@ -191,14 +207,16 @@ public sealed class JoustGame : Game
         p.IsConnected && (p.IsButtonDown(Buttons.A) || p.IsButtonDown(Buttons.B) || p.IsButtonDown(Buttons.X));
 
     /// <summary>
-    /// Hands this frame's sound to the audio device. If the device has fallen behind by more than
-    /// a few frames, the frame is dropped rather than letting latency grow.
+    /// Hands this frame's sound to the audio device. If the device has fallen well behind, the
+    /// frame is dropped rather than letting latency grow.
     /// </summary>
     private void SubmitAudio()
     {
         var stereo = _session.Audio;
         if (stereo.Length == 0) return;
-        if (_audio.PendingBufferCount > 4) { _dropped++; return; }
+        // The queue normally holds 1-3 frames; the device sometimes takes a buffer late, so allow
+        // up to 6 (100 ms) before dropping one, which would skip a frame of sound.
+        if (_audio.PendingBufferCount > 6) { _dropped++; return; }
         for (int s = 0; s < stereo.Length; s++)
         {
             _peak = Math.Max(_peak, Math.Abs(stereo[s]));
