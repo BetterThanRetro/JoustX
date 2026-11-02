@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <!-- The browser build: the game (Joust.Host, both boards in C#) compiled to WebAssembly, with
+       a small hand-written page in wwwroot for the picture (WebGL2), sound and input. Built and
+       served in Docker (docker/web, scripts/web-docker.ps1); Release compiles ahead of time,
+       which needs the wasm-tools workload the container installs. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RunAOTCompilation Condition="'$(Configuration)' == 'Release'">true</RunAOTCompilation>
+    <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Joust.Host\Joust.Host.csproj" />
+  </ItemGroup>
+
+</Project>

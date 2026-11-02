@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Joust.Emulation\Joust.Emulation.csproj" />
     <ProjectReference Include="..\Joust.Port\Joust.Port.csproj" />
     <ProjectReference Include="..\Joust.Render\Joust.Render.csproj" />
+    <ProjectReference Include="..\Joust.Host\Joust.Host.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

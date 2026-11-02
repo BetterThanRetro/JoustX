@@ -17,6 +17,7 @@ The game now runs entirely in C#, with no CPU emulation on either board: the mai
 | `src/Joust.Emulation` | 6809 CPU, SC1 blitter, 6821 PIAs, CMOS, video timing (the reference machine), plus `GameStateReader` |
 | `src/Joust.Port` | The native C# port: hand-written routines, the translated program (`Translated/`) and the no-CPU runtime, all verified against the original |
 | `src/Joust.Host` | One running game with no window, audio device or file system (`JoustSession`): the CPU mode, first-launch factory settings, the frame loop, the audio mix and both pictures; `GameImage` assembles the program or loads a saved image. Every front end builds on it |
+| `src/Joust.Web` | The browser version: the game compiled to WebAssembly, and a small WebGL2 / Web Audio page (`wwwroot`); built and served by `docker/web` |
 | `src/Joust.App` | MonoGame window around a `JoustSession`: plays the game (in C# with no CPU; `--cpu` keeps the emulated 6809 behind the C# code, `--original` runs pure emulation), keyboard input, CMOS persistence |
 | `src/Joust.Tools` | CLI: `build-roms`, headless `run` with screenshots and scripted input, `verify-native`, `translate`, `bench`, `census` |
 | `tests/Joust.Tests` | Assembler encodings, CPU semantics, ROM checksums, golden replay |
@@ -49,6 +50,14 @@ The app assembles the game from `joust-main-asm/` at startup and refuses to run 
 Xbox (XInput) pads 1 and 2 play players 1 and 2: D-pad or left stick to steer, A/B/X to flap, Start to start, Back to insert a coin. `--classic` starts with the original graphics.
 
 The HD picture is drawn on the GPU by shaders (`src/Joust.App/Shaders/Hd.fx`), about 1.4 ms a frame; the CPU renderer in `Joust.Render` stays as the reference, and `--cpu-render` (or F9) uses it. `--compare-render <dir>` draws a few frames both ways and writes the pictures, their difference and a report. The build recompiles the shaders when `Hd.fx` changes, with the repository's shader compiler (run `dotnet tool restore` once); without it the checked-in `Hd.mgfxo` is used.
+
+## Play it in a browser
+
+```bash
+powershell -File scripts/web-docker.ps1
+```
+
+This builds the browser version in Docker and serves it at http://localhost:8080 (`-Port` picks another port, `-Stop` stops it). The first build downloads the .NET WebAssembly tools and takes several minutes. The game (`Joust.Host`, both boards in C#) is compiled ahead of time to WebAssembly (`src/Joust.Web`). A small page draws it with WebGL2 (`wwwroot/gl.js`, a GLSL port of `Hd.fx`), plays its sound through Web Audio and reads the keyboard and gamepads. The keys are as on the desktop. The saved settings stay in the browser. The game image is assembled from `joust-main-asm/` during the build (`joust-tools build-image`). Keep it to your own machine: the game's code and art belong to their owners.
 
 ## Tools
 

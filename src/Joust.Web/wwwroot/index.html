@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JoustX</title>
+    <style>
+        html, body { margin: 0; height: 100%; background: #000; color: #c9b27a; font: 14px system-ui, sans-serif; overflow: hidden; }
+        #screen { display: block; width: 100vw; height: 100vh; }
+        #cover { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #000; text-align: center; }
+        #cover h1 { margin: 0; font-size: 40px; letter-spacing: 6px; color: #ffd84a; }
+        #status { font-size: 16px; }
+        #keys { color: #8a7a55; line-height: 1.6; max-width: 640px; }
+        kbd { color: #e8d9a8; }
+    </style>
+</head>
+<body>
+    <canvas id="screen"></canvas>
+    <div id="cover">
+        <h1>JOUSTX</h1>
+        <div id="status">Loading…</div>
+        <div id="keys">
+            <kbd>5</kbd>/<kbd>6</kbd> coin · <kbd>1</kbd>/<kbd>2</kbd> start ·
+            <kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> and <kbd>Space</kbd> player 1 ·
+            <kbd>J</kbd><kbd>L</kbd> and <kbd>K</kbd> player 2<br>
+            <kbd>F2</kbd> advance · <kbd>F3</kbd> reset · <kbd>F5</kbd> HD/classic · <kbd>F6</kbd> CRT ·
+            <kbd>F7</kbd> reverb · <kbd>F8</kbd> widescreen · <kbd>F11</kbd> fullscreen<br>
+            Gamepads: stick or D-pad steers, A/B/X flap, Start starts, Back is a coin
+            (press a button with this page in front so the browser shows the pad to it)
+        </div>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
