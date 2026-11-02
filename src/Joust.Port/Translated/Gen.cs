@@ -166,7 +166,7 @@ public sealed class Gen
     /// <summary>PIA, bank latch, blitter, watchdog: logged in order, and the call ends after this instruction.</summary>
     private void IoWrite(int a, byte v)
     {
-        T.IoWrite(a, v);
+        T.IoWrite(a, v, _start.Cycles);                          // as the CPU times it: the instruction's start
         _stopAfter = true;
         if ((a & 0xFF00) != 0xCA00) return;
         if (_blitter == null)

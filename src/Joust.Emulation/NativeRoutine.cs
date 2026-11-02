@@ -75,6 +75,23 @@ public sealed class NativeContext
     }
 
     /// <summary>
+    /// A write that the routine made <paramref name="cyclesFromNow"/> cycles into its run (an I/O
+    /// register, applied at commit), timed as the original made it.
+    /// </summary>
+    public void WriteAt(int address, byte value, int cyclesFromNow)
+    {
+        _m.WriteCycleOffset = cyclesFromNow;
+        try
+        {
+            Write(address, value);
+        }
+        finally
+        {
+            _m.WriteCycleOffset = 0;
+        }
+    }
+
+    /// <summary>
     /// Address of a base-page variable as the original reaches it with direct addressing
     /// (assembled under ASSUME DPR:$A0), i.e. relative to the live DP register.
     /// </summary>

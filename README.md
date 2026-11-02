@@ -16,7 +16,8 @@ The game now runs entirely in C#, with no CPU emulation. The hot paths are hand-
 | `src/Joust.Assembler` | C# 6809 assembler for the AS dialect. Builds the 12 main-board ROMs from source |
 | `src/Joust.Emulation` | 6809 CPU, SC1 blitter, 6821 PIAs, CMOS, video timing (the reference machine), plus `GameStateReader` |
 | `src/Joust.Port` | The native C# port: hand-written routines, the translated program (`Translated/`) and the no-CPU runtime, all verified against the original |
-| `src/Joust.App` | MonoGame window: plays the game (in C# with no CPU; `--cpu` keeps the emulated 6809 behind the C# code, `--original` runs pure emulation), keyboard input, CMOS persistence |
+| `src/Joust.Host` | One running game with no window, audio device or file system (`JoustSession`): the CPU mode, first-launch factory settings, the frame loop, the audio mix and both pictures; `GameImage` assembles the program or loads a saved image. Every front end builds on it |
+| `src/Joust.App` | MonoGame window around a `JoustSession`: plays the game (in C# with no CPU; `--cpu` keeps the emulated 6809 behind the C# code, `--original` runs pure emulation), keyboard input, CMOS persistence |
 | `src/Joust.Tools` | CLI: `build-roms`, headless `run` with screenshots and scripted input, `verify-native`, `translate`, `bench`, `census` |
 | `tests/Joust.Tests` | Assembler encodings, CPU semantics, ROM checksums, golden replay |
 

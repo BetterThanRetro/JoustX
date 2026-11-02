@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Joust.Emulation\Joust.Emulation.csproj" />
     <ProjectReference Include="..\..\src\Joust.Port\Joust.Port.csproj" />
     <ProjectReference Include="..\..\src\Joust.Render\Joust.Render.csproj" />
+    <ProjectReference Include="..\..\src\Joust.Host\Joust.Host.csproj" />
   </ItemGroup>
 
 </Project>

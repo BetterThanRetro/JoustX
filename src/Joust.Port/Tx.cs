@@ -12,7 +12,7 @@ public sealed class Tx
 {
     private readonly NativeContext _c;
     private Dictionary<int, byte> _pending = [];
-    private readonly List<(int Address, byte Value, bool Write)> _io = [];
+    private readonly List<(int Address, byte Value, bool Write, int Cycle)> _io = [];
 
     public byte A, B, DP, CC;
     public ushort X, Y, U, S;
@@ -57,14 +57,18 @@ public sealed class Tx
 
     // ------------------------------------------------------------------ I/O
 
-    /// <summary>A write to an I/O register, performed (in order) at commit.</summary>
-    public void IoWrite(int address, byte value) => _io.Add((address, value, true));
+    /// <summary>
+    /// A write to an I/O register, performed (in order) at commit, and timed at
+    /// <paramref name="cycle"/> cycles into the routine (by default, the cycles charged so far:
+    /// the start of the instruction making it, as each instruction charges its cycles after it).
+    /// </summary>
+    public void IoWrite(int address, byte value, int? cycle = null) => _io.Add((address, value, true, cycle ?? Cycles));
 
     /// <summary>
     /// A read of an I/O register whose value the caller already knows (e.g. from
     /// <see cref="NativeContext.PeekWidget"/>); it is repeated at commit for its side effects.
     /// </summary>
-    public void IoRead(int address) => _io.Add((address, 0, false));
+    public void IoRead(int address) => _io.Add((address, 0, false, Cycles));
 
     public ushort D
     {
@@ -194,9 +198,9 @@ public sealed class Tx
     {
         foreach (var (a, v) in _pending)
             _c.Write(a, v);
-        foreach (var (a, v, write) in _io)
+        foreach (var (a, v, write, cycle) in _io)
         {
-            if (write) _c.Write(a, v);
+            if (write) _c.WriteAt(a, v, cycle);
             else _c.Read(a);
         }
         var p = _c.Cpu;

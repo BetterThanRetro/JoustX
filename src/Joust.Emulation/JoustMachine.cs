@@ -87,7 +87,7 @@ public sealed class JoustMachine : IBus
         // The sound board latches the low 6 bits; $3F is the idle value written between commands.
         Pia1.WritePortB = v =>
         {
-            SoundPortWrite?.Invoke(v, Cpu.Cycles);
+            SoundPortWrite?.Invoke(v, Cpu.Cycles + WriteCycleOffset);
             if ((v & 0x3F) != 0x3F) SoundCommand?.Invoke((byte)(v & 0x3F));
         };
     }
@@ -204,6 +204,13 @@ public sealed class JoustMachine : IBus
         int clocksAt4MHz = (control & 0x04) != 0 ? 4 + 4 * (accesses + 2) : 4 + 2 * (accesses + 3);
         return (clocksAt4MHz + 3) / 4;
     }
+
+    /// <summary>
+    /// While a native routine's transaction is applied, how many cycles past the CPU clock the
+    /// write being applied happened, so a timed effect (the sound board's command) lands at the
+    /// original's exact cycle.
+    /// </summary>
+    internal int WriteCycleOffset { get; set; }
 
     /// <summary>Installs a native routine at its original entry address.</summary>
     public void InstallNative(NativeRoutine routine, ushort address) => _natives[address] = routine;

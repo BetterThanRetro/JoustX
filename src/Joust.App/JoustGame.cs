@@ -1,5 +1,5 @@
-using Joust.Assembler;
 using Joust.Emulation;
+using Joust.Host;
 using Joust.Render;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -9,59 +9,43 @@ using Microsoft.Xna.Framework.Input;
 namespace Joust.App;
 
 /// <summary>
-/// Host window. The game runs on the reference machine every frame (in C#, with no 6809
-/// emulation, unless --cpu or --original); this class only feeds it switches and presents its output. Rendering and audio upgrades plug in here
-/// through <see cref="GameStateReader"/> and <see cref="JoustMachine.SoundCommand"/>.
+/// The desktop front end. The game itself is a <see cref="JoustSession"/> (in C#, with no 6809
+/// emulation, unless --cpu or --original); this window only feeds it the keyboard and pads,
+/// plays its sound, shows its picture and keeps the saved settings on disk.
 /// </summary>
 public sealed class JoustGame : Game
 {
     // The monitor shows lines 7-246 and pixels 6-297 of the 304x256 frame buffer.
     private static readonly Rectangle Visible = new(6, 7, 292, 240);
-    private const double FrameRate = 1_000_000.0 / (JoustMachine.CyclesPerScanline * JoustMachine.ScanlinesPerFrame);
 
     private readonly GraphicsDeviceManager _graphics;
-    private JoustMachine _machine = null!;
-    private GameStateReader _state = null!;
+    private JoustSession _session = null!;
     private SpriteBatch _batch = null!;
     private Texture2D _screen = null!;
     private Texture2D _white = null!;
-    private readonly uint[] _argb = new uint[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
     private readonly uint[] _rgba = new uint[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
     private readonly List<GameObject> _objects = [];
     private KeyboardState _previousKeys;
     private bool _showObjects;
-    private byte _lastSound;
     private string _cmosPath = "", _settingsPath = "";
 
-    // HD presentation (F5 toggles classic, F6 CRT). It only reads the frame buffer.
-    private readonly HdRenderer _renderer = new();
+    // HD presentation (F5 toggles classic, F6 CRT, F8 widescreen). It only reads the frame buffer.
     private HdOptions _hdOptions = new() { Abgr = true };
-    private readonly byte[] _indices = new byte[JoustMachine.ScreenWidth * JoustMachine.ScreenHeight];
-    private readonly uint[] _palette = new uint[16];
     private Texture2D _hdScreen = null!, _hdWide = null!;
-    private EventEffects _events = null!;
-    private bool _hd = !Environment.GetCommandLineArgs().Contains("--classic");
+    private bool _hd = true;
 
     private const int SampleRate = 48000;
     private const float StickDeadZone = 0.35f;
-    private SoundBridge _sound = null!;
     private DynamicSoundEffectInstance _audio = null!;
-    private readonly float[] _samples = new float[SampleRate / 10];
-    private readonly float[] _stereo = new float[SampleRate / 10 * 2];
     private readonly byte[] _pcm = new byte[SampleRate / 10 * 4];
-    private readonly CavernReverb _reverb = new(SampleRate);
-    private bool _reverbOn = true;                               // F7: original sound only
 
     // Timing shown in the title bar, to see whether a slow machine is dropping frames.
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
     private double _updateMs, _drawMs, _lastTitle;
     private int _draws, _updates, _fps, _ups;
-    private string? _halted;
     private float _peak;                                         // loudest sample sent this second
-    private int _soundCommands;
     private readonly bool _autoCoin = Environment.GetCommandLineArgs().Contains("--autocoin");   // for checking sound unattended
-    private int _dropped;                                       // frames of audio dropped because the device lagged                                     // a copy-protection check found the program changed
-    private float _dcIn, _dcOut;
+    private int _dropped;                                        // frames of audio dropped because the device lagged
 
     public JoustGame()
     {
@@ -72,70 +56,33 @@ public sealed class JoustGame : Game
             SynchronizeWithVerticalRetrace = true,
         };
         IsFixedTimeStep = true;
-        TargetElapsedTime = TimeSpan.FromSeconds(1.0 / FrameRate);
+        TargetElapsedTime = TimeSpan.FromSeconds(1.0 / JoustSession.FrameRate);
         Window.AllowUserResizing = true;
         Window.Title = "JoustX";
     }
 
     protected override void Initialize()
     {
-        string source = JoustRomBuild.FindSourceDirectory(AppContext.BaseDirectory)
-            ?? JoustRomBuild.FindSourceDirectory(Environment.CurrentDirectory)
-            ?? throw new DirectoryNotFoundException($"Could not find {JoustRomBuild.SourceFolderName}/{JoustRomBuild.MainFile}");
-        var program = JoustRomBuild.Assemble(source);
-        if (!program.Success)
-            throw new InvalidOperationException("Assembly failed: " + string.Join("; ", program.Errors.Take(5)));
-        if (JoustRomBuild.VerifyChecksums(program).Any(c => !c.Ok))
-            throw new InvalidOperationException("Assembled ROMs do not match the original checksums.");
-
-        _machine = new JoustMachine(program.Memory);
-        // The game runs in C# with no 6809 emulation; --cpu keeps the emulated 6809 behind the C#
-        // code, and --original runs only the emulated original.
         var args = Environment.GetCommandLineArgs();
-        if (!args.Contains("--original"))
-        {
-            Port.NativeRoutines.InstallAll(_machine, program.Symbols);
-            if (!args.Contains("--cpu"))
-                Port.NoCpuRuntime.Attach(_machine);
-        }
-        _state = new GameStateReader(_machine, JoustLayout.FromSymbols(program.Symbols));
-        _events = new EventEffects(_state, _renderer.Effects);
-        _machine.SoundCommand += cmd => { _lastSound = cmd; _soundCommands++; };
-        // SND stores the accepted sound in SNDPTR while the process that asked for it is still
-        // running (the board gets it next frame): pan toward that object, or centre for the rest.
-        _machine.WatchAddress = (int)program.Symbols["SNDPTR"];
-        _machine.Watched = _ => _reverb.Pan = _state.Executing() is { } source ? (source.X + 8 - 152) / 146f : 0f;
-
-        var sound = JoustRomBuild.AssembleSound(source);
-        if (!sound.Success || JoustRomBuild.SoundChecksum(sound) is var (sum, stored) && sum != stored)
-            throw new InvalidOperationException("The sound ROM did not assemble to its checksum.");
-        var board = new SoundBoard(sound.Memory);
-        board.Reset();
-        _sound = new SoundBridge(_machine, board, SampleRate);
-        _audio = new DynamicSoundEffectInstance(SampleRate, AudioChannels.Stereo);
-        _audio.Play();
+        var image = GameImage.FromSourceNear(AppContext.BaseDirectory, Environment.CurrentDirectory);
+        var mode = args.Contains("--original") ? CpuMode.Original : args.Contains("--cpu") ? CpuMode.Behind : CpuMode.None;
 
         string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JoustX");
         Directory.CreateDirectory(dataDir);
         _cmosPath = Path.Combine(dataDir, "cmos.bin");
-        var saved = File.Exists(_cmosPath) ? File.ReadAllBytes(_cmosPath) : [];
-        if (saved.Length >= _machine.Cmos.Length && !IsBlank(saved))
-            saved.AsSpan(0, _machine.Cmos.Length).CopyTo(_machine.Cmos);
-        else
-        {
-            // Blank CMOS (no file, or one saved before the game ever set it up): the game restores
-            // factory settings and then halts on that message, coins silent, until the operator
-            // power-cycles. Do that first boot out of sight, as hd-shots does.
-            var factory = new JoustMachine(program.Memory);
-            factory.Reset();
-            for (int f = 0; f < 1300; f++) factory.RunFrame();
-            factory.Cmos.CopyTo(_machine.Cmos, 0);
-            File.WriteAllBytes(_cmosPath, _machine.Cmos);
-        }
-        _settingsPath = Path.Combine(dataDir, "display.txt");
-        LoadSettings();
+        _session = new JoustSession(image, File.Exists(_cmosPath) ? File.ReadAllBytes(_cmosPath) : null, mode, SampleRate);
+        if (_session.FactoryRestored)
+            SaveCmos();
 
-        _machine.Reset();
+        _settingsPath = Path.Combine(dataDir, "display.txt");
+        var settings = File.Exists(_settingsPath) ? DisplaySettings.Parse(File.ReadAllLines(_settingsPath)) : new DisplaySettings();
+        _hd = settings.Hd && !args.Contains("--classic");
+        _hdOptions = _hdOptions with { Crt = settings.Crt, Widescreen = settings.Widescreen };
+        _session.Reverb = settings.Reverb;
+        if (settings.Fullscreen) ToggleFullScreen();
+
+        _audio = new DynamicSoundEffectInstance(SampleRate, AudioChannels.Stereo);
+        _audio.Play();
         base.Initialize();
     }
 
@@ -161,13 +108,13 @@ public sealed class JoustGame : Game
         if (FnPressed(k, alt, 1))
             _showObjects = !_showObjects;
         if (FnPressed(k, alt, 3))
-            _machine.Reset();
+            _session.Reset();
         if (FnPressed(k, alt, 5))
             _hd = !_hd;
         if (FnPressed(k, alt, 8))
             _hdOptions = _hdOptions with { Widescreen = !_hdOptions.Widescreen };
         if (FnPressed(k, alt, 7))
-            _reverbOn = !_reverbOn;
+            _session.Reverb = !_session.Reverb;
         if (FnPressed(k, alt, 6))
             _hdOptions = _hdOptions with { Crt = !_hdOptions.Crt };
 
@@ -176,7 +123,7 @@ public sealed class JoustGame : Game
         var pad1 = GamePad.GetState(PlayerIndex.One);
         var pad2 = GamePad.GetState(PlayerIndex.Two);
 
-        var i = _machine.Inputs;
+        var i = _session.Inputs;
         i.P1Left = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.A) || PadLeft(pad1);
         i.P1Right = k.IsKeyDown(Keys.Right) || k.IsKeyDown(Keys.D) || PadRight(pad1);
         i.P1Flap = k.IsKeyDown(Keys.Space) || k.IsKeyDown(Keys.LeftControl) || PadFlap(pad1);
@@ -186,38 +133,31 @@ public sealed class JoustGame : Game
         bool Digit(Keys d) => !alt && k.IsKeyDown(d);                // with Alt, digits are the F-keys
         i.Start1 = Digit(Keys.D1) || pad1.IsButtonDown(Buttons.Start);
         i.Start2 = Digit(Keys.D2) || pad2.IsButtonDown(Buttons.Start);
+        long frame = _session.Machine.Frame;
         i.CoinLeft = Digit(Keys.D5) || pad1.IsButtonDown(Buttons.Back)
-            || (_autoCoin && _machine.Frame % 300 is >= 0 and < 4 && _machine.Frame > 600);   // --autocoin: a coin every 5 s
+            || (_autoCoin && frame % 300 is >= 0 and < 4 && frame > 600);   // --autocoin: a coin every 5 s
         i.CoinRight = Digit(Keys.D6) || pad2.IsButtonDown(Buttons.Back);
         i.Advance = FnDown(k, alt, 2);
         i.AutoUp = FnDown(k, alt, 4);
+        _previousKeys = k;
 
         double start = _clock.Elapsed.TotalMilliseconds;
-        if (_halted != null)
+        if (_session.Halted != null)
         {
-            Window.Title = "JoustX stopped: " + _halted;
+            Window.Title = "JoustX stopped: " + _session.Halted;
             base.Update(gameTime);
             return;
         }
-        try
-        {
-            _machine.RunFrame();
-        }
-        catch (Port.Routines.RomTamperedException e)
-        {
-            _halted = e.Message;                                 // freeze on the last picture
-        }
-        _events.Update();
+        _session.RunFrame();
         SubmitAudio();
         _updateMs = 0.9 * _updateMs + 0.1 * (_clock.Elapsed.TotalMilliseconds - start);
         _updates++;
-        _previousKeys = k;
         if (start - _lastTitle >= 1000)
         {
             _fps = _draws; _ups = _updates; _draws = _updates = 0; _lastTitle = start;
             Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  F11 fullscreen (Alt+1..8 = F1..F8)  |  5 coin  1/2 start  |  " +
                 $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}  |  " +
-                $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_soundCommands} sounds (last ${_lastSound:X2})";
+                $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_session.SoundCommands} sounds (last ${_session.LastSound:X2})";
             _peak = 0;
         }
         base.Update(gameTime);
@@ -251,38 +191,22 @@ public sealed class JoustGame : Game
         p.IsConnected && (p.IsButtonDown(Buttons.A) || p.IsButtonDown(Buttons.B) || p.IsButtonDown(Buttons.X));
 
     /// <summary>
-    /// Hands this frame's sound-board output to the audio device. If the device has fallen
-    /// behind by more than a few frames, the frame is dropped rather than letting latency grow.
+    /// Hands this frame's sound to the audio device. If the device has fallen behind by more than
+    /// a few frames, the frame is dropped rather than letting latency grow.
     /// </summary>
     private void SubmitAudio()
     {
-        int n = _sound.EndFrame(_samples);
-        if (n == 0) return;
+        var stereo = _session.Audio;
+        if (stereo.Length == 0) return;
         if (_audio.PendingBufferCount > 4) { _dropped++; return; }
-        for (int s = 0; s < n; s++)
+        for (int s = 0; s < stereo.Length; s++)
         {
-            // DC blocker: the DAC rests at whatever level a sound left it, which would click.
-            float x = _samples[s];
-            _dcOut = x - _dcIn + 0.9985f * _dcOut;
-            _dcIn = x;
-            _samples[s] = _dcOut;
-        }
-        if (_reverbOn)
-        {
-            _reverb.Process(_samples.AsSpan(0, n), _stereo);
-        }
-        else
-        {
-            for (int s = 0; s < n; s++) _stereo[2 * s] = _stereo[2 * s + 1] = _samples[s];
-        }
-        for (int s = 0; s < 2 * n; s++)
-        {
-            _peak = Math.Max(_peak, Math.Abs(_stereo[s]));
-            short v = (short)Math.Clamp(_stereo[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
+            _peak = Math.Max(_peak, Math.Abs(stereo[s]));
+            short v = (short)Math.Clamp(stereo[s] * 0.8f * short.MaxValue, short.MinValue, short.MaxValue);
             _pcm[2 * s] = (byte)v;
             _pcm[2 * s + 1] = (byte)(v >> 8);
         }
-        _audio.SubmitBuffer(_pcm, 0, n * 4);
+        _audio.SubmitBuffer(_pcm, 0, stereo.Length * 2);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -293,11 +217,9 @@ public sealed class JoustGame : Game
         var dest = FitRectangle(GraphicsDevice.Viewport.Bounds, wide ? 16f / 9f : 4f / 3f);
         if (_hd)
         {
-            _machine.RenderIndices(_indices);
-            for (int c = 0; c < 16; c++) _palette[c] = JoustMachine.PaletteToArgb(_machine.Palette[c]);
-            _renderer.Render(_indices, _palette, _machine.Frame, _hdOptions);
+            var picture = _session.RenderHd(_hdOptions);
             var texture = wide ? _hdWide : _hdScreen;
-            texture.SetData(_renderer.Output, 0, texture.Width * texture.Height);
+            texture.SetData(picture, 0, texture.Width * texture.Height);
             _batch.Begin(samplerState: SamplerState.LinearClamp);
             _batch.Draw(texture, dest, Color.White);
             if (wide)                                            // the object boxes (F1) are relative to the field
@@ -305,12 +227,7 @@ public sealed class JoustGame : Game
         }
         else
         {
-            _machine.RenderArgb(_argb);
-            for (int p = 0; p < _argb.Length; p++)
-            {
-                uint c = _argb[p]; // AARRGGBB -> AABBGGRR (MonoGame Color is RGBA in memory)
-                _rgba[p] = (c & 0xFF00FF00) | ((c >> 16) & 0xFF) | ((c & 0xFF) << 16);
-            }
+            _session.RenderClassic(_rgba, abgr: true);           // MonoGame's Color is RGBA in memory
             _screen.SetData(_rgba);
             _batch.Begin(samplerState: SamplerState.PointClamp);
             _batch.Draw(_screen, dest, Visible, Color.White);
@@ -326,7 +243,7 @@ public sealed class JoustGame : Game
     private void DrawObjectBoxes(Rectangle dest)
     {
         float sx = dest.Width / (float)Visible.Width, sy = dest.Height / (float)Visible.Height;
-        foreach (var o in _state.ReadObjects(_objects))
+        foreach (var o in _session.State.ReadObjects(_objects))
         {
             var color = o.Kind switch
             {
@@ -366,37 +283,22 @@ public sealed class JoustGame : Game
 
     protected override void OnExiting(object sender, ExitingEventArgs args)
     {
-        if (_machine != null && _cmosPath.Length > 0 && !IsBlank(_machine.Cmos))
-            File.WriteAllBytes(_cmosPath, _machine.Cmos);
-        SaveSettings();
+        if (_session != null)
+        {
+            SaveCmos();
+            if (_settingsPath.Length > 0)
+                File.WriteAllLines(_settingsPath, new DisplaySettings
+                {
+                    Hd = _hd, Crt = _hdOptions.Crt, Widescreen = _hdOptions.Widescreen,
+                    Reverb = _session.Reverb, Fullscreen = _graphics.IsFullScreen,
+                }.ToLines());
+        }
         base.OnExiting(sender, args);
     }
 
-    /// <summary>The CMOS keeps 4-bit values; if every one is the same, nothing was ever stored.</summary>
-    private static bool IsBlank(byte[] cmos) => cmos.All(b => (b & 0x0F) == (cmos[0] & 0x0F));
-
-    /// <summary>The F5-F8 and fullscreen choices, kept between runs as "name=true|false" lines.</summary>
-    private void LoadSettings()
+    private void SaveCmos()
     {
-        if (!File.Exists(_settingsPath)) return;
-        var s = File.ReadAllLines(_settingsPath)
-            .Select(l => l.Split('=', 2))
-            .Where(p => p.Length == 2 && bool.TryParse(p[1], out _))
-            .ToDictionary(p => p[0].Trim(), p => bool.Parse(p[1]));
-        if (s.TryGetValue("hd", out bool hd) && !Environment.GetCommandLineArgs().Contains("--classic")) _hd = hd;
-        if (s.TryGetValue("crt", out bool crt)) _hdOptions = _hdOptions with { Crt = crt };
-        if (s.TryGetValue("widescreen", out bool wide)) _hdOptions = _hdOptions with { Widescreen = wide };
-        if (s.TryGetValue("reverb", out bool reverb)) _reverbOn = reverb;
-        if (s.TryGetValue("fullscreen", out bool full) && full) ToggleFullScreen();
-    }
-
-    private void SaveSettings()
-    {
-        if (_settingsPath.Length == 0) return;
-        File.WriteAllLines(_settingsPath,
-        [
-            $"hd={_hd}", $"crt={_hdOptions.Crt}", $"widescreen={_hdOptions.Widescreen}", $"reverb={_reverbOn}",
-            $"fullscreen={_graphics.IsFullScreen}",
-        ]);
+        if (_session.Cmos is { } cmos)
+            File.WriteAllBytes(_cmosPath, cmos);
     }
 }
