@@ -66,6 +66,32 @@ public sealed class HdRenderer
     /// <param name="frame">Frame number, for the animated effects.</param>
     public void Render(ReadOnlySpan<byte> indices, ReadOnlySpan<uint> palette, long frame, HdOptions options)
     {
+        Prepare(indices, palette, frame, options);
+        Compose(options);
+    }
+
+    /// <summary>The CPU's full-size compose of the frame last <see cref="Prepare"/>d, into <see cref="Output"/>.</summary>
+    public void Compose(HdOptions options)
+    {
+        OutputWidth = options.Widescreen ? WideWidth : Width;
+        Parallel.For(0, Height, y =>
+        {
+            ComposeRow(y, Time, Flicker, options);
+            if (options.Widescreen) ComposeSides(y, options);
+        });
+        if (options.Particles)
+            Effects.Draw(Output, OutputWidth, (OutputWidth - Width) / 2, options.Abgr);
+    }
+
+    /// <summary>
+    /// The low-resolution work: the visible field's indices, the palette, the backdrop's fade and
+    /// the particles' step; and, for the CPU's <see cref="Compose"/> (<paramref name="forCpu"/>),
+    /// the Scale4x picture and the bloom and heat light. A GPU renderer does those itself, from
+    /// <see cref="Low"/>, <see cref="PaletteRgb"/>, <see cref="Hot"/> and the frame's
+    /// <see cref="Time"/>, <see cref="Flicker"/> and <see cref="Arena"/>.
+    /// </summary>
+    public void Prepare(ReadOnlySpan<byte> indices, ReadOnlySpan<uint> palette, long frame, HdOptions options, bool forCpu = true)
+    {
         for (int i = 0; i < 16; i++)
         {
             float r = ((palette[i] >> 16) & 0xFF) / 255f, g = ((palette[i] >> 8) & 0xFF) / 255f, b = (palette[i] & 0xFF) / 255f;
@@ -75,8 +101,11 @@ public sealed class HdRenderer
         for (int y = 0; y < VisibleHeight; y++)
             indices.Slice((y + VisibleY) * SourceWidth + VisibleX, VisibleWidth).CopyTo(_low.AsSpan(y * VisibleWidth));
 
-        PixelScaler.Scale4x(_low, VisibleWidth, VisibleHeight, _mid, _high);
-        BuildLight(options);
+        if (forCpu)
+        {
+            PixelScaler.Scale4x(_low, VisibleWidth, VisibleHeight, _mid, _high);
+            BuildLight(options);
+        }
 
         // The cavern belongs to the arena: shown while the lava is on screen (play and the attract
         // demo), faded out on the title, high-score and self-test screens, which are black in the
@@ -91,20 +120,41 @@ public sealed class HdRenderer
         }
         _arena += ((lavaRows >= 3 ? 1f : 0f) - _arena) * 0.08f;
 
-        float t = frame;
-        float flicker = 1f + 0.10f * MathF.Sin(t * 0.071f) + 0.05f * MathF.Sin(t * 0.23f + 1.3f);
-        OutputWidth = options.Widescreen ? WideWidth : Width;
-        Parallel.For(0, Height, y =>
-        {
-            ComposeRow(y, t, flicker, options);
-            if (options.Widescreen) ComposeSides(y, options);
-        });
+        Time = frame;
+        Flicker = 1f + 0.10f * MathF.Sin(Time * 0.071f) + 0.05f * MathF.Sin(Time * 0.23f + 1.3f);
         if (options.Particles)
-        {
             Effects.Step(_low, _hot, LavaTop, embers: _arena > 0.5f);   // embers rise only off real lava
-            Effects.Draw(Output, OutputWidth, (OutputWidth - Width) / 2, options.Abgr);
-        }
     }
+
+    /// <summary>The visible 292x240 field, one palette index per pixel (after <see cref="Prepare"/>).</summary>
+    public ReadOnlySpan<byte> Low => _low;
+
+    /// <summary>The 16 palette colours as linear 0-1 R, G, B.</summary>
+    public ReadOnlySpan<float> PaletteRgb => _palette;
+
+    /// <summary>Which palette entries are lava and fire red.</summary>
+    public ReadOnlySpan<bool> Hot => _hot;
+
+    /// <summary>The bloom light at the field's size, R, G, B per pixel (already blurred).</summary>
+    public ReadOnlySpan<float> Glow => _glow;
+
+    /// <summary>The lava's heat light at the field's size, R, G, B per pixel (already blurred).</summary>
+    public ReadOnlySpan<float> Heat => _heat;
+
+    /// <summary>The cavern backdrop (static).</summary>
+    public Backdrop Cavern => _backdrop;
+
+    /// <summary>The frame number, for the animated effects.</summary>
+    public float Time { get; private set; }
+
+    /// <summary>The lava light's flicker this frame (about 0.85-1.15).</summary>
+    public float Flicker { get; private set; }
+
+    /// <summary>0..1: how much of the cavern backdrop shows (only while lava is on screen).</summary>
+    public float Arena => _arena;
+
+    /// <summary>Rows of the visible field from which lava can show (shimmer applies below).</summary>
+    public const int LavaRow = LavaTop;
 
     /// <summary>Embers and spark bursts drawn over the frame (the host adds bursts for events).</summary>
     public Particles Effects { get; } = new();

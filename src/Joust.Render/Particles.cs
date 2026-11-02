@@ -65,6 +65,20 @@ public sealed class Particles
         }
     }
 
+    /// <summary>One particle as a soft dot: centre in HD field pixels, colour, Gaussian size and brightness.</summary>
+    public readonly record struct Dot(float X, float Y, float R, float G, float B, float Size, float Intensity);
+
+    /// <summary>The live particles as dots (for a renderer that draws them itself, such as the GPU's).</summary>
+    public void Dots(List<Dot> into)
+    {
+        into.Clear();
+        foreach (var p in _live)
+        {
+            float fade = p.Life / p.MaxLife;
+            into.Add(new Dot(p.X, p.Y, p.R, p.G, p.B, p.Size, fade * fade * 1.4f));
+        }
+    }
+
     /// <summary>Additively splat each particle as a soft dot into the packed output.</summary>
     internal void Draw(uint[] output, int stride, int offsetX, bool abgr)
     {

@@ -33,6 +33,8 @@ public sealed class JoustGame : Game
     private HdOptions _hdOptions = new() { Abgr = true };
     private Texture2D _hdScreen = null!, _hdWide = null!;
     private bool _hd = true;
+    private GpuRenderer _gpu = null!;
+    private bool _gpuHd = !Environment.GetCommandLineArgs().Contains("--cpu-render");   // F9: the CPU renderer, for comparison
 
     private const int SampleRate = 48000;
     private const float StickDeadZone = 0.35f;
@@ -95,12 +97,22 @@ public sealed class JoustGame : Game
         _white = new Texture2D(GraphicsDevice, 1, 1);
         _white.SetData([Color.White]);
 
-        // Draw both pictures once now, so the renderer is compiled and the textures are on the
+        _gpu = new GpuRenderer(GraphicsDevice);
+
+        var compare = Environment.GetCommandLineArgs().SkipWhile(a => a != "--compare-render").Skip(1).FirstOrDefault();
+        if (compare != null)
+        {
+            RenderCompare.Run(_session, _gpu, GraphicsDevice, compare);
+            Exit();
+            return;
+        }
+
+        // Draw the pictures once now, so the renderers are compiled and the textures are on the
         // GPU before the game starts. Then start the clock afresh: otherwise the fixed time step
         // makes up for the loading time by running a burst of frames back to back, and their
         // sound overflows the audio queue.
-        _hdScreen.SetData(_session.RenderHd(_hdOptions with { Widescreen = false }), 0, _hdScreen.Width * _hdScreen.Height);
-        _hdWide.SetData(_session.RenderHd(_hdOptions with { Widescreen = true }), 0, _hdWide.Width * _hdWide.Height);
+        _gpu.Render(_session.PrepareHd(_hdOptions with { Widescreen = false }), _hdOptions with { Widescreen = false });
+        _gpu.Render(_session.PrepareHd(_hdOptions with { Widescreen = true }), _hdOptions with { Widescreen = true });
         _session.RenderClassic(_rgba, abgr: true);
         _screen.SetData(_rgba);
         ResetElapsedTime();
@@ -127,6 +139,8 @@ public sealed class JoustGame : Game
             _session.Reverb = !_session.Reverb;
         if (FnPressed(k, alt, 6))
             _hdOptions = _hdOptions with { Crt = !_hdOptions.Crt };
+        if (FnPressed(k, alt, 9))
+            _gpuHd = !_gpuHd;
 
         // Xbox (XInput) controllers: pad 1 and pad 2 are players 1 and 2. D-pad or left stick
         // steers, A/B/X flaps, Start starts that player's game, Back drops a coin.
@@ -171,7 +185,7 @@ public sealed class JoustGame : Game
         if (start - _lastTitle >= 1000)
         {
             _fps = _draws; _ups = _updates; _draws = _updates = 0; _lastTitle = start;
-            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  F11 fullscreen (Alt+1..8 = F1..F8)  |  5 coin  1/2 start  |  " +
+            Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  F9 {(_gpuHd ? "GPU" : "CPU")}  F11 fullscreen (Alt+1..9 = F1..F9)  |  5 coin  1/2 start  |  " +
                 $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}  |  " +
                 $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_session.SoundCommands} sounds (last ${_session.LastSound:X2})";
             _peak = 0;
@@ -235,9 +249,15 @@ public sealed class JoustGame : Game
         var dest = FitRectangle(GraphicsDevice.Viewport.Bounds, wide ? 16f / 9f : 4f / 3f);
         if (_hd)
         {
-            var picture = _session.RenderHd(_hdOptions);
-            var texture = wide ? _hdWide : _hdScreen;
-            texture.SetData(picture, 0, texture.Width * texture.Height);
+            Texture2D texture;
+            if (_gpuHd)
+                texture = _gpu.Render(_session.PrepareHd(_hdOptions), _hdOptions);
+            else
+            {
+                var picture = _session.RenderHd(_hdOptions);
+                texture = wide ? _hdWide : _hdScreen;
+                texture.SetData(picture, 0, texture.Width * texture.Height);
+            }
             _batch.Begin(samplerState: SamplerState.LinearClamp);
             _batch.Draw(texture, dest, Color.White);
             if (wide)                                            // the object boxes (F1) are relative to the field

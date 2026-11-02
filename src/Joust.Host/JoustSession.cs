@@ -167,6 +167,19 @@ public sealed class JoustSession
         return Renderer.Output;
     }
 
+    /// <summary>
+    /// Only the HD picture's low-resolution work (<see cref="HdRenderer.Prepare"/>), for a front
+    /// end that draws the rest on the GPU from <see cref="Renderer"/>; with <paramref name="forCpu"/>
+    /// also what the CPU's compose needs (to compare the two).
+    /// </summary>
+    public HdRenderer PrepareHd(HdOptions options, bool forCpu = false)
+    {
+        Machine.RenderIndices(_indices);
+        for (int c = 0; c < 16; c++) _palette[c] = JoustMachine.PaletteToArgb(Machine.Palette[c]);
+        Renderer.Prepare(_indices, _palette, Machine.Frame, options, forCpu);
+        return Renderer;
+    }
+
     /// <summary>The original picture: the whole 304x256 frame buffer, ARGB (or ABGR) per pixel.</summary>
     public void RenderClassic(uint[] destination, bool abgr = false)
     {

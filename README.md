@@ -41,11 +41,14 @@ The app assembles the game from `joust-main-asm/` at startup and refuses to run 
 | F2 | Service "advance" switch |
 | F3 | Reset |
 | F5 / F6 / F7 / F8 | HD or classic graphics / CRT effect / reverb / widescreen (remembered between runs) |
+| F9 | HD drawn on the GPU (normal) or by the CPU renderer, for comparison |
 | F11 or Alt+Enter | Fullscreen (remembered between runs) |
-| Alt+1 … Alt+8 | Same as F1 … F8, for keyboards whose top row sends media keys |
+| Alt+1 … Alt+9 | Same as F1 … F9, for keyboards whose top row sends media keys |
 | Esc | Quit |
 
 Xbox (XInput) pads 1 and 2 play players 1 and 2: D-pad or left stick to steer, A/B/X to flap, Start to start, Back to insert a coin. `--classic` starts with the original graphics.
+
+The HD picture is drawn on the GPU by shaders (`src/Joust.App/Shaders/Hd.fx`), about 1.4 ms a frame; the CPU renderer in `Joust.Render` stays as the reference, and `--cpu-render` (or F9) uses it. `--compare-render <dir>` draws a few frames both ways and writes the pictures, their difference and a report. The build recompiles the shaders when `Hd.fx` changes, with the repository's shader compiler (run `dotnet tool restore` once); without it the checked-in `Hd.mgfxo` is used.
 
 ## Tools
 

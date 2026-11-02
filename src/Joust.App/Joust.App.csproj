@@ -12,6 +12,8 @@
          call, not after a slow first phase: that phase made the first draws take up to 170 ms,
          and the fixed time step then ran a burst of frames whose sound overflowed the queue. -->
     <TieredCompilationQuickJitForLoops>false</TieredCompilationQuickJitForLoops>
+    <!-- The GPU renderer's per-pixel uploads run here every frame, also in a Debug `dotnet run`. -->
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +26,17 @@
     <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
     <None Include="Icon.ico" />
   </ItemGroup>
+
+  <!-- The HD shaders. Hd.mgfxo is checked in; it is rebuilt from Hd.fx when that changes, with
+       the repository's mgfxc tool ("dotnet tool restore" once). Without the tool the build warns
+       and keeps the checked-in shaders. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Shaders\Hd.mgfxo" LogicalName="Hd.mgfxo" />
+    <None Include="Shaders\Hd.fx" />
+  </ItemGroup>
+  <Target Name="CompileShaders" BeforeTargets="BeforeBuild" Inputs="Shaders\Hd.fx" Outputs="Shaders\Hd.mgfxo">
+    <Exec Command="dotnet mgfxc Shaders/Hd.fx Shaders/Hd.mgfxo /Profile:OpenGL" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="WarnAndContinue" />
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\Joust.Host\Joust.Host.csproj" />
