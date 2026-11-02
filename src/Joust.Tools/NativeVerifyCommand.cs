@@ -10,6 +10,8 @@ namespace Joust.Tools;
 /// The translated program runs under the hand-written routines unless --no-translated;
 /// --translated-only leaves the hand-written ones out, to check the translation by itself.
 /// --no-cpu runs the lockstep machine with no 6809 emulation (<see cref="NoCpuRuntime"/>).
+/// --chase-eggs plays with the <see cref="EggChaser"/> (player 1 goes for eggs and jousts from
+/// above) instead of the random player, so egg collection is well covered.
 /// --eggs makes every wave an egg wave (the <see cref="EggScenario"/>); --cliffs starts each game at wave 81,
 /// where the cliffs change (the <see cref="CliffScenario"/>).
 /// --troll runs the <see cref="TrollScenario"/>: the troll and a burnt bridge from the first wave,
@@ -33,10 +35,11 @@ internal static class NativeVerifyCommand
         bool profile = false;
         bool eggs = false;
         bool cliffs = false;
-        bool translated = true, handWritten = true, noCpu = false;
+        bool translated = true, handWritten = true, noCpu = false, chaseEggs = false;
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] == "--no-cpu") noCpu = true;
+            if (args[i] == "--chase-eggs") chaseEggs = true;
+            else if (args[i] == "--no-cpu") noCpu = true;
             else if (args[i] == "--no-translated") translated = false;
             else if (args[i] == "--translated-only") handWritten = false;
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
@@ -82,6 +85,10 @@ internal static class NativeVerifyCommand
             cliffScenario?.Apply(m);
         }
         int flaps = troll ? TrollScenario.FlapPercent : 18;
+        var layout = JoustLayout.FromSymbols(program.Symbols);
+        ITestPlayer Player(JoustMachine m, int seed) => chaseEggs
+            ? new EggChaser(new GameStateReader(m, layout), seed)
+            : new RandomPlayer(seed, twoPlayers, flaps);
 
         bool ok = true;
         foreach (int seed in seeds)
@@ -92,7 +99,7 @@ internal static class NativeVerifyCommand
             var m = Boot(image, cmos);
             Install(m, program.Symbols);
             var verifier = new NativeVerifier(m) { TraceOriginal = trace };
-            var player = new RandomPlayer(seed, twoPlayers, flaps);
+            var player = Player(m, seed);
             for (int f = 0; f < frames; f++)
             {
                 player.Apply(m.Inputs, f);
@@ -111,8 +118,8 @@ internal static class NativeVerifyCommand
             native.IdleStart = (ushort)program.Symbols["EXEINT"];
             native.IdleEnd = (ushort)(native.IdleStart + 4);          // TST ,X / BNE EXEINT
             var runtime = noCpu ? NoCpuRuntime.Attach(native) : null;
-            var p1 = new RandomPlayer(seed, twoPlayers, flaps);
-            var p2 = new RandomPlayer(seed, twoPlayers, flaps);
+            var p1 = Player(original, seed);
+            var p2 = Player(native, seed);
             var profileCycles = new long[0x10000];
             if (profile) native.StepHook = (pc, cycles) => profileCycles[pc] += cycles;
             string? diff = null;

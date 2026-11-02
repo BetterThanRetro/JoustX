@@ -33,11 +33,17 @@ public static class Lockstep
     }
 }
 
+/// <summary>A scripted player for long test runs: sets the inputs for each frame.</summary>
+public interface ITestPlayer
+{
+    void Apply(JoustInputs i, long frame);
+}
+
 /// <summary>
 /// Deterministic pseudo-random player: keeps feeding coins and starts, and flaps and steers
 /// with a seeded generator, so long runs cover many waves, deaths and game-overs.
 /// </summary>
-public sealed class RandomPlayer(int seed, bool twoPlayers = false, int flapPercent = 18)
+public sealed class RandomPlayer(int seed, bool twoPlayers = false, int flapPercent = 18) : ITestPlayer
 {
     private uint _state = (uint)seed * 2654435761u + 1;
     private int _flapHold, _dir, _dirHold;

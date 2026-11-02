@@ -106,6 +106,42 @@ public class TranslationTests
     }
 
     [Fact]
+    public void ChasingEggsMatchesTheOriginalCallByCallAndWithNoCpu()
+    {
+        // The egg chaser collects eggs, which the random player rarely does.
+        var layout = JoustLayout.FromSymbols(Program.Value.Symbols);
+        var verified = Boot();
+        NativeRoutines.InstallAll(verified, Program.Value.Symbols);
+        var v = new NativeVerifier(verified);
+        var chaser = new EggChaser(new GameStateReader(verified, layout), seed: 3);
+        for (int f = 0; f < 8000; f++)
+        {
+            chaser.Apply(verified.Inputs, f);
+            verified.RunFrame();
+        }
+        Assert.True(v.TotalMismatches == 0, string.Join("\n", v.Reports));
+        Assert.True(v.Stats.TryGetValue("EGGSC2", out var collected) && collected.Calls > 10,
+            $"eggs collected: {(collected?.Calls ?? 0)} (went for eggs in {chaser.EggFrames} frames)");
+
+        var original = Boot();
+        var native = Boot();
+        NativeRoutines.InstallAll(native, Program.Value.Symbols);
+        NoCpuRuntime.Attach(native);
+        var p1 = new EggChaser(new GameStateReader(original, layout), seed: 3);
+        var p2 = new EggChaser(new GameStateReader(native, layout), seed: 3);
+        for (int f = 0; f < 8000; f++)
+        {
+            p1.Apply(original.Inputs, f);
+            p2.Apply(native.Inputs, f);
+            original.RunFrame();
+            native.RunFrame();
+            var diff = Lockstep.Compare(original, native);
+            Assert.True(diff == null, $"frame {f}: {diff}");
+        }
+        Assert.Equal(0, native.CpuSteps);
+    }
+
+    [Fact]
     public void WithNoCpuTheOperatorMenusAreIdentical()
     {
         // Advance on the coin door every 6 s: the hardware tests, bookkeeping and adjustments, stepped
