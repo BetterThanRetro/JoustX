@@ -138,14 +138,14 @@ public sealed class JoustMachine : IBus
                     }
                 }
                 if (Cpu.PC >= IdleStart && Cpu.PC < IdleEnd)
-                    IdleCycles += Cpu.Step();
+                    IdleCycles += Step();
                 else if (StepHook != null)
                 {
                     ushort pc = Cpu.PC;
-                    StepHook(pc, Cpu.Step());
+                    StepHook(pc, Step());
                 }
                 else
-                    Cpu.Step();
+                    Step();
             }
             // The monitor shows each line as the beam passes it, while the game is still erasing
             // and redrawing objects elsewhere; latch the line now so the picture is what a CRT shows.
@@ -158,6 +158,23 @@ public sealed class JoustMachine : IBus
 
     /// <summary>Called after each original (non-native, non-idle) instruction with its PC and cycles, for profiling.</summary>
     public Action<ushort, int>? StepHook { get; set; }
+
+    /// <summary>
+    /// Replaces the 6809 core where no native routine ran: takes a pending interrupt or runs one
+    /// instruction, and returns the cycles used. Set by the no-CPU runtime; null runs the CPU.
+    /// </summary>
+    public Func<int>? StepOverride { get; set; }
+
+    /// <summary>Instructions (and interrupt entries) the emulated 6809 core has run.</summary>
+    public long CpuSteps { get; private set; }
+
+    private int Step()
+    {
+        if (StepOverride != null)
+            return StepOverride();
+        CpuSteps++;
+        return Cpu.Step();
+    }
 
     /// <summary>Address range of a busy-wait loop whose cycles are counted as <see cref="IdleCycles"/>.</summary>
     public ushort IdleStart { get; set; }
@@ -192,6 +209,9 @@ public sealed class JoustMachine : IBus
     public void InstallNative(NativeRoutine routine, ushort address) => _natives[address] = routine;
 
     public void RemoveNative(ushort address) => _natives[address] = null;
+
+    /// <summary>The native routine installed at <paramref name="address"/>, if any.</summary>
+    public NativeRoutine? NativeAt(ushort address) => _natives[address];
 
     /// <summary>
     /// A native routine runs atomically, so it may only run when the original could not have
@@ -382,6 +402,9 @@ public sealed class JoustMachine : IBus
 
     /// <summary>Current player multiplexer (CB2 of the widget PIA): true = player 1.</summary>
     public bool WidgetMux => _mux;
+
+    /// <summary>True while the bank latch maps the program ROM over $0000-$8FFF for reads.</summary>
+    public bool RomBankSelected => _romBank;
 
     /// <summary>What reading widget port A would return with the multiplexer at <paramref name="player1"/>, without side effects.</summary>
     public byte PeekWidget(bool player1) => Pia0.PeekA(WidgetInputs(player1));

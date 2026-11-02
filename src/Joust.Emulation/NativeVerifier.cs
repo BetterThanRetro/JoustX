@@ -180,8 +180,12 @@ public sealed class NativeVerifier
     public string Summary()
     {
         var sb = new StringBuilder();
-        foreach (var (name, s) in Stats.OrderBy(k => k.Key))
+        foreach (var (name, s) in Stats.Where(k => !k.Key.StartsWith("gen:")).OrderBy(k => k.Key))
             sb.AppendLine($"  {name,-10} calls {s.Calls,8}  declined {s.Declined,6}  mismatches {s.Mismatches}");
+        // The translated program's routines (named gen:LABEL), as one line.
+        var gen = Stats.Where(k => k.Key.StartsWith("gen:")).Select(k => k.Value).ToList();
+        if (gen.Count > 0)
+            sb.AppendLine($"  translated: {gen.Count} routines, calls {gen.Sum(s => s.Calls)}  declined {gen.Sum(s => s.Declined)}  mismatches {gen.Sum(s => s.Mismatches)}");
         return sb.ToString();
     }
 }

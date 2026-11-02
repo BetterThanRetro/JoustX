@@ -30,7 +30,7 @@ Still open here:
 
 ## Phase 2: native C# port (strangler pattern)
 
-**Status:** the hook mechanism, both verifiers and the first routines are in place.
+**Status:** done. The game runs in C# with no CPU emulation (see the translation and no-CPU step below).
 
 | Routine | What it does | Native since |
 | --- | --- | --- |
@@ -126,7 +126,7 @@ Checksum step: 0 per-call mismatches, lockstep identical; natives now handle abo
 
 Tail step: the pterodactyl's flight loop (`PTEFLY`/`PTESTF`), the whole lava process (`NEXTLN`'s line fill in interrupt-safe chunks, `CHECK`, the bubbles and `BURSTR`), the high-score colour cycler (`CYCLE`) and `GSTART`'s idle poll are native. Lockstep identical over 3 seeds × 20,000 frames plus a two-player seed, 0 per-call mismatches. Natives handle about 97.5–98% of non-idle CPU time.
 
-Next: what's left is spread thin, each at most about 0.1%, and is now mostly hand-backs: native routines that let the original run a call because an interrupt edge falls inside it (`WRPIXH`, `WRRIDR`, `WRHOR2`, `AIROVR` …), plus a few small unported routines (`PEON`, `ATTRCT`, `RCMOS`, `ADGCEI`, `AIRRTS`, `THORSE`, `SRCNOF`). Removing the hand-backs needs step 4 below: interrupts and the scheduler in C#, so nothing has to fit between interrupt edges. The random test player rarely collects eggs, so egg coverage would benefit from a scripted "chase the egg" player. `verify-native --two-players` covers player 2 and player-vs-player play.
+Translation and no-CPU step (the end state, step 5 below): `joust-tools translate` turns the whole program, 9,696 instructions, into generated C# (`src/Joust.Port/Translated`), one `case` per instruction with its source line and exact cycles. It runs under the hand-written routines and takes their hand-backs. `NoCpuRuntime` then single-steps the few instructions that cross an interrupt edge or read I/O, and enters interrupts in C# at the same instruction boundary as the 6809, so the app runs with no CPU emulation. Verified with `verify-native --no-cpu` (3 seeds × 20,000 frames, two players, troll, eggs, cliffs, translation alone) and tests from power-on and through the operator menus: lockstep identical, 0 mismatches, 0 CPU steps. See [NO-CPU-PLAN.md](NO-CPU-PLAN.md). The random test player rarely collects eggs, so egg coverage would still benefit from a scripted "chase the egg" player.
 
 1. **Routine hooks.** Add a `NativeRoutines` table keyed by ROM address. When the PC reaches a hooked entry, the C# implementation runs against the *same* RAM, registers and stack, then returns as the original `RTS` would.
 2. **Lockstep verifier.** Run two machines side by side, pure original and hooked, with identical inputs. Compare RAM, palette and CMOS every frame and report the first diverging address, frame and routine. The golden replay script grows into a library of input recordings (wave 1–10, pterodactyls, lava troll, egg waves, two-player gladiator rounds, high-score entry).
@@ -139,7 +139,7 @@ Next: what's left is spread thin, each at most about 0.1%, and is now mostly han
    - wave control (`CIA`), dynamic difficulty tables (`DYNADJ`), transporters, cliff destruction
    - attract mode, high-score entry, audits
 4. **Scheduler last.** Replace the process list with C# coroutines (`SLEEP`/`NAP` become `yield`). The secondary-process budget is timing-dependent, so native routines carry a cycle cost measured from the emulator, which keeps frame-by-frame scheduling identical.
-5. **End state.** The runtime has no CPU emulation. The 6809 machine stays in the test suite as the oracle.
+5. **End state (done).** The runtime has no CPU emulation. The 6809 machine stays in the test suite as the oracle.
 
 ## Phase 3: 2026 graphics
 

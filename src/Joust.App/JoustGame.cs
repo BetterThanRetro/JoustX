@@ -9,8 +9,8 @@ using Microsoft.Xna.Framework.Input;
 namespace Joust.App;
 
 /// <summary>
-/// Host window. The original program runs on the reference machine every frame; this class
-/// only feeds it switches and presents its output. Rendering and audio upgrades plug in here
+/// Host window. The game runs on the reference machine every frame (in C#, with no 6809
+/// emulation, unless --cpu or --original); this class only feeds it switches and presents its output. Rendering and audio upgrades plug in here
 /// through <see cref="GameStateReader"/> and <see cref="JoustMachine.SoundCommand"/>.
 /// </summary>
 public sealed class JoustGame : Game
@@ -89,8 +89,15 @@ public sealed class JoustGame : Game
             throw new InvalidOperationException("Assembled ROMs do not match the original checksums.");
 
         _machine = new JoustMachine(program.Memory);
-        if (!Environment.GetCommandLineArgs().Contains("--original"))
+        // The game runs in C# with no 6809 emulation; --cpu keeps the emulated 6809 behind the C#
+        // code, and --original runs only the emulated original.
+        var args = Environment.GetCommandLineArgs();
+        if (!args.Contains("--original"))
+        {
             Port.NativeRoutines.InstallAll(_machine, program.Symbols);
+            if (!args.Contains("--cpu"))
+                Port.NoCpuRuntime.Attach(_machine);
+        }
         _state = new GameStateReader(_machine, JoustLayout.FromSymbols(program.Symbols));
         _events = new EventEffects(_state, _renderer.Effects);
         _machine.SoundCommand += cmd => { _lastSound = cmd; _soundCommands++; };

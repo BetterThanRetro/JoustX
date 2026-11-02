@@ -20,10 +20,16 @@ public sealed class AssemblyResult
     public required IReadOnlyList<string> Warnings { get; init; }
     public required int Passes { get; init; }
 
+    /// <summary>Every instruction the source assembled (not data), by address: where it came from and its text.</summary>
+    public required IReadOnlyDictionary<int, SourceLine> Instructions { get; init; }
+
     public bool Success => Errors.Count == 0;
 
     public byte[] Slice(int start, int length) => Memory.AsSpan(start, length).ToArray();
 }
+
+/// <summary>A source line: file name (no directory), 1-based line number and the text as written.</summary>
+public readonly record struct SourceLine(string File, int Line, string Text);
 
 /// <summary>
 /// A two-plus-pass 6809 assembler for the Macro Assembler {AS} dialect used by the Joust
@@ -45,6 +51,7 @@ public sealed partial class Assembler
     private readonly List<string> _warnings = [];
     private byte[] _memory = new byte[0x10000];
     private bool[] _written = new bool[0x10000];
+    private readonly Dictionary<int, SourceLine> _instructions = [];
     private int _pc;
     private int _linePc;
     private int _dpr = -1;
@@ -86,6 +93,7 @@ public sealed partial class Assembler
             Errors = _errors.ToList(),
             Warnings = _warnings.ToList(),
             Passes = pass + 1,
+            Instructions = new Dictionary<int, SourceLine>(_instructions),
         };
     }
 
@@ -102,6 +110,7 @@ public sealed partial class Assembler
         _warnings.Clear();
         _memory = new byte[0x10000];
         _written = new bool[0x10000];
+        _instructions.Clear();
         _pc = 0;
         _dpr = -1;
         _m6800 = false;
@@ -313,6 +322,8 @@ public sealed partial class Assembler
         }
         else if (Instructions6809.Table.TryGetValue(op, out var info))
         {
+            if (_final)
+                _instructions[_pc & 0xFFFF] = new SourceLine(Path.GetFileName(_file), _line, raw.Trim());
             AssembleInstruction(op, info, line.Operand);
             return;
         }

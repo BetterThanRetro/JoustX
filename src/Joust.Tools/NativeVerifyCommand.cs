@@ -6,6 +6,10 @@ namespace Joust.Tools;
 
 /// <summary>
 /// verify-native [--frames N] [--seeds 1,2,3] [--only SYM,...] [--trace] [--two-players] [--troll] [--probe LABEL,...] [--profile] [--eggs] [--cliffs]
+///               [--no-translated | --translated-only] [--no-cpu]
+/// The translated program runs under the hand-written routines unless --no-translated;
+/// --translated-only leaves the hand-written ones out, to check the translation by itself.
+/// --no-cpu runs the lockstep machine with no 6809 emulation (<see cref="NoCpuRuntime"/>).
 /// --eggs makes every wave an egg wave (the <see cref="EggScenario"/>); --cliffs starts each game at wave 81,
 /// where the cliffs change (the <see cref="CliffScenario"/>).
 /// --troll runs the <see cref="TrollScenario"/>: the troll and a burnt bridge from the first wave,
@@ -29,8 +33,12 @@ internal static class NativeVerifyCommand
         bool profile = false;
         bool eggs = false;
         bool cliffs = false;
+        bool translated = true, handWritten = true, noCpu = false;
         for (int i = 0; i < args.Length; i++)
         {
+            if (args[i] == "--no-cpu") noCpu = true;
+            else if (args[i] == "--no-translated") translated = false;
+            else if (args[i] == "--translated-only") handWritten = false;
             if (args[i] == "--frames") frames = int.Parse(args[++i]);
             else if (args[i] == "--seeds") seeds = args[++i].Split(',').Select(int.Parse).ToArray();
             else if (args[i] == "--only") only = new HashSet<string>(args[++i].Split(','), StringComparer.OrdinalIgnoreCase);
@@ -45,7 +53,7 @@ internal static class NativeVerifyCommand
 
         void Install(JoustMachine m, IReadOnlyDictionary<string, long> symbols)
         {
-            foreach (var r in NativeRoutines.Create())
+            foreach (var r in handWritten ? NativeRoutines.Create() : Array.Empty<NativeRoutine>())
             {
                 if (only != null && !only.Contains(r.Symbol)) continue;
                 r.Bind(symbols);
@@ -53,6 +61,8 @@ internal static class NativeVerifyCommand
             }
             foreach (string label in probes)
                 m.InstallNative(new Probe(label), (ushort)symbols[label]);
+            if (translated && !Joust.Port.Translated.Translation.Install(m))
+                throw new InvalidOperationException("the translated program does not match this ROM; run joust-tools translate");
         }
 
         string dir = JoustRomBuild.FindSourceDirectory(Environment.CurrentDirectory)
@@ -100,6 +110,7 @@ internal static class NativeVerifyCommand
             Install(native, program.Symbols);
             native.IdleStart = (ushort)program.Symbols["EXEINT"];
             native.IdleEnd = (ushort)(native.IdleStart + 4);          // TST ,X / BNE EXEINT
+            var runtime = noCpu ? NoCpuRuntime.Attach(native) : null;
             var p1 = new RandomPlayer(seed, twoPlayers, flaps);
             var p2 = new RandomPlayer(seed, twoPlayers, flaps);
             var profileCycles = new long[0x10000];
@@ -122,6 +133,8 @@ internal static class NativeVerifyCommand
             long busy = native.Cpu.Cycles - native.IdleCycles;
             Console.WriteLine($"  native share of non-idle CPU time: {100.0 * native.NativeCycles / busy:F1}% "
                               + $"(idle wait for the blitter IRQ: {100.0 * native.IdleCycles / native.Cpu.Cycles:F1}% of all cycles)");
+            if (runtime != null)
+                Console.WriteLine($"  no CPU: {native.CpuSteps} 6809 steps; {runtime.Steps} instructions single-stepped in C#, {runtime.Interrupts} interrupts entered in C#");
             if (profile) PrintProfile(profileCycles, busy, program.Symbols);
             ok &= diff == null;
         }

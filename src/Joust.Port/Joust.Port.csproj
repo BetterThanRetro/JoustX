@@ -8,6 +8,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- The game runs in this code every frame, also from a Debug build of the app. -->
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
 </Project>

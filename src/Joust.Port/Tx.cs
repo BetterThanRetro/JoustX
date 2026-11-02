@@ -98,7 +98,44 @@ public sealed class Tx
 
     public ushort Read16(int a) => (ushort)((Read(a) << 8) | Read(a + 1));
 
-    public void Write(int a, byte v) => _pending[a & 0xFFFF] = v;
+    public void Write(int a, byte v)
+    {
+        a &= 0xFFFF;
+        if (_undo != null)
+            _undo.Add((a, _pending.TryGetValue(a, out byte old), old));
+        _pending[a] = v;
+    }
+
+    // ------------------------------------------------------------------ undo points
+
+    private List<(int Address, bool Had, byte Old)>? _undo;
+
+    /// <summary>A cheap restore point (registers, cycles, and how far the write logs had got).</summary>
+    public readonly record struct UndoPoint(
+        byte A, byte B, byte DP, byte CC, ushort X, ushort Y, ushort U, ushort S, int Cycles, int StallCycles, int Undo, int Io);
+
+    /// <summary>
+    /// Takes a restore point. Unlike <see cref="Mark"/> it copies nothing: from the first call on,
+    /// each write logs what it replaced, so translated code can take one per instruction.
+    /// </summary>
+    public UndoPoint Point()
+    {
+        _undo ??= [];
+        return new(A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, _undo.Count, _io.Count);
+    }
+
+    public void Restore(UndoPoint p)
+    {
+        (A, B, DP, CC, X, Y, U, S, Cycles, StallCycles) = (p.A, p.B, p.DP, p.CC, p.X, p.Y, p.U, p.S, p.Cycles, p.StallCycles);
+        for (int i = _undo!.Count - 1; i >= p.Undo; i--)
+        {
+            var (a, had, old) = _undo[i];
+            if (had) _pending[a] = old;
+            else _pending.Remove(a);
+        }
+        _undo.RemoveRange(p.Undo, _undo.Count - p.Undo);
+        _io.RemoveRange(p.Io, _io.Count - p.Io);
+    }
 
     public void Write16(int a, ushort v)
     {
@@ -141,6 +178,16 @@ public sealed class Tx
         Apply();
         _c.Jump(pc, Cycles);
         return true;
+    }
+
+    /// <summary>
+    /// Like <see cref="CommitJump"/> without the interrupt-window check, for exactly one
+    /// instruction: an interrupt that arrives during it is taken after it, as the CPU does.
+    /// </summary>
+    public void CommitJumpNow(ushort pc)
+    {
+        Apply();
+        _c.Jump(pc, Cycles);
     }
 
     private void Apply()

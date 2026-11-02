@@ -6,6 +6,8 @@ A C# port of Williams' 1982 **Joust** that keeps the original game mechanics exa
 
 The approach is a *verified port*: the original 6809 program, assembled from source, runs on a C# reference machine. That machine is the ground truth that the native C# rewrite is checked against, routine by routine. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
+The game now runs entirely in C#, with no CPU emulation. The hot paths are hand-written; the rest is translated from the original source by `joust-tools translate`. It stays identical to the original frame by frame. See [docs/NO-CPU-PLAN.md](docs/NO-CPU-PLAN.md).
+
 ## Layout
 
 | Project | What it is |
@@ -13,9 +15,9 @@ The approach is a *verified port*: the original 6809 program, assembled from sou
 | `joust-main-asm/` | Original source (SynaMax's rewrite for Macro Assembler {AS}), untouched |
 | `src/Joust.Assembler` | C# 6809 assembler for the AS dialect. Builds the 12 main-board ROMs from source |
 | `src/Joust.Emulation` | 6809 CPU, SC1 blitter, 6821 PIAs, CMOS, video timing (the reference machine), plus `GameStateReader` |
-| `src/Joust.Port` | The native C# port: routines that replace original subroutines, verified against them |
-| `src/Joust.App` | MonoGame window: plays the game (with native routines; `--original` for pure emulation), keyboard input, CMOS persistence |
-| `src/Joust.Tools` | CLI: `build-roms`, headless `run` with screenshots and scripted input |
+| `src/Joust.Port` | The native C# port: hand-written routines, the translated program (`Translated/`) and the no-CPU runtime, all verified against the original |
+| `src/Joust.App` | MonoGame window: plays the game (in C# with no CPU; `--cpu` keeps the emulated 6809 behind the C# code, `--original` runs pure emulation), keyboard input, CMOS persistence |
+| `src/Joust.Tools` | CLI: `build-roms`, headless `run` with screenshots and scripted input, `verify-native`, `translate`, `bench`, `census` |
 | `tests/Joust.Tests` | Assembler encodings, CPU semantics, ROM checksums, golden replay |
 
 ## Run it
@@ -55,7 +57,13 @@ dotnet run --project src/Joust.Tools -- run build/roms/joust_main_64k.bin 2200 b
 dotnet run --project src/Joust.Tools -- verify-native --frames 20000 --seeds 1,2,3
 ```
 
-`verify-native` plays deterministic pseudo-random games and checks every native routine against the original two ways. Per call, it runs both versions from the same state and compares registers, flags, cycles and memory writes. In lockstep, it runs an all-original machine and a native machine side by side and compares them every frame.
+`verify-native` plays deterministic pseudo-random games and checks every native routine against the original two ways. Per call, it runs both versions from the same state and compares registers, flags, cycles and memory writes. In lockstep, it runs an all-original machine and a native machine side by side and compares them every frame. `--no-cpu` runs the lockstep machine with no CPU emulation; `--translated-only` checks the translated program without the hand-written routines.
+
+```bash
+dotnet run --project src/Joust.Tools -- translate
+```
+
+`translate` regenerates `src/Joust.Port/Translated/*.g.cs` from the original source. The translation checks at start-up that the ROM is the one it was made from. `bench` compares the speed of the original, of C# with the CPU behind it, and of C# with no CPU.
 
 `build-roms` writes the 12 ROM files (MAME names), a 64K image and a symbol file, then checks every ROM against the game's own checksum table. `run` emulates headlessly (about 4,000 fps), saves PNG screenshots and lists live objects. `--watch C000-C00F` traces writes to an address range.
 

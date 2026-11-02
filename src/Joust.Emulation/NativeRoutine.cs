@@ -89,6 +89,12 @@ public sealed class NativeContext
     /// <summary>Current player multiplexer of the widget PIA (true = player 1).</summary>
     public bool WidgetMux => _m.WidgetMux;
 
+    /// <summary>True while reads of $0000-$8FFF see the program ROM rather than video RAM.</summary>
+    public bool RomBankSelected => _m.RomBankSelected;
+
+    /// <summary>The value last written to blitter register <paramref name="reg"/> (0-7).</summary>
+    public byte BlitterRegister(int reg) => _m.Peek((ushort)(0xCA00 | (reg & 7)));
+
     /// <summary>Widget port A as a read would return it with the multiplexer at <paramref name="player1"/> (no side effects).</summary>
     public byte PeekWidget(bool player1) => _m.PeekWidget(player1);
 
@@ -236,6 +242,15 @@ public static class Alu6809
         byte r = (byte)((m << 1) | ((cc & C) != 0 ? 1 : 0));
         cc = Set(cc, C, (m & 0x80) != 0);
         cc = Set(cc, V, ((m ^ r) & 0x80) != 0);
+        cc = NZ8(cc, r);
+        return r;
+    }
+
+    /// <summary>LSR: C from bit 0, N cleared, Z from the result (V unchanged).</summary>
+    public static byte Lsr8(ref byte cc, byte m)
+    {
+        cc = Set(cc, C, (m & 1) != 0);
+        byte r = (byte)(m >> 1);
         cc = NZ8(cc, r);
         return r;
     }

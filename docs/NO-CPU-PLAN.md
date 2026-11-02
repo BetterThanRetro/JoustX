@@ -3,6 +3,44 @@
 Goal: the game runs entirely in C#, with no 6809 emulation and identical gameplay. The emulated
 original stays in the test suite as the reference (roadmap step 5).
 
+## Outcome (2 November 2026)
+
+**Done.** The app now runs the game with no 6809 emulation, identical to the original frame by
+frame. It took two steps instead of the five phases below.
+
+1. **The whole program translated to C#.** `joust-tools translate` turns every one of the 9,696
+   instructions in the source into a `case` of a generated C# routine
+   (`src/Joust.Port/Translated/*.g.cs`), with its source line as a comment.
+   - Each instruction's cycle count is measured on the reference CPU.
+   - Branches inside a routine are `goto case`; calls, returns and jumps leave through the
+     dispatcher.
+   - The translation runs under the hand-written routines and also takes the calls they hand
+     back.
+2. **The no-CPU runtime** (`NoCpuRuntime`). Translated code stops at an exact instruction boundary
+   whenever the original's timing matters:
+   - before an instruction that would cross an interrupt edge;
+   - before an instruction that reads an I/O register;
+   - after an instruction that writes one or may unmask interrupts.
+
+   At those points the runtime runs that single instruction in C#, then enters the interrupt in
+   C# exactly where the 6809 would have. The emulated CPU's instruction stepping is never called
+   (`JoustMachine.CpuSteps` stays 0).
+
+Because interrupts land on the same instruction as in the original, phases 2 and 3 below
+(deferred interrupts, read/write overlap checks, splitting routines) were not needed. The
+exception in decision 1 (dead stack bytes) never arises: the stack matches byte for byte.
+
+**Verified:**
+- `verify-native --no-cpu`: 3 seeds × 20,000 frames, plus two players, the troll and lava
+  deaths, egg waves, cliffs, and the translation without any hand-written code.
+- Tests from power-on (self-test, factory restore, power cycle, a game) and through the operator
+  menus.
+- Lockstep identical every frame, 0 per-call mismatches, 0 CPU steps.
+
+**Speed:** 0.12 ms per frame (`joust-tools bench`).
+
+The sections below are the plan as it was written before the work.
+
 ## Where things stand
 
 - C# routines handle about 97.5–98% of the game's non-idle CPU time, and lockstep is identical

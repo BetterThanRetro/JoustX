@@ -22,8 +22,12 @@ public static class NativeRoutines
         .. TxJumpRoutine.All(),
     ];
 
-    /// <summary>Binds every native routine to the assembled program and installs it at its entry address.</summary>
-    public static IReadOnlyList<NativeRoutine> InstallAll(JoustMachine machine, IReadOnlyDictionary<string, long> symbols)
+    /// <summary>
+    /// Binds every native routine to the assembled program and installs it at its entry address,
+    /// with the translated program (<see cref="Translated.Translation"/>) under them unless
+    /// <paramref name="translated"/> is false.
+    /// </summary>
+    public static IReadOnlyList<NativeRoutine> InstallAll(JoustMachine machine, IReadOnlyDictionary<string, long> symbols, bool translated = true)
     {
         var routines = Create();
         foreach (var r in routines)
@@ -31,6 +35,8 @@ public static class NativeRoutines
             r.Bind(symbols);
             machine.InstallNative(r, r.ResolveAddress(symbols));
         }
+        if (translated && !Translated.Translation.Install(machine))
+            throw new InvalidOperationException("the translated program does not match this ROM; run joust-tools translate");
         return routines;
     }
 }
