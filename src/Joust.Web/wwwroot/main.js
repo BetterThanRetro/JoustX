@@ -63,6 +63,10 @@ const ACTIONS = {
 
 // F10: what the browser reports for each gamepad, and the buttons the game gets (to find why a pad does nothing).
 const padInfo = document.getElementById('padinfo');
+const padEvents = [];
+// Some browsers share pads with a page more readily once it listens for them.
+addEventListener('gamepadconnected', (e) => padEvents.push(`connected ${e.gamepad.index}: ${e.gamepad.id}`));
+addEventListener('gamepaddisconnected', (e) => padEvents.push(`disconnected ${e.gamepad.index}`));
 function showPads(bits) {
     if (padInfo.hidden) return;
     const lines = [...(navigator.getGamepads?.() ?? [])].map((p, slot) => !p ? `slot ${slot}: empty` :
@@ -70,6 +74,9 @@ function showPads(bits) {
         `held [${p.buttons.map((b, i) => b.pressed ? i : -1).filter((i) => i >= 0).join(' ')}] | ` +
         `axes [${p.axes.map((a) => a.toFixed(2)).join(' ')}]`);
     lines.push(`game buttons: ${bits.toString(2).padStart(13, '0')} (bit 0 left, 1 right, 2 flap, 6 start, 8 coin)`);
+    lines.push(`secure ${isSecureContext} | focused ${document.hasFocus()} | ${document.visibilityState} | ` +
+        `interacted ${navigator.userActivation?.hasBeenActive} | ${navigator.userAgent.match(/(Chrome|Firefox|Edg)\/[\d.]+/)?.[0] ?? ''}`);
+    lines.push(`pad events: ${padEvents.length ? padEvents.slice(-4).join('; ') : 'none'}`);
     padInfo.textContent = lines.join('\n');
 }
 // A press counts for at least 4 frames, however short: the board reads its switches once a
