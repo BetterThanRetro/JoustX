@@ -183,10 +183,15 @@ const begin = async () => {
 };
 addEventListener('pointerdown', begin);
 addEventListener('keydown', begin);
-// A gamepad shows up to the page only once one of its buttons is pressed: watch for that too.
+// A gamepad shows up to the page only once one of its buttons is pressed: watch for that too,
+// and say on the start screen which pads the browser has shown (to check one is seen).
 (function watchPads() {
     if (begun) return;
-    for (const pad of navigator.getGamepads?.() ?? [])
-        if (pad?.buttons.some((b) => b.pressed)) { begin(); return; }
+    const pads = [...(navigator.getGamepads?.() ?? [])].filter((p) => p);
+    document.getElementById('pads').textContent = pads.length
+        ? 'Gamepad: ' + pads.map((p) => p.id + (p.mapping === 'standard' ? '' : ' (unusual layout)')).join(', ')
+        : 'No gamepad seen yet: press a button on it';
+    for (const pad of pads)
+        if (pad.buttons.some((b) => b.pressed)) { begin(); return; }
     requestAnimationFrame(watchPads);
 })();
