@@ -142,10 +142,13 @@ public sealed class JoustGame : Game
         if (FnPressed(k, alt, 9))
             _gpuHd = !_gpuHd;
 
-        // Xbox (XInput) controllers: pad 1 and pad 2 are players 1 and 2. D-pad or left stick
-        // steers, A/B/X flaps, Start starts that player's game, Back drops a coin.
-        var pad1 = GamePad.GetState(PlayerIndex.One);
-        var pad2 = GamePad.GetState(PlayerIndex.Two);
+        // Game pads (Xbox and the like): the first connected pad plays player 1 and the second
+        // player 2, whichever slots the system gave them (another controller, or a virtual one
+        // from controller software, can take the first slot). D-pad or left stick steers, A/B/X
+        // flaps, Start starts that player's game, Back drops a coin.
+        if (_session.Machine.Frame % 60 == 0) FindPads();
+        var pad1 = _pads[0] >= 0 ? GamePad.GetState(_pads[0]) : default;
+        var pad2 = _pads[1] >= 0 ? GamePad.GetState(_pads[1]) : default;
 
         var i = _session.Inputs;
         i.P1Left = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.A) || PadLeft(pad1);
@@ -187,7 +190,7 @@ public sealed class JoustGame : Game
             _fps = _draws; _ups = _updates; _draws = _updates = 0; _lastTitle = start;
             Window.Title = $"JoustX  |  F1 objects  F2 advance  F3 reset  F5 HD/classic  F6 CRT  F7 reverb  F8 widescreen  F9 {(_gpuHd ? "GPU" : "CPU")}  F11 fullscreen (Alt+1..9 = F1..F9)  |  5 coin  1/2 start  |  " +
                 $"{_ups} game / {_fps} drawn per s, game {_updateMs:F1} ms, draw {_drawMs:F1} ms{(gameTime.IsRunningSlowly ? ", SLOW" : "")}  |  " +
-                $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_session.SoundCommands} sounds (last ${_session.LastSound:X2})";
+                $"audio {_audio.State} {_audio.PendingBufferCount} queued, peak {_peak:F2}, dropped {_dropped}, {_session.SoundCommands} sounds (last ${_session.LastSound:X2})  |  {_padNames}";
             _peak = 0;
         }
         base.Update(gameTime);
@@ -209,6 +212,24 @@ public sealed class JoustGame : Game
         _graphics.HardwareModeSwitch = false;
         _graphics.IsFullScreen = !_graphics.IsFullScreen;
         _graphics.ApplyChanges();
+    }
+
+    private readonly int[] _pads = [-1, -1];                     // the slots of players 1 and 2's pads
+    private string _padNames = "no pads";
+
+    /// <summary>Looks for connected pads (once a second, so plugging one in works).</summary>
+    private void FindPads()
+    {
+        _pads[0] = _pads[1] = -1;
+        var names = new List<string>();
+        for (int slot = 0, player = 0; slot < GamePad.MaximumGamePadCount && player < 2; slot++)
+        {
+            var caps = GamePad.GetCapabilities(slot);
+            if (!caps.IsConnected) continue;
+            _pads[player++] = slot;
+            names.Add($"pad {player}: {caps.DisplayName}");
+        }
+        _padNames = names.Count > 0 ? string.Join(", ", names) : "no pads";
     }
 
     private static bool PadLeft(GamePadState p) =>
