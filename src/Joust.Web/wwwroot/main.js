@@ -57,8 +57,21 @@ const ACTIONS = {
     F6: () => { display.crt = !display.crt; saveDisplay(); },
     F7: () => { display.reverb = !display.reverb; game.SetReverb(display.reverb); saveDisplay(); },
     F8: () => { display.widescreen = !display.widescreen; saveDisplay(); },
+    F10: () => { padInfo.hidden = !padInfo.hidden; },
     F11: () => document.fullscreenElement ? document.exitFullscreen() : canvas.requestFullscreen(),
 };
+
+// F10: what the browser reports for each gamepad, and the buttons the game gets (to find why a pad does nothing).
+const padInfo = document.getElementById('padinfo');
+function showPads(bits) {
+    if (padInfo.hidden) return;
+    const lines = [...(navigator.getGamepads?.() ?? [])].map((p, slot) => !p ? `slot ${slot}: empty` :
+        `slot ${slot}: ${p.id} | mapping "${p.mapping}" | connected ${p.connected} | ` +
+        `held [${p.buttons.map((b, i) => b.pressed ? i : -1).filter((i) => i >= 0).join(' ')}] | ` +
+        `axes [${p.axes.map((a) => a.toFixed(2)).join(' ')}]`);
+    lines.push(`game buttons: ${bits.toString(2).padStart(13, '0')} (bit 0 left, 1 right, 2 flap, 6 start, 8 coin)`);
+    padInfo.textContent = lines.join('\n');
+}
 // A press counts for at least 4 frames, however short: the board reads its switches once a
 // frame and debounces them, so a quick tap between two frames would otherwise be lost.
 const tapped = new Map();
@@ -118,7 +131,9 @@ addEventListener('keydown', wake);
 
 let frames = 0;
 function step() {
-    game.Frame(buttons());
+    const bits = buttons();
+    showPads(bits);
+    game.Frame(bits);
     const bytes = new Uint8Array(game.Audio());
     if (feed && bytes.length) feed.port.postMessage(new Float32Array(bytes.buffer, 0, bytes.length / 4));
     if (++frames % 600 === 0) saveCmos();                    // every 10 s, as the settings change
