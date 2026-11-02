@@ -39,6 +39,17 @@ exception in decision 1 (dead stack bytes) never arises: the stack matches byte 
 
 **Speed:** 0.12 ms per frame (`joust-tools bench`).
 
+**The sound board too (later on 2 November).** The sound board's 6808 program (1,376
+instructions) is translated the same way (`Sound.g.cs`). Each instruction first checks for a
+pending interrupt and the end of its time slice, then charges its cycles through
+`SoundBoard.Spend` before it runs, exactly as the emulated core is stepped, so the samples come
+out bit for bit the same. The flag arithmetic (`Alu6800`) is shared with the emulated core. One
+sound (command `$18`) builds a `JMP` in RAM and jumps through it; the runtime follows that jump.
+Tests play every sound command, and 400 commands interrupting each other, on an emulated and a
+translated board side by side (identical samples, registers and RAM). A game played by a fully
+translated session matches the fully emulated original in every frame, including every audio
+sample. Neither board's emulated CPU runs a single step.
+
 The sections below are the plan as it was written before the work.
 
 ## Where things stand

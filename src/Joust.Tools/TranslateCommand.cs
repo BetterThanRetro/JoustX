@@ -7,7 +7,8 @@ using Joust.Port.Translated;
 namespace Joust.Tools;
 
 /// <summary>
-/// translate [--out dir]: translates the whole original program to C# (src/Joust.Port/Translated/*.g.cs).
+/// translate [--out dir]: translates the whole original program to C# (src/Joust.Port/Translated/*.g.cs),
+/// and the sound board's program too (Sound.g.cs, by <see cref="SoundTranslator"/>).
 /// Every instruction the assembler emitted (and any code a branch reaches that the listing does
 /// not cover) becomes one <c>case</c> of a routine's switch, with its exact cycle count (measured
 /// by running it on the reference CPU) and its source line as a comment. Branches inside a
@@ -29,6 +30,12 @@ internal static class TranslateCommand
         var translator = new Translator(program);
         translator.Write(outDir);
         Console.WriteLine(translator.Report());
+
+        var sound = JoustRomBuild.AssembleSound(source);
+        if (!sound.Success) throw new InvalidOperationException("sound ROM assembly failed");
+        var soundTranslator = new SoundTranslator(sound);
+        soundTranslator.Write(outDir);                           // after the main program, which clears the folder
+        Console.WriteLine(soundTranslator.Report());
         return 0;
     }
 }

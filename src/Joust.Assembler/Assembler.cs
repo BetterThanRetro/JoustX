@@ -316,6 +316,8 @@ public sealed partial class Assembler
         {
             if (Instructions6800.Table.TryGetValue(op, out var op6800))
             {
+                if (_final)
+                    _instructions[_pc & 0xFFFF] = new SourceLine(Path.GetFileName(_file), _line, raw.Trim());
                 Assemble6800(op, op6800, line.Operand);
                 return;
             }

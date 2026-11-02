@@ -47,7 +47,8 @@ public class HostTests
             foreach (float s in session.Audio) peak = Math.Max(peak, Math.Abs(s));
         }
         Assert.Null(session.Halted);
-        Assert.Equal(0, session.Machine.CpuSteps);                           // no CPU by default
+        Assert.Equal(0, session.Machine.CpuSteps);                           // no CPU by default,
+        Assert.Equal(0, session.SoundBoard.CpuSteps);                        // on either board
         Assert.InRange(samples, 2000 * 48000 / 61, 2000 * 48000 / 59);        // a frame's worth each frame
         Assert.True(session.SoundCommands > 20 && peak > 0.2f, $"{session.SoundCommands} sounds, peak {peak}");
         Assert.True(peak <= 0.951f, $"the mix reached {peak}: it would clip");     // the limiter's ceiling
@@ -70,7 +71,8 @@ public class HostTests
                 s.RunFrame();
             }
             Assert.Null(Lockstep.Compare(original.Machine, native.Machine));
-            // The sound board hears each command at the same cycle, so every sample matches.
+            // The sound board hears each command at the same cycle and runs the same program (in
+            // C# here, emulated there), so every sample matches.
             Assert.True(original.Audio.SequenceEqual(native.Audio), $"frame {f}: the sound differs");
             sounds = original.SoundCommands;
         }

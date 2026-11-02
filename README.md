@@ -6,7 +6,7 @@ A C# port of Williams' 1982 **Joust** that keeps the original game mechanics exa
 
 The approach is a *verified port*: the original 6809 program, assembled from source, runs on a C# reference machine. That machine is the ground truth that the native C# rewrite is checked against, routine by routine. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
-The game now runs entirely in C#, with no CPU emulation. The hot paths are hand-written; the rest is translated from the original source by `joust-tools translate`. It stays identical to the original frame by frame. See [docs/NO-CPU-PLAN.md](docs/NO-CPU-PLAN.md).
+The game now runs entirely in C#, with no CPU emulation on either board: the main board's 6809 and the sound board's 6808. The hot paths are hand-written; the rest is translated from the original source by `joust-tools translate`. It stays identical to the original frame by frame. See [docs/NO-CPU-PLAN.md](docs/NO-CPU-PLAN.md).
 
 ## Layout
 
@@ -64,7 +64,7 @@ dotnet run --project src/Joust.Tools -- verify-native --frames 20000 --seeds 1,2
 dotnet run --project src/Joust.Tools -- translate
 ```
 
-`translate` regenerates `src/Joust.Port/Translated/*.g.cs` from the original source. The translation checks at start-up that the ROM is the one it was made from. `bench` compares the speed of the original, of C# with the CPU behind it, and of C# with no CPU.
+`translate` regenerates `src/Joust.Port/Translated/*.g.cs` (the main program, and the sound board's program in `Sound.g.cs`) from the original source. The translation checks at start-up that the ROM is the one it was made from. `bench` compares the speed of the original, of C# with the CPU behind it, and of C# with no CPU.
 
 `build-roms` writes the 12 ROM files (MAME names), a 64K image and a symbol file, then checks every ROM against the game's own checksum table. `run` emulates headlessly (about 4,000 fps), saves PNG screenshots and lists live objects. `--watch C000-C00F` traces writes to an address range.
 

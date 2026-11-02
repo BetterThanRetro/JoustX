@@ -8,7 +8,7 @@ namespace Joust.Host;
 /// <summary>How the game's code runs.</summary>
 public enum CpuMode
 {
-    /// <summary>All in C#, with no 6809 emulation (the normal way).</summary>
+    /// <summary>All in C#, with no 6809 or 6808 emulation (the normal way).</summary>
     None,
 
     /// <summary>The C# code with the emulated 6809 behind it.</summary>
@@ -60,6 +60,8 @@ public sealed class JoustSession
         _samples = new float[sampleRate / 10];
         _stereo = new float[sampleRate / 10 * 2];
         var board = new SoundBoard(image.Sound);
+        if (mode == CpuMode.None && !Port.Translated.SoundTranslation.Attach(board, image.Sound))
+            throw new InvalidOperationException("the translated sound program does not match this ROM; run joust-tools translate");
         board.Reset();
         _sound = new SoundBridge(Machine, board, sampleRate);
         // SND stores the accepted sound in SNDPTR while the process that asked for it is still
@@ -83,6 +85,9 @@ public sealed class JoustSession
     }
 
     public JoustMachine Machine { get; }
+
+    /// <summary>The sound board (its program in C# too, with <see cref="CpuMode.None"/>).</summary>
+    public SoundBoard SoundBoard => _sound.Board;
     public JoustInputs Inputs => Machine.Inputs;
 
     /// <summary>Where the game's objects are, for overlays and effects.</summary>

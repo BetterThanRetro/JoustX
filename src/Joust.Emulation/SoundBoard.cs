@@ -52,31 +52,83 @@ public sealed class SoundBoard : IBus6800
     /// </summary>
     public int Run(long cycles, int sampleRate, Span<float> samples)
     {
-        double cyclesPerSample = ClockHz / sampleRate;
+        _cyclesPerSample = ClockHz / sampleRate;
         _target += cycles;                                       // absolute, so instruction overshoot never drifts
-        int n = 0;
+        _out = samples.Length <= _buffer.Length ? _buffer : _buffer = new float[samples.Length];
+        _outLimit = samples.Length;
+        _n = 0;
         while (Cpu.Cycles < _target)
         {
+            if (Runner != null)
+            {
+                Runner(this);
+                continue;
+            }
             Cpu.IrqLine = Pia.IrqA || Pia.IrqB;
             byte level = _dac;
             int c = Cpu.Step();
-            // The DAC held its old level for this instruction (writes land at its end).
-            double left = c;
-            while (left > 0)
+            CpuSteps++;
+            Account(level, c);
+        }
+        _out.AsSpan(0, _n).CopyTo(samples);
+        return _n;
+    }
+
+    /// <summary>
+    /// Replaces the emulated 6808: runs instructions (each through <see cref="Spend"/>) until
+    /// <see cref="Due"/>, or enters a pending interrupt. Set by the translated sound program.
+    /// </summary>
+    public Action<SoundBoard>? Runner { get; set; }
+
+    /// <summary>Instructions (and interrupt entries) the emulated 6808 core has run.</summary>
+    public long CpuSteps { get; private set; }
+
+    /// <summary>
+    /// True when the next instruction must not run as part of a translated stretch: the time
+    /// slice is used up, or an interrupt is pending (the 6808 checks before every instruction).
+    /// </summary>
+    public bool Due => Cpu.Cycles >= _target || ((Pia.IrqA || Pia.IrqB) && (Cpu.CC & Alu6800.I) == 0);
+
+    /// <summary>
+    /// Charges the next instruction's (or interrupt entry's) <paramref name="cycles"/>, with the
+    /// DAC at the level it had before the instruction: its writes land at its end.
+    /// </summary>
+    public void Spend(int cycles)
+    {
+        byte level = _dac;
+        Cpu.Cycles += cycles;
+        Account(level, cycles);
+    }
+
+    /// <summary>Enters the pending IRQ (the command interrupt) as the 6808 does, and charges its cycles.</summary>
+    public void EnterInterrupt()
+    {
+        byte level = _dac;
+        int c = Cpu.Interrupt(0xFFF8);
+        Account(level, c);
+    }
+
+    private double _cyclesPerSample;
+    private float[] _buffer = new float[4096];
+    private float[] _out = [];
+    private int _n, _outLimit;
+
+    private void Account(byte level, int c)
+    {
+        double left = c;
+        while (left > 0)
+        {
+            double take = Math.Min(left, _cyclesPerSample - _sampleClock);
+            _sampleSum += take * (level - 128) / 128.0;
+            _sampleWeight += take;
+            _sampleClock += take;
+            left -= take;
+            if (_sampleClock >= _cyclesPerSample - 1e-9)
             {
-                double take = Math.Min(left, cyclesPerSample - _sampleClock);
-                _sampleSum += take * (level - 128) / 128.0;
-                _sampleWeight += take;
-                _sampleClock += take;
-                left -= take;
-                if (_sampleClock >= cyclesPerSample - 1e-9)
-                {
-                    if (n < samples.Length) samples[n++] = (float)(_sampleSum / _sampleWeight);
-                    _sampleClock = _sampleSum = _sampleWeight = 0;
-                }
+                if (_n < _outLimit) _out[_n++] = (float)(_sampleSum / _sampleWeight);
+                _sampleClock = _sampleSum = _sampleWeight = 0;
             }
         }
-        return n;
     }
 
     public byte Read(ushort a)

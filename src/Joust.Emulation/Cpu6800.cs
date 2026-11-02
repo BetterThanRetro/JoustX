@@ -1,3 +1,5 @@
+using static Joust.Emulation.Alu6800;
+
 namespace Joust.Emulation;
 
 /// <summary>Memory and I/O as the 6800 sees it.</summary>
@@ -9,22 +11,23 @@ public interface IBus6800
 
 /// <summary>
 /// Motorola 6800 (the sound board's 6808), with the documented cycle counts. Undefined
-/// opcodes throw: the sound ROM never runs one.
+/// opcodes throw: the sound ROM never runs one. The flag arithmetic is <see cref="Alu6800"/>.
 /// </summary>
 public sealed class Cpu6800(IBus6800 bus)
 {
-    private const byte C = 0x01, V = 0x02, Z = 0x04, N = 0x08, I = 0x10, H = 0x20;
-
     public byte A, B, CC = 0xC0 | I;
     public ushort X, SP, PC;
     public long Cycles;
     public bool IrqLine, NmiLine;
-    private bool _waiting, _nmiPrevious;
+    private bool _nmiPrevious;
+
+    /// <summary>Stopped in WAI with the registers stacked, until an interrupt.</summary>
+    public bool Waiting;
 
     public void Reset()
     {
         CC = 0xC0 | I;
-        _waiting = false;
+        Waiting = false;
         PC = Read16(0xFFFE);
     }
 
@@ -38,7 +41,7 @@ public sealed class Cpu6800(IBus6800 bus)
         }
         _nmiPrevious = NmiLine;
         if (IrqLine && (CC & I) == 0) return Interrupt(0xFFF8);
-        if (_waiting)
+        if (Waiting)
         {
             Cycles += 1;
             return 1;
@@ -48,12 +51,13 @@ public sealed class Cpu6800(IBus6800 bus)
         return c;
     }
 
-    private int Interrupt(ushort vector)
+    /// <summary>Enters the interrupt through <paramref name="vector"/> (also used by the translated sound program); returns its cycles.</summary>
+    public int Interrupt(ushort vector)
     {
         int c = 12;
-        if (_waiting) c = 4;                                     // WAI already stacked the registers
+        if (Waiting) c = 4;                                      // WAI already stacked the registers
         else PushAll();
-        _waiting = false;
+        Waiting = false;
         CC |= I;
         PC = Read16(vector);
         Cycles += c;
@@ -89,108 +93,8 @@ public sealed class Cpu6800(IBus6800 bus)
     /// <summary>Operand address for the $x0-$xF column groups: 1 = direct, 2 = indexed, 3 = extended.</summary>
     private int Address(int mode) => mode switch { 1 => Direct(), 2 => Indexed(), _ => Extended() };
 
-    // ------------------------------------------------------------------ flags
-
-    private void Nz(byte r) => CC = (byte)((CC & ~(N | Z)) | ((r & 0x80) != 0 ? N : 0) | (r == 0 ? Z : 0));
-    private void Nz16(ushort r) => CC = (byte)((CC & ~(N | Z)) | ((r & 0x8000) != 0 ? N : 0) | (r == 0 ? Z : 0));
-    private void Logic(byte r) { Nz(r); CC &= unchecked((byte)~V); }
-    private void Flag(byte f, bool on) => CC = on ? (byte)(CC | f) : (byte)(CC & ~f);
-
-    private byte Add(byte a, byte b, bool carry)
-    {
-        int cin = carry && (CC & C) != 0 ? 1 : 0;
-        int r = a + b + cin;
-        Flag(H, ((a & 0x0F) + (b & 0x0F) + cin) > 0x0F);
-        Flag(C, r > 0xFF);
-        Flag(V, ((a ^ r) & (b ^ r) & 0x80) != 0);
-        Nz((byte)r);
-        return (byte)r;
-    }
-
-    private byte Sub(byte a, byte b, bool carry)
-    {
-        int cin = carry && (CC & C) != 0 ? 1 : 0;
-        int r = a - b - cin;
-        Flag(C, r < 0);
-        Flag(V, ((a ^ b) & (a ^ r) & 0x80) != 0);
-        Nz((byte)r);
-        return (byte)r;
-    }
-
-    private byte Unary(int op, byte m)
-    {
-        byte r;
-        switch (op)
-        {
-            case 0x0:                                            // NEG
-                r = (byte)-m;
-                Nz(r); Flag(V, r == 0x80); Flag(C, r != 0);
-                return r;
-            case 0x3:                                            // COM
-                r = (byte)~m;
-                Logic(r); CC |= C;
-                return r;
-            case 0x4:                                            // LSR
-                r = (byte)(m >> 1);
-                Flag(C, (m & 1) != 0); Nz(r); Flag(V, (CC & C) != 0);   // V = N ^ C, N = 0
-                return r;
-            case 0x6:                                            // ROR
-                r = (byte)((m >> 1) | ((CC & C) != 0 ? 0x80 : 0));
-                Flag(C, (m & 1) != 0); Nz(r); ShiftV();
-                return r;
-            case 0x7:                                            // ASR
-                r = (byte)((m >> 1) | (m & 0x80));
-                Flag(C, (m & 1) != 0); Nz(r); ShiftV();
-                return r;
-            case 0x8:                                            // ASL
-                r = (byte)(m << 1);
-                Flag(C, (m & 0x80) != 0); Nz(r); ShiftV();
-                return r;
-            case 0x9:                                            // ROL
-                r = (byte)((m << 1) | ((CC & C) != 0 ? 1 : 0));
-                Flag(C, (m & 0x80) != 0); Nz(r); ShiftV();
-                return r;
-            case 0xA:                                            // DEC
-                r = (byte)(m - 1);
-                Nz(r); Flag(V, m == 0x80);
-                return r;
-            case 0xC:                                            // INC
-                r = (byte)(m + 1);
-                Nz(r); Flag(V, m == 0x7F);
-                return r;
-            case 0xD:                                            // TST
-                Logic(m); CC &= unchecked((byte)~C);
-                return m;
-            case 0xF:                                            // CLR
-                CC = (byte)((CC & ~(N | V | C)) | Z);
-                return 0;
-        }
-        throw Undefined(op);
-    }
-
-    private void ShiftV() => Flag(V, ((CC & N) != 0) ^ ((CC & C) != 0));
-
     private InvalidOperationException Undefined(int op) =>
         new($"undefined 6800 opcode ${op:X2} at ${(ushort)(PC - 1):X4}");
-
-    private bool Branch(int cond) => cond switch
-    {
-        0x0 => true,
-        0x2 => (CC & (C | Z)) == 0,                              // BHI
-        0x3 => (CC & (C | Z)) != 0,                              // BLS
-        0x4 => (CC & C) == 0,
-        0x5 => (CC & C) != 0,
-        0x6 => (CC & Z) == 0,
-        0x7 => (CC & Z) != 0,
-        0x8 => (CC & V) == 0,
-        0x9 => (CC & V) != 0,
-        0xA => (CC & N) == 0,
-        0xB => (CC & N) != 0,
-        0xC => ((CC & N) != 0) == ((CC & V) != 0),               // BGE
-        0xD => ((CC & N) != 0) != ((CC & V) != 0),               // BLT
-        0xE => (CC & Z) == 0 && ((CC & N) != 0) == ((CC & V) != 0),
-        _ => (CC & Z) != 0 || ((CC & N) != 0) != ((CC & V) != 0),
-    };
 
     // ------------------------------------------------------------------ execute
 
@@ -201,20 +105,20 @@ public sealed class Cpu6800(IBus6800 bus)
             case 0x01: return 2;                                 // NOP
             case 0x06: CC = (byte)(A | 0xC0); return 2;          // TAP
             case 0x07: A = CC; return 2;                         // TPA
-            case 0x08: X++; Flag(Z, X == 0); return 4;           // INX
-            case 0x09: X--; Flag(Z, X == 0); return 4;           // DEX
+            case 0x08: X++; Flag(ref CC, Z, X == 0); return 4;   // INX
+            case 0x09: X--; Flag(ref CC, Z, X == 0); return 4;   // DEX
             case 0x0A: CC &= unchecked((byte)~V); return 2;
             case 0x0B: CC |= V; return 2;
             case 0x0C: CC &= unchecked((byte)~C); return 2;
             case 0x0D: CC |= C; return 2;
             case 0x0E: CC &= unchecked((byte)~I); return 2;
             case 0x0F: CC |= I; return 2;
-            case 0x10: A = Sub(A, B, false); return 2;           // SBA
-            case 0x11: Sub(A, B, false); return 2;               // CBA
-            case 0x16: B = A; Logic(B); return 2;                // TAB
-            case 0x17: A = B; Logic(A); return 2;                // TBA
-            case 0x19: Daa(); return 2;
-            case 0x1B: A = Add(A, B, false); return 2;           // ABA
+            case 0x10: A = Sub(ref CC, A, B, false); return 2;   // SBA
+            case 0x11: Sub(ref CC, A, B, false); return 2;       // CBA
+            case 0x16: B = A; Logic(ref CC, B); return 2;        // TAB
+            case 0x17: A = B; Logic(ref CC, A); return 2;        // TBA
+            case 0x19: A = Daa(ref CC, A); return 2;
+            case 0x1B: A = Add(ref CC, A, B, false); return 2;   // ABA
             case 0x30: X = (ushort)(SP + 1); return 4;           // TSX
             case 0x31: SP++; return 4;                           // INS
             case 0x32: A = Pull(); return 4;
@@ -227,7 +131,7 @@ public sealed class Cpu6800(IBus6800 bus)
             case 0x3B:                                           // RTI
                 CC = (byte)(Pull() | 0xC0); B = Pull(); A = Pull(); X = Pull16(); PC = Pull16();
                 return 10;
-            case 0x3E: PushAll(); _waiting = true; return 9;     // WAI
+            case 0x3E: PushAll(); Waiting = true; return 9;      // WAI
             case 0x3F: PushAll(); CC |= I; PC = Read16(0xFFFA); return 12;   // SWI
             case 0x8D:                                           // BSR
             {
@@ -247,7 +151,7 @@ public sealed class Cpu6800(IBus6800 bus)
         {
             sbyte d = (sbyte)Fetch();
             if (lo == 1) throw Undefined(op);
-            if (Branch(lo)) PC = (ushort)(PC + d);
+            if (Branch(CC, lo)) PC = (ushort)(PC + d);
             return 4;
         }
         if (hi is >= 0x4 and <= 0x7)
@@ -255,12 +159,12 @@ public sealed class Cpu6800(IBus6800 bus)
             if (lo is 0x1 or 0x2 or 0x5 or 0xB or 0xE) throw Undefined(op);
             switch (hi)
             {
-                case 0x4: A = Unary(lo, A); return 2;
-                case 0x5: B = Unary(lo, B); return 2;
+                case 0x4: A = Unary(ref CC, lo, A); return 2;
+                case 0x5: B = Unary(ref CC, lo, B); return 2;
                 default:
                 {
                     int a = hi == 0x6 ? Indexed() : Extended();
-                    byte r = Unary(lo, Read(a));
+                    byte r = Unary(ref CC, lo, Read(a));
                     if (lo != 0xD) Write(a, r);                  // TST only reads
                     return hi == 0x6 ? 7 : 6;
                 }
@@ -283,16 +187,14 @@ public sealed class Cpu6800(IBus6800 bus)
             case 0xC when !isB:                                  // CPX
             {
                 ushort m = mode == 0 ? Fetch16() : Read16(Address(mode));
-                int r = X - m;
-                Nz16((ushort)r);
-                Flag(V, ((X ^ m) & (X ^ r) & 0x8000) != 0);
+                Cpx(ref CC, X, m);
                 return baseCycles + 1;
             }
             case 0xE:                                            // LDS / LDX
             {
                 ushort m = mode == 0 ? Fetch16() : Read16(Address(mode));
                 if (isB) X = m; else SP = m;
-                Nz16(m); CC &= unchecked((byte)~V);
+                Logic16(ref CC, m);
                 return baseCycles + 1;
             }
             case 0xF:                                            // STS / STX
@@ -300,7 +202,7 @@ public sealed class Cpu6800(IBus6800 bus)
                 if (mode == 0) throw Undefined(op);
                 ushort v = isB ? X : SP;
                 Write16(Address(mode), v);
-                Nz16(v); CC &= unchecked((byte)~V);
+                Logic16(ref CC, v);
                 return baseCycles + 2;
             }
             case 0x3 or 0xC or 0xD:
@@ -310,7 +212,7 @@ public sealed class Cpu6800(IBus6800 bus)
                 if (mode == 0) throw Undefined(op);
                 byte v = isB ? B : A;
                 Write(Address(mode), v);
-                Logic(v);
+                Logic(ref CC, v);
                 return baseCycles + 1;
             }
         }
@@ -319,30 +221,18 @@ public sealed class Cpu6800(IBus6800 bus)
         byte acc = isB ? B : A;
         switch (lo)
         {
-            case 0x0: acc = Sub(acc, operand, false); break;     // SUB
-            case 0x1: Sub(acc, operand, false); break;           // CMP
-            case 0x2: acc = Sub(acc, operand, true); break;      // SBC
-            case 0x4: acc &= operand; Logic(acc); break;         // AND
-            case 0x5: Logic((byte)(acc & operand)); break;       // BIT
-            case 0x6: acc = operand; Logic(acc); break;          // LDA
-            case 0x8: acc ^= operand; Logic(acc); break;         // EOR
-            case 0x9: acc = Add(acc, operand, true); break;      // ADC
-            case 0xA: acc |= operand; Logic(acc); break;         // ORA
-            case 0xB: acc = Add(acc, operand, false); break;     // ADD
+            case 0x0: acc = Sub(ref CC, acc, operand, false); break;     // SUB
+            case 0x1: Sub(ref CC, acc, operand, false); break;           // CMP
+            case 0x2: acc = Sub(ref CC, acc, operand, true); break;      // SBC
+            case 0x4: acc &= operand; Logic(ref CC, acc); break;         // AND
+            case 0x5: Logic(ref CC, (byte)(acc & operand)); break;       // BIT
+            case 0x6: acc = operand; Logic(ref CC, acc); break;          // LDA
+            case 0x8: acc ^= operand; Logic(ref CC, acc); break;         // EOR
+            case 0x9: acc = Add(ref CC, acc, operand, true); break;      // ADC
+            case 0xA: acc |= operand; Logic(ref CC, acc); break;         // ORA
+            case 0xB: acc = Add(ref CC, acc, operand, false); break;     // ADD
         }
         if (isB) B = acc; else A = acc;
         return baseCycles;
-    }
-
-    private void Daa()
-    {
-        int a = A, correction = 0;
-        bool carry = (CC & C) != 0;
-        if ((CC & H) != 0 || (a & 0x0F) > 9) correction |= 0x06;
-        if (carry || a > 0x99 || (a > 0x8F && (a & 0x0F) > 9)) { correction |= 0x60; carry = true; }
-        int r = a + correction;
-        A = (byte)r;
-        Nz(A);
-        Flag(C, carry || r > 0xFF);
     }
 }
