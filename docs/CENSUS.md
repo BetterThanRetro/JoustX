@@ -2,6 +2,12 @@
 
 This is phase 0 of [the no-CPU plan](NO-CPU-PLAN.md).
 
+> **History (31 October 2026).** This was taken before the translation. Since 2 November the
+> whole program, and the sound board's, runs in C#, and in normal play no emulated CPU runs at
+> all. The `census` command still works on a machine with the 6809 behind the C# code (as with
+> `--cpu`), where it now finds only the single instructions that machine leaves to the CPU at
+> interrupt edges and I/O reads.
+
 To reproduce it, run:
 
 ```bash

@@ -11,7 +11,7 @@ namespace Joust.Port;
 public sealed class Tx
 {
     private readonly NativeContext _c;
-    private Dictionary<int, byte> _pending = [];
+    private readonly Dictionary<int, byte> _pending = [];
     private readonly List<(int Address, byte Value, bool Write, int Cycle)> _io = [];
 
     public byte A, B, DP, CC;
@@ -41,18 +41,36 @@ public sealed class Tx
 
     // ------------------------------------------------------------------ marks
 
+    private List<(int Address, bool Had, byte Old)>? _undo;
+
+    /// <summary>A restore point: the registers, cycles and multiplexer, and how far the write logs had got.</summary>
     public readonly record struct TxMark(
         byte A, byte B, byte DP, byte CC, ushort X, ushort Y, ushort U, ushort S, int Cycles, int StallCycles, bool Mux,
-        Dictionary<int, byte> Pending, int IoCount);
+        int Undo, int Io);
 
-    /// <summary>Remembers the current state so a later step can be undone.</summary>
-    public TxMark Mark() => new(A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, Mux, new Dictionary<int, byte>(_pending), _io.Count);
+    /// <summary>
+    /// Remembers the current state so a later step can be undone. It copies nothing: from the
+    /// first mark on, each write logs what it replaced, so translated code can take one per instruction.
+    /// </summary>
+    public TxMark Mark()
+    {
+        _undo ??= [];
+        return new(A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, Mux, _undo.Count, _io.Count);
+    }
 
+    /// <summary>Undoes everything since <paramref name="m"/> (the latest mark, or an earlier one).</summary>
     public void Rollback(TxMark m)
     {
         (A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, Mux) = (m.A, m.B, m.DP, m.CC, m.X, m.Y, m.U, m.S, m.Cycles, m.StallCycles, m.Mux);
-        _pending = new Dictionary<int, byte>(m.Pending);
-        _io.RemoveRange(m.IoCount, _io.Count - m.IoCount);
+        if (m.Undo > _undo!.Count) throw new InvalidOperationException("rolling back to a mark that was already undone");
+        for (int i = _undo.Count - 1; i >= m.Undo; i--)
+        {
+            var (a, had, old) = _undo[i];
+            if (had) _pending[a] = old;
+            else _pending.Remove(a);
+        }
+        _undo.RemoveRange(m.Undo, _undo.Count - m.Undo);
+        _io.RemoveRange(m.Io, _io.Count - m.Io);
     }
 
     // ------------------------------------------------------------------ I/O
@@ -108,37 +126,6 @@ public sealed class Tx
         if (_undo != null)
             _undo.Add((a, _pending.TryGetValue(a, out byte old), old));
         _pending[a] = v;
-    }
-
-    // ------------------------------------------------------------------ undo points
-
-    private List<(int Address, bool Had, byte Old)>? _undo;
-
-    /// <summary>A cheap restore point (registers, cycles, and how far the write logs had got).</summary>
-    public readonly record struct UndoPoint(
-        byte A, byte B, byte DP, byte CC, ushort X, ushort Y, ushort U, ushort S, int Cycles, int StallCycles, int Undo, int Io);
-
-    /// <summary>
-    /// Takes a restore point. Unlike <see cref="Mark"/> it copies nothing: from the first call on,
-    /// each write logs what it replaced, so translated code can take one per instruction.
-    /// </summary>
-    public UndoPoint Point()
-    {
-        _undo ??= [];
-        return new(A, B, DP, CC, X, Y, U, S, Cycles, StallCycles, _undo.Count, _io.Count);
-    }
-
-    public void Restore(UndoPoint p)
-    {
-        (A, B, DP, CC, X, Y, U, S, Cycles, StallCycles) = (p.A, p.B, p.DP, p.CC, p.X, p.Y, p.U, p.S, p.Cycles, p.StallCycles);
-        for (int i = _undo!.Count - 1; i >= p.Undo; i--)
-        {
-            var (a, had, old) = _undo[i];
-            if (had) _pending[a] = old;
-            else _pending.Remove(a);
-        }
-        _undo.RemoveRange(p.Undo, _undo.Count - p.Undo);
-        _io.RemoveRange(p.Io, _io.Count - p.Io);
     }
 
     public void Write16(int a, ushort v)

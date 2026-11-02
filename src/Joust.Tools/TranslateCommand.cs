@@ -64,8 +64,6 @@ internal sealed partial class Translator
     private readonly Dictionary<int, string> _labels;
     private readonly List<UnitPlan> _units = [];
 
-    private const char GoMark = '\u0001';
-
     public Translator(AssemblyResult program)
     {
         _program = program;
@@ -79,7 +77,7 @@ internal sealed partial class Translator
             if (_insns.ContainsKey(pc)) continue;
             var d = Decode(pc);
             d.Text = program.Instructions.TryGetValue(pc, out var line)
-                ? $"{Squash(line.Text)}  ({line.File}:{line.Line})"
+                ? $"{TranslationText.Squash(line.Text)}  ({line.File}:{line.Line})"
                 : $"(reached from ${from:X4}; not in the listing)";
             _insns[pc] = d;
             foreach (int target in d.Targets.Append(d.FallsThrough ? (pc + d.Length) & 0xFFFF : -1))
@@ -87,47 +85,12 @@ internal sealed partial class Translator
                     work.Push((target, pc));
         }
 
-        _labels = program.Symbols
-            .Where(kv => !kv.Key.Contains('.') && kv.Value is >= 0 and <= 0xFFFF && _insns.ContainsKey((int)kv.Value))
-            .GroupBy(kv => (int)kv.Value)
-            .ToDictionary(g => g.Key, g => g.Select(kv => kv.Key).Order(StringComparer.Ordinal).First());
-        PlanUnits();
+        _labels = TranslationText.Labels(program.Symbols, _insns.ContainsKey);
+        foreach (var (name, insns) in TranslationText.Routines(_insns.Values, d => d.Pc, d => d.Length, _labels, "START"))
+            _units.Add(new UnitPlan(name, $"L{insns[0].Pc:X4}_{TranslationText.Identifier(name)}", insns));
     }
 
     private static bool InRom(int a) => a is < 0x9000 or >= 0xD000;
-
-    private static string Squash(string s) => WhitespaceRegex().Replace(s, " ");
-
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex WhitespaceRegex();
-
-    // ------------------------------------------------------------------ routines
-
-    private void PlanUnits()
-    {
-        const int maxInsns = 300;
-        UnitPlan? current = null;
-        int expected = -1;
-        string lastLabel = "START";
-        foreach (var d in _insns.Values)
-        {
-            bool labelled = _labels.TryGetValue(d.Pc, out string? label);
-            if (labelled) lastLabel = label!;
-            if (current == null || labelled || d.Pc != expected || current.Insns.Count >= maxInsns)
-            {
-                string name = labelled ? label! : $"{lastLabel}_{d.Pc:X4}";
-                current = new UnitPlan(name, $"L{d.Pc:X4}_{Identifier(name)}", []);
-                _units.Add(current);
-            }
-            current.Insns.Add(d);
-            expected = d.Pc + d.Length;
-        }
-    }
-
-    private static string Identifier(string name) => IdentifierRegex().Replace(name, "_");
-
-    [GeneratedRegex(@"[^A-Za-z0-9_]")]
-    private static partial Regex IdentifierRegex();
 
     public void Write(string outDir)
     {
@@ -200,9 +163,9 @@ internal sealed partial class Translator
                 continue;
             }
             sb.AppendLine($"                if (!g.{(d.ReadsIo ? "IoI" : "I")}(0x{d.Pc:X4}, {d.Cycles})) return 0x{d.Pc:X4};");
-            var body = d.FallsThrough ? d.Body.Append(Go((d.Pc + d.Length) & 0xFFFF)) : d.Body;
+            var body = d.FallsThrough ? d.Body.Append(TranslationText.Go(d.Pc + d.Length)) : d.Body;
             foreach (string line in body)
-                sb.AppendLine("                " + Resolve(line, members));
+                sb.AppendLine("                " + TranslationText.Resolve(line, members));
         }
         sb.AppendLine("        }");
         sb.AppendLine("        return pc;");
@@ -211,18 +174,6 @@ internal sealed partial class Translator
     }
 
     private static string Escape(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
-
-    private static string Go(int target) => $"{GoMark}{target & 0xFFFF:X4}";
-
-    private static string Resolve(string line, HashSet<int> members) =>
-        GoRegex().Replace(line, m =>
-        {
-            int target = Convert.ToInt32(m.Groups[1].Value, 16);
-            return members.Contains(target) ? $"goto case 0x{target:X4};" : $"return 0x{target:X4};";
-        });
-
-    [GeneratedRegex("\u0001([0-9A-F]{4})")]
-    private static partial Regex GoRegex();
 
     public string Report()
     {
@@ -294,7 +245,7 @@ internal sealed partial class Translator
         private string Go(int target)
         {
             d.Targets.Add(target & 0xFFFF);
-            return Translator.Go(target);
+            return TranslationText.Go(target);
         }
 
         private static readonly string[] IndexRegs = ["t.X", "t.Y", "t.U", "t.S"];

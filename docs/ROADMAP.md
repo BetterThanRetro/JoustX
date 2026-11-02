@@ -92,11 +92,7 @@ Still open here:
 - Jump-style natives (scheduler code, slices) are verified by running the original for exactly the native's cycle count and comparing the whole machine state.
 - The list walk runs with interrupts enabled and reads DMA state the IRQ changes. So it advances only while no interrupt can arrive, then stops at the loop head exactly as the original would be there.
 
-Still original code:
-- `EXECST`: frame start (busy-wait for a free DMA table and sending the queued sound to the sound board).
-- Process bodies: the bird's birth and transporter entry (`PLAYR`, `PLYINT`), the collision sweeps (`PLYCOL`/`OPPCOL`), transporters, lava troll, wave control, attract mode (including its `PJOY` pilots).
-- The process the death routines start for game over (`GAMOVR`/`GAMOV1`). The attract mode's cycling egg score (`ATTEGG`) is handed back.
-- Rare joust cases hand the whole call back: an egg score that earns an extra mount, and the "fictitious collision" `SWI`.
+At this step these were still original code: frame start (`EXECST`); the bird's birth, transporters, the collision sweeps, the lava troll, wave control and attract mode; game over; and a few rare joust cases. All were ported later, and since the translation step nothing is left to the CPU. The step notes below keep the history.
 
 `verify-native --only SYM,...` checks a subset; `--trace` adds the original's instruction trace to mismatch reports (how the one `BCKPIX` bug in this step was found).
 

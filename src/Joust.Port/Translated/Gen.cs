@@ -23,7 +23,7 @@ public sealed class Gen
     private readonly NativeContext _c;
     private readonly bool[] _handWritten;
     private readonly bool _romBank;
-    private Tx.UndoPoint _start;
+    private Tx.TxMark _start;
     private byte[]? _blitter;
     private bool _stopAfter;
 
@@ -53,7 +53,7 @@ public sealed class Gen
     {
         if (_live ? Count > 0 : _stopAfter || (Count > 0 && _handWritten[pc]) || !T.CanRun(cycles))
             return false;
-        _start = T.Point();
+        _start = T.Mark();
         Pc = pc;
         Count++;
         T.Cycles += cycles;
@@ -91,7 +91,7 @@ public sealed class Gen
     /// <summary>Takes back the instruction begun last.</summary>
     private void Undo()
     {
-        T.Restore(_start);
+        T.Rollback(_start);
         Count--;
     }
 

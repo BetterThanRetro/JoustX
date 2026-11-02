@@ -177,14 +177,6 @@ public sealed class Asm(Tx t)
     /// <summary>LDB B,Y.</summary>
     public void LdbBY() { T.B = T.Read(T.Y + (sbyte)T.B); T.CC = Logic8(T.CC, T.B); Cy(5); }
 
-    private static byte Lsr8(ref byte cc, byte m)
-    {
-        cc = Set(cc, C, (m & 1) != 0);
-        byte r = (byte)(m >> 1);
-        cc = NZ8(cc, r);
-        return r;
-    }
-
     /// <summary>TFR U,Y.</summary>
     public void TfrUY() { T.Y = T.U; Cy(6); }
 

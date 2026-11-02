@@ -27,8 +27,6 @@ internal sealed partial class SoundTranslator
 
     private sealed record UnitPlan(string Name, string Method, List<Insn> Insns);
 
-    private const char GoMark = '\u0001';
-
     private readonly byte[] _mem;
     private readonly AssemblyResult _program;
     private readonly SortedDictionary<int, Insn> _insns = [];
@@ -48,41 +46,19 @@ internal sealed partial class SoundTranslator
             if (_insns.ContainsKey(pc)) continue;
             var d = Decode(pc);
             d.Text = program.Instructions.TryGetValue(pc, out var line)
-                ? $"{Regex.Replace(line.Text, @"\s+", " ")}  ({line.File}:{line.Line})"
+                ? $"{TranslationText.Squash(line.Text)}  ({line.File}:{line.Line})"
                 : $"(reached from ${from:X4}; not in the listing)";
             _insns[pc] = d;
             foreach (int target in d.Targets.Append(d.FallsThrough ? (pc + d.Length) & 0xFFFF : -1))
                 if (target >= 0 && InRom(target) && !_insns.ContainsKey(target))
                     work.Push((target, pc));
         }
-        _labels = program.Symbols
-            .Where(kv => !kv.Key.Contains('.') && kv.Value is >= 0 and <= 0xFFFF && _insns.ContainsKey((int)kv.Value))
-            .GroupBy(kv => (int)kv.Value)
-            .ToDictionary(g => g.Key, g => g.Select(kv => kv.Key).Order(StringComparer.Ordinal).First());
-        PlanUnits();
+        _labels = TranslationText.Labels(program.Symbols, _insns.ContainsKey);
+        foreach (var (name, insns) in TranslationText.Routines(_insns.Values, d => d.Pc, d => d.Length, _labels, "SOUND"))
+            _units.Add(new UnitPlan(name, $"S{insns[0].Pc:X4}_{TranslationText.Identifier(name)}", insns));
     }
 
     private static bool InRom(int a) => a >= JoustRomBuild.SoundRomBase + 1;     // $F000 is the checksum byte
-
-    private void PlanUnits()
-    {
-        UnitPlan? current = null;
-        int expected = -1;
-        string lastLabel = "SOUND";
-        foreach (var d in _insns.Values)
-        {
-            bool labelled = _labels.TryGetValue(d.Pc, out string? label);
-            if (labelled) lastLabel = label!;
-            if (current == null || labelled || d.Pc != expected || current.Insns.Count >= 300)
-            {
-                string name = labelled ? label! : $"{lastLabel}_{d.Pc:X4}";
-                current = new UnitPlan(name, $"S{d.Pc:X4}_{Regex.Replace(name, "[^A-Za-z0-9_]", "_")}", []);
-                _units.Add(current);
-            }
-            current.Insns.Add(d);
-            expected = d.Pc + d.Length;
-        }
-    }
 
     public void Write(string outDir)
     {
@@ -134,27 +110,15 @@ internal sealed partial class SoundTranslator
             }
             sb.AppendLine($"                if (b.Due) return 0x{d.Pc:X4};");
             sb.AppendLine($"                b.Spend({d.Cycles});");
-            var body = d.FallsThrough ? d.Body.Append(Go((d.Pc + d.Length) & 0xFFFF)) : d.Body;
+            var body = d.FallsThrough ? d.Body.Append(TranslationText.Go(d.Pc + d.Length)) : d.Body;
             foreach (string line in body)
-                sb.AppendLine("                " + Resolve(line, members));
+                sb.AppendLine("                " + TranslationText.Resolve(line, members));
         }
         sb.AppendLine("        }");
         sb.AppendLine("        return pc;");
         sb.AppendLine("    }");
         sb.AppendLine();
     }
-
-    private static string Go(int target) => $"{GoMark}{target & 0xFFFF:X4}";
-
-    private static string Resolve(string line, HashSet<int> members) =>
-        GoRegex().Replace(line, m =>
-        {
-            int target = Convert.ToInt32(m.Groups[1].Value, 16);
-            return members.Contains(target) ? $"goto case 0x{target:X4};" : $"return 0x{target:X4};";
-        });
-
-    [GeneratedRegex("\u0001([0-9A-F]{4})")]
-    private static partial Regex GoRegex();
 
     public string Report() =>
         $"sound board: {_insns.Count} instructions ({_insns.Keys.Count(_program.Instructions.ContainsKey)} from the listing) in {_units.Count} routines, " +
@@ -168,7 +132,7 @@ internal sealed partial class SoundTranslator
         byte B(int i) => _mem[(pc + i) & 0xFFFF];
         int W(int i) => (B(i) << 8) | B(i + 1);
         void E(string s) => d.Body.Add(s);
-        string GoTo(int target) { d.Targets.Add(target & 0xFFFF); return Go(target); }
+        string GoTo(int target) { d.Targets.Add(target & 0xFFFF); return TranslationText.Go(target); }
 
         byte op = B(0);
         int next() => (pc + d.Length) & 0xFFFF;
