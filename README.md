@@ -19,6 +19,8 @@ This is a preservation project, and the next step in a chain of work on the orig
 
 Because no emulator runs between the game and the screen, the controls feel more immediate than under emulation. That is an observation, not a measurement. The game itself still reads its inputs exactly when the original did.
 
+Best played on an arcade fight stick with arcade-grade parts, such as a Sanwa Denshi stick and buttons (Sanwa Denshi is a trademark of its owner). The cabinet had a left/right stick and a flap button, and a real stick and button feel closest to it.
+
 The repository holds source only: no ROM files and no built game. The new code is in the public domain ([LICENSE](LICENSE)); the original game and everything made from its source are not, and belong to their owners ([NOTICE.md](NOTICE.md)).
 
 ## Layout
