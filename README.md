@@ -8,11 +8,24 @@ The approach is a *verified port*: the original 6809 program, assembled from sou
 
 The game now runs entirely in C#, with no CPU emulation on either board: the main board's 6809 and the sound board's 6808. The hot paths are hand-written; the rest is translated from the original source by `joust-tools translate`. It stays identical to the original frame by frame. See [docs/NO-CPU-PLAN.md](docs/NO-CPU-PLAN.md).
 
+## Lineage and preservation
+
+This is a preservation project, and the next step in a chain of work on the original source:
+
+1. Williams Electronics, 1982: Joust, designed by John Newcomer and programmed by Bill Pfutzenreuter, Cary Kolker and Ken Lantz, with the sound ROM by John Kotlarik and Tim Murphy.
+2. [historicalsource/joust](https://github.com/historicalsource/joust): the original source, published.
+3. [synamaxmusic/joust](https://github.com/synamaxmusic/joust): SynaMax's rewrite for a modern assembler, which rebuilds every ROM exactly. It is in `joust-main-asm/`, unchanged.
+4. JoustX: the same program as C#, checked against the original instruction by instruction and frame by frame, so the game can outlive the hardware and the emulators.
+
+Because no emulator runs between the game and the screen, the controls feel more immediate than under emulation. That is an observation, not a measurement. The game itself still reads its inputs exactly when the original did.
+
+The repository holds source only: no ROM files and no built game. The new code is in the public domain ([LICENSE](LICENSE)); the original game and everything made from its source are not, and belong to their owners ([NOTICE.md](NOTICE.md)).
+
 ## Layout
 
 | Project | What it is |
 | --- | --- |
-| `joust-main-asm/` | Original source (SynaMax's rewrite for Macro Assembler {AS}), untouched |
+| `joust-main-asm/` | Original source ([SynaMax's rewrite](https://github.com/synamaxmusic/joust) for Macro Assembler {AS}), untouched |
 | `src/Joust.Assembler` | C# 6809 assembler for the AS dialect. Builds the 12 main-board ROMs from source |
 | `src/Joust.Emulation` | 6809 CPU, SC1 blitter, 6821 PIAs, CMOS, video timing (the reference machine), plus `GameStateReader` |
 | `src/Joust.Port` | The native C# port: hand-written routines, the translated program (`Translated/`) and the no-CPU runtime, all verified against the original |
@@ -57,7 +70,7 @@ The HD picture is drawn on the GPU by shaders (`src/Joust.App/Shaders/Hd.fx`), a
 powershell -File scripts/web-docker.ps1
 ```
 
-This builds the browser version in Docker and serves it at http://127.0.0.1:8080 and over HTTPS at https://127.0.0.1:8443 (a self-signed certificate: the browser warns once). `-Port` and `-HttpsPort` pick other ports, and `-Stop` stops it. If a gamepad does nothing, `/pads.html` lists what the browser reports, as does F10 in the game. On one machine Chrome showed no gamepad to any page until the experimental `chrome://flags` setting "Gamepad Multitouch" was set to Disabled. The first build downloads the .NET WebAssembly tools and takes several minutes. The game (`Joust.Host`, both boards in C#) is compiled ahead of time to WebAssembly (`src/Joust.Web`). A small page draws it with WebGL2 (`wwwroot/gl.js`, a GLSL port of `Hd.fx`), plays its sound through Web Audio and reads the keyboard and gamepads. The keys are as on the desktop. The saved settings stay in the browser. The game image is assembled from `joust-main-asm/` during the build (`joust-tools build-image`). Keep it to your own machine: the game's code and art belong to their owners.
+This builds the browser version in Docker and serves it at http://127.0.0.1:8080 and over HTTPS at https://127.0.0.1:8443 (a self-signed certificate: the browser warns once). `-Port` and `-HttpsPort` pick other ports, and `-Stop` stops it. If a gamepad does nothing, `/pads.html` lists what the browser reports, as does F10 in the game. On one machine Chrome showed no gamepad to any page until the experimental `chrome://flags` setting "Gamepad Multitouch" was set to Disabled. The first build downloads the .NET WebAssembly tools and takes several minutes. The game (`Joust.Host`, both boards in C#) is compiled ahead of time to WebAssembly (`src/Joust.Web`). A small page draws it with WebGL2 (`wwwroot/gl.js`, a GLSL port of `Hd.fx`), plays its sound through Web Audio and reads the keyboard and gamepads. The keys are as on the desktop. The saved settings stay in the browser. The game image is assembled from `joust-main-asm/` during the build (`joust-tools build-image`). Keep the built game to your own machine: the game's code and art belong to their owners.
 
 ## Tools
 
