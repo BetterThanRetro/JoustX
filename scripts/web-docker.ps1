@@ -1,4 +1,5 @@
-# Builds the browser version of JoustX in Docker and serves it at http://localhost:<Port>.
+# Builds the browser version of JoustX in Docker and serves it at http://127.0.0.1:<Port>
+# (on one machine Chrome withheld a gamepad from the page at "localhost"; 127.0.0.1 worked).
 # The first build downloads the .NET WebAssembly tools and takes several minutes.
 # -Stop stops the running container.
 param([int]$Port = 8080, [switch]$Stop)
@@ -13,4 +14,4 @@ docker build -f "$repo/docker/web/Dockerfile" -t $name $repo
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 docker run -d --name $name -p "${Port}:80" $name | Out-Null
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-Write-Host "JoustX is at http://localhost:$Port"
+Write-Host "JoustX is at http://127.0.0.1:$Port"
