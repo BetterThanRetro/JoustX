@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JoustX gamepad check</title>
+    <style>
+        body { background: #000; color: #9f9; font: 14px monospace; padding: 16px; }
+        h1 { color: #ffd84a; font: bold 18px system-ui, sans-serif; }
+    </style>
+</head>
+<body>
+    <h1>Gamepad check: press buttons on your pad with this page in front</h1>
+    <pre id="out"></pre>
+    <script>
+        // Nothing but the Gamepad API, to tell a browser or protocol problem from one in the game page.
+        const events = [];
+        addEventListener('gamepadconnected', (e) => events.push(`connected ${e.gamepad.index}: ${e.gamepad.id}`));
+        addEventListener('gamepaddisconnected', (e) => events.push(`disconnected ${e.gamepad.index}`));
+        (function poll() {
+            const lines = [`${location.protocol}//${location.host} | secure ${isSecureContext} | focused ${document.hasFocus()} | ` +
+                           `interacted ${navigator.userActivation?.hasBeenActive}`];
+            [...(navigator.getGamepads?.() ?? [])].forEach((p, slot) => lines.push(!p ? `slot ${slot}: empty` :
+                `slot ${slot}: ${p.id} | mapping "${p.mapping}" | held [${p.buttons.map((b, i) => b.pressed ? i : -1).filter((i) => i >= 0).join(' ')}]` +
+                ` | axes [${p.axes.map((a) => a.toFixed(2)).join(' ')}]`));
+            lines.push(`events: ${events.length ? events.join('; ') : 'none'}`);
+            lines.push(navigator.userAgent);
+            document.getElementById('out').textContent = lines.join('\n');
+            requestAnimationFrame(poll);
+        })();
+    </script>
+</body>
+</html>

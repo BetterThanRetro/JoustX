@@ -12,7 +12,12 @@ RUN dotnet run -c Release --project src/Joust.Tools -- build-image /out/joust.im
 RUN dotnet publish src/Joust.Web -c Release -o /publish \
  && cp /out/joust.img /publish/wwwroot/
 
-# 2. Serve: the page, the WebAssembly and the game image as static files.
+# 2. Serve: the page, the WebAssembly and the game image as static files, over HTTP and over
+#    HTTPS with a self-signed certificate for localhost and 127.0.0.1 (browsers warn once).
 FROM nginx:alpine
+RUN apk add --no-cache openssl \
+ && openssl req -x509 -nodes -newkey rsa:2048 -days 3650 -subj "/CN=localhost" \
+      -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" \
+      -keyout /etc/nginx/joustx.key -out /etc/nginx/joustx.crt
 COPY docker/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /publish/wwwroot /usr/share/nginx/html
