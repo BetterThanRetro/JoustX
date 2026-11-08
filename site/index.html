@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JoustX: Williams Joust (1982) arcade game source code in C#</title>
+    <meta name="description" content="JoustX is the 1982 Williams arcade game Joust as native C# source code, with no CPU emulation, verified routine by routine and frame by frame against the original 6809 program. Source only, for preservation.">
+    <link rel="canonical" href="https://betterthanretro.github.io/">
+    <link rel="icon" href="data:,">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="JoustX: Williams Joust (1982) arcade game source code in C#">
+    <meta property="og:description" content="The 1982 arcade game as native C#, verified against the original program frame by frame. Source only, for preservation.">
+    <meta property="og:url" content="https://betterthanretro.github.io/">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "JoustX",
+        "description": "The 1982 Williams arcade game Joust as native C# source code, verified against the original 6809 program.",
+        "codeRepository": "https://github.com/BetterThanRetro/JoustX",
+        "programmingLanguage": "C#",
+        "runtimePlatform": ".NET 10",
+        "keywords": "Joust, Williams, 1982, arcade game, source code, C#, 6809, game preservation, WebAssembly"
+    }
+    </script>
+    <style>
+        :root { --bg: #fbfaf6; --text: #24211b; --muted: #6a6355; --line: #dcd6c8; --link: #8a3b12; --code: #efebe0; }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #15130f; --text: #ece6d8; --muted: #a79e8b; --line: #38332a; --link: #f0a35e; --code: #26221b; }
+        }
+        html { -webkit-text-size-adjust: 100%; }
+        body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+        main { max-width: 42rem; margin: 0 auto; padding: 3rem 1rem 4rem; }
+        h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 1rem; }
+        h2 { font-size: 1.2rem; margin: 2.25rem 0 .5rem; }
+        p, ol, ul { margin: 0 0 1rem; }
+        a { color: var(--link); }
+        code, pre { font: 15px/1.5 ui-monospace, Consolas, monospace; background: var(--code); }
+        code { padding: .1em .3em; }
+        pre { padding: .75rem 1rem; overflow-x: auto; margin: 0 0 1rem; }
+        pre code { padding: 0; }
+        .source { font-size: 1.1rem; font-weight: 600; }
+        footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>JoustX: Williams Joust (1982) arcade game source code in C#</h1>
+    <p>JoustX is the 1982 Williams arcade game Joust, rebuilt as native C#. Nothing emulates the game's processors, yet it plays identically to the original, frame by frame.</p>
+    <p class="source"><a href="https://github.com/BetterThanRetro/JoustX">Read the source code on GitHub</a></p>
+    <p>This site holds no playable game and no ROM files. The project is published as source only, for preservation.</p>
+
+    <h2>What it is</h2>
+    <ul>
+        <li>The main board's 6809 program (9,696 instructions) and the sound board's 6808 program (1,376 instructions) as C#. The hot paths are written by hand and the rest is translated from the original source.</li>
+        <li>A C# assembler that builds all 12 main-board ROM images from the original assembly source and checks them against the game's own checksum table.</li>
+        <li>A desktop app and a WebAssembly browser version, with an optional high-definition picture over the same untouched game logic.</li>
+    </ul>
+
+    <h2>How it stays faithful</h2>
+    <p>The original program runs on a C# reference machine, which serves as the ground truth. Every hand-written routine is compared with the original, per call, on registers, flags, cycle counts and memory writes. Whole games are then played on both side by side and compared on every frame, and the sound output matches sample for sample.</p>
+
+    <h2>Build it yourself</h2>
+    <p>With the .NET 10 SDK and a copy of the repository:</p>
+    <pre><code>dotnet run --project src/Joust.App</code></pre>
+    <p>The game is assembled from the original source at start-up, so no ROM files are needed. The README explains the browser build and the verification tools.</p>
+
+    <h2>Where it comes from</h2>
+    <ol>
+        <li>Williams Electronics, 1982: designed by John Newcomer and programmed by Bill Pfutzenreuter, Cary Kolker and Ken Lantz, with the sound ROM by John Kotlarik and Tim Murphy.</li>
+        <li><a href="https://github.com/historicalsource/joust">historicalsource/joust</a>: the original source, published.</li>
+        <li><a href="https://github.com/synamaxmusic/joust">synamaxmusic/joust</a>: SynaMax's rewrite for a modern assembler, which rebuilds every ROM exactly.</li>
+        <li><a href="https://github.com/BetterThanRetro/JoustX">JoustX</a>: the same program as C#.</li>
+    </ol>
+
+    <footer>
+        JoustX is a preservation project, not affiliated with or endorsed by the owners of Joust. The game, its source code, graphics and sound belong to their rights holder. Only the new code is in the public domain; see the repository's LICENSE and NOTICE files.
+    </footer>
+</main>
+</body>
+</html>

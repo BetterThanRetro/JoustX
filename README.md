@@ -1,8 +1,8 @@
-# JoustX
+# JoustX: Williams Joust (1982) arcade game source code in C#
 
 <img src="docs/images/icon.png" width="96" alt="JoustX icon: the yellow knight on his ostrich above the lava">
 
-A C# port of Williams' 1982 **Joust** that keeps the original game mechanics exactly, with a path to modern (2026) graphics and sound.
+A C# port of Williams' 1982 **Joust** arcade game that keeps the original game mechanics exactly, with a path to modern (2026) graphics and sound. It runs as native C# on .NET 10, with no 6809 or 6808 CPU emulation, as a desktop app or in a browser through WebAssembly. It builds from the original assembly source, so no ROM files are needed.
 
 The approach is a *verified port*: the original 6809 program, assembled from source, runs on a C# reference machine. That machine is the ground truth that the native C# rewrite is checked against, routine by routine. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
@@ -36,6 +36,7 @@ The repository holds source only: no ROM files and no built game. The new code i
 | `src/Joust.App` | MonoGame window around a `JoustSession`: plays the game (in C# with no CPU; `--cpu` keeps the emulated 6809 behind the C# code, `--original` runs pure emulation), keyboard input, CMOS persistence |
 | `src/Joust.Tools` | CLI: `build-roms`, headless `run` with screenshots and scripted input, `verify-native`, `translate`, `bench`, `census` |
 | `tests/Joust.Tests` | Assembler encodings, CPU semantics, ROM checksums, golden replay |
+| `site/` | The project's text-only web page, published on its own to betterthanretro.github.io |
 
 ## Run it
 
